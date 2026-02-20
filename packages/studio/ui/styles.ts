@@ -35,6 +35,19 @@ export const layoutStyles: Record<string, CSSProperties> = {
     flex: 1,
     overflow: 'hidden',
   },
+  timeline: {
+    flexShrink: 0,
+    minHeight: 120,
+    overflow: 'hidden',
+    display: 'flex',
+    flexDirection: 'column',
+  },
+  timelineResizeHandle: {
+    height: 4,
+    cursor: 'row-resize',
+    backgroundColor: colors.border,
+    flexShrink: 0,
+  },
 };
 
 export const topBarStyles: Record<string, CSSProperties> = {

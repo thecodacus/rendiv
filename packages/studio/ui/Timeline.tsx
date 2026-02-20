@@ -10,10 +10,10 @@ interface TimelineProps {
   onSeek: (frame: number) => void;
 }
 
-const LABEL_WIDTH = 80;
+const LABEL_WIDTH = 280;
 const RULER_HEIGHT = 28;
 const TRACK_HEIGHT = 40;
-const MIN_TRACKS = 3;
+const MIN_TRACKS = 0;
 
 const BLOCK_COLORS = [
   { bg: 'rgba(74, 158, 255, 0.5)', border: '#4a9eff' },

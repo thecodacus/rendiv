@@ -1,7 +1,6 @@
 import React, { useRef, useState, useCallback, useEffect } from 'react';
 import { Player, type PlayerRef } from '@rendiv/player';
-import type { TimelineEntry, CompositionEntry } from 'rendiv';
-import { Timeline } from './Timeline';
+import type { CompositionEntry } from 'rendiv';
 import { previewStyles, colors, fonts } from './styles';
 
 interface PreviewProps {
@@ -10,6 +9,8 @@ interface PreviewProps {
   playbackRate: number;
   onPlaybackRateChange: (rate: number) => void;
   onInputPropsChange: (props: Record<string, unknown>) => void;
+  onFrameUpdate?: (frame: number) => void;
+  seekRef?: React.MutableRefObject<((frame: number) => void) | null>;
 }
 
 const SPEED_STEPS = [0.25, 0.5, 1, 2, 4];
@@ -28,35 +29,40 @@ export const Preview: React.FC<PreviewProps> = ({
   playbackRate,
   onPlaybackRateChange,
   onInputPropsChange,
+  onFrameUpdate,
+  seekRef,
 }) => {
   const playerRef = useRef<PlayerRef>(null);
+  const wrapperRef = useRef<HTMLDivElement>(null);
   const [currentFrame, setCurrentFrame] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [propsOpen, setPropsOpen] = useState(false);
   const [propsText, setPropsText] = useState('');
   const [propsError, setPropsError] = useState(false);
+  const [wrapperSize, setWrapperSize] = useState({ width: 0, height: 0 });
 
-  // Timeline registry: reads from a shared global Map + listens for sync events.
-  // This avoids module identity issues (no React context) and handles effect timing
-  // (global Map captures entries even before this listener is active).
-  const [timelineEntries, setTimelineEntries] = useState<TimelineEntry[]>([]);
-
+  // Track player wrapper dimensions to fit the player within both axes
   useEffect(() => {
-    const readEntries = () => {
-      const w = window as unknown as Record<string, unknown>;
-      const entries = w.__RENDIV_TIMELINE_ENTRIES__ as Map<string, TimelineEntry> | undefined;
-      setTimelineEntries(entries ? Array.from(entries.values()) : []);
-    };
-
-    // Read entries that were registered before this listener was set up
-    readEntries();
-
-    // Listen for future register/unregister events
-    document.addEventListener('rendiv:timeline-sync', readEntries);
-    return () => {
-      document.removeEventListener('rendiv:timeline-sync', readEntries);
-    };
+    const el = wrapperRef.current;
+    if (!el) return;
+    const observer = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        setWrapperSize({ width: entry.contentRect.width, height: entry.contentRect.height });
+      }
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
   }, []);
+
+  // Expose seekTo to parent via mutable ref
+  useEffect(() => {
+    if (seekRef) {
+      seekRef.current = (frame: number) => playerRef.current?.seekTo(frame);
+    }
+    return () => {
+      if (seekRef) seekRef.current = null;
+    };
+  }, [seekRef]);
 
   const mergedProps = { ...composition.defaultProps, ...inputProps };
 
@@ -74,6 +80,7 @@ export const Preview: React.FC<PreviewProps> = ({
 
     const onFrame = (data: { frame: number }) => {
       setCurrentFrame(data.frame);
+      onFrameUpdate?.(data.frame);
     };
     const onPlay = () => setIsPlaying(true);
     const onPause = () => setIsPlaying(false);
@@ -128,10 +135,6 @@ export const Preview: React.FC<PreviewProps> = ({
     },
     [playbackRate, onPlaybackRateChange, isPlaying, currentFrame, composition.durationInFrames],
   );
-
-  const handleSeek = useCallback((frame: number) => {
-    playerRef.current?.seekTo(frame);
-  }, []);
 
   const handlePropsChange = useCallback(
     (text: string) => {
@@ -189,7 +192,7 @@ export const Preview: React.FC<PreviewProps> = ({
       </div>
 
       {/* Player */}
-      <div style={previewStyles.playerWrapper}>
+      <div ref={wrapperRef} style={previewStyles.playerWrapper}>
         <Player
           key={composition.id}
           ref={playerRef}
@@ -201,7 +204,11 @@ export const Preview: React.FC<PreviewProps> = ({
           inputProps={mergedProps}
           playbackRate={playbackRate}
           loop
-          style={{ width: '100%', maxHeight: '100%' }}
+          style={{
+            width: wrapperSize.width > 0 && wrapperSize.height > 0
+              ? Math.min(wrapperSize.width, wrapperSize.height * (composition.width / composition.height))
+              : '100%',
+          }}
         />
       </div>
 
@@ -268,15 +275,6 @@ export const Preview: React.FC<PreviewProps> = ({
           </div>
         </div>
       </div>
-
-      {/* Track-based Timeline */}
-      <Timeline
-        entries={timelineEntries}
-        currentFrame={currentFrame}
-        totalFrames={composition.durationInFrames}
-        fps={composition.fps}
-        onSeek={handleSeek}
-      />
 
       {/* Props editor */}
       {Object.keys(composition.defaultProps).length > 0 && (
