@@ -51,7 +51,7 @@ export async function startStudio(options: StudioOptions): Promise<StudioResult>
     publicDir: path.resolve(cwd, publicDir),
     plugins: [
       react(),
-      rendivStudioPlugin({ studioHtmlFileName: HTML_FILE }),
+      rendivStudioPlugin({ studioHtmlFileName: HTML_FILE, entryPoint: absoluteEntry }),
     ],
     resolve: {
       // Force Vite to resolve these packages from the user's project root,

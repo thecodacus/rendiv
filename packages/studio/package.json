@@ -19,6 +19,8 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
+    "@rendiv/bundler": "workspace:*",
+    "@rendiv/renderer": "workspace:*",
     "@vitejs/plugin-react": "^4.3.0",
     "vite": "^6.0.0"
   },

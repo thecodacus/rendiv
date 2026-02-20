@@ -189,6 +189,12 @@ importers:
 
   packages/studio:
     dependencies:
+      '@rendiv/bundler':
+        specifier: workspace:*
+        version: link:../bundler
+      '@rendiv/renderer':
+        specifier: workspace:*
+        version: link:../renderer
       '@vitejs/plugin-react':
         specifier: ^4.3.0
         version: 4.7.0(vite@6.4.1)

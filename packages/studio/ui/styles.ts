@@ -71,6 +71,11 @@ export const topBarStyles: Record<string, CSSProperties> = {
     color: colors.textSecondary,
     fontFamily: fonts.mono,
   },
+  actions: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 8,
+  },
   button: {
     padding: '6px 12px',
     fontSize: 12,
@@ -81,6 +86,28 @@ export const topBarStyles: Record<string, CSSProperties> = {
     borderRadius: 6,
     cursor: 'pointer',
     fontFamily: fonts.sans,
+  },
+  renderButton: {
+    padding: '6px 14px',
+    fontSize: 12,
+    fontWeight: 600,
+    color: '#fff',
+    backgroundColor: colors.accentMuted,
+    border: 'none',
+    borderRadius: 6,
+    cursor: 'pointer',
+    fontFamily: fonts.sans,
+    position: 'relative' as const,
+    overflow: 'hidden',
+    minWidth: 90,
+  },
+  renderProgress: {
+    position: 'absolute' as const,
+    left: 0,
+    bottom: 0,
+    height: 3,
+    backgroundColor: colors.accent,
+    transition: 'width 0.2s ease',
   },
 };
 

@@ -127,7 +127,7 @@ const StudioApp: React.FC = () => {
   return (
     <div style={layoutStyles.root}>
       <style dangerouslySetInnerHTML={{ __html: scrollbarCSS }} />
-      <TopBar composition={selectedComposition} entryPoint={ENTRY_POINT} />
+      <TopBar composition={selectedComposition} entryPoint={ENTRY_POINT} inputProps={inputProps} />
 
       <div style={layoutStyles.body}>
         <Sidebar
