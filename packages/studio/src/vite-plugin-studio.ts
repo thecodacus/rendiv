@@ -6,7 +6,27 @@ export interface StudioPluginOptions {
   entryPoint: string;
 }
 
-/** Active render state — only one render at a time. */
+// --- Server-side render queue state (in-memory, survives page refresh) ---
+
+type ServerRenderJobStatus = 'queued' | 'bundling' | 'rendering' | 'encoding' | 'done' | 'error' | 'cancelled';
+
+interface ServerRenderJob {
+  id: string;
+  compositionId: string;
+  compositionName: string;
+  codec: 'mp4' | 'webm';
+  outputPath: string;
+  inputProps: Record<string, unknown>;
+  status: ServerRenderJobStatus;
+  progress: number;
+  renderedFrames: number;
+  totalFrames: number;
+  error?: string;
+}
+
+let renderJobs: ServerRenderJob[] = [];
+let nextJobId = 1;
+let activeJobId: string | null = null;
 let activeAbortController: AbortController | null = null;
 
 function readBody(req: IncomingMessage): Promise<string> {
@@ -18,119 +38,94 @@ function readBody(req: IncomingMessage): Promise<string> {
   });
 }
 
-function writeLine(res: ServerResponse, data: Record<string, unknown>) {
-  res.write(JSON.stringify(data) + '\n');
-}
+function processQueue(entryPoint: string): void {
+  if (activeJobId) return;
 
-async function handleRender(
-  req: IncomingMessage,
-  res: ServerResponse,
-  entryPoint: string,
-) {
-  if (activeAbortController) {
-    res.writeHead(409, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ error: 'A render is already in progress' }));
-    return;
-  }
+  const nextJob = renderJobs.find((j) => j.status === 'queued');
+  if (!nextJob) return;
 
-  const body = JSON.parse(await readBody(req));
-  const { compositionId, codec = 'mp4', outputPath, inputProps = {} } = body as {
-    compositionId: string;
-    codec?: 'mp4' | 'webm';
-    outputPath: string;
-    inputProps?: Record<string, unknown>;
-  };
-
+  activeJobId = nextJob.id;
   const abortController = new AbortController();
   activeAbortController = abortController;
 
-  res.writeHead(200, {
-    'Content-Type': 'text/plain; charset=utf-8',
-    'Transfer-Encoding': 'chunked',
-    'Cache-Control': 'no-cache',
-    'X-Content-Type-Options': 'nosniff',
-  });
+  const updateJob = (updates: Partial<ServerRenderJob>) => {
+    const job = renderJobs.find((j) => j.id === activeJobId);
+    if (job) Object.assign(job, updates);
+  };
 
-  try {
-    // Dynamic imports so these are only loaded when rendering
-    const { bundle } = await import('@rendiv/bundler');
-    const { selectComposition, renderMedia, closeBrowser } = await import('@rendiv/renderer');
+  (async () => {
+    updateJob({ status: 'bundling', progress: 0 });
 
-    // Step 1: Bundle
-    writeLine(res, { type: 'bundling', progress: 0 });
-    const bundlePath = await bundle({
-      entryPoint,
-      onProgress: (p: number) => {
-        writeLine(res, { type: 'bundling', progress: p });
-      },
-    });
-
-    if (abortController.signal.aborted) {
-      writeLine(res, { type: 'cancelled' });
-      res.end();
-      return;
-    }
-
-    // Step 2: Get composition metadata
-    writeLine(res, { type: 'metadata' });
-    const composition = await selectComposition(bundlePath, compositionId, inputProps);
-
-    if (abortController.signal.aborted) {
-      writeLine(res, { type: 'cancelled' });
-      res.end();
-      return;
-    }
-
-    // Step 3: Render
-    writeLine(res, { type: 'rendering', renderedFrames: 0, totalFrames: composition.durationInFrames, progress: 0 });
-    await renderMedia({
-      composition,
-      serveUrl: bundlePath,
-      codec,
-      outputLocation: outputPath,
-      inputProps,
-      onProgress: ({ progress, renderedFrames, totalFrames }) => {
-        if (progress < 0.9) {
-          writeLine(res, { type: 'rendering', renderedFrames, totalFrames, progress });
-        } else if (progress < 1) {
-          writeLine(res, { type: 'encoding' });
-        }
-      },
-      cancelSignal: abortController.signal,
-    });
-
-    if (abortController.signal.aborted) {
-      writeLine(res, { type: 'cancelled' });
-    } else {
-      writeLine(res, { type: 'done', outputPath });
-    }
-
-    await closeBrowser();
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    writeLine(res, { type: 'error', message });
     try {
-      const { closeBrowser } = await import('@rendiv/renderer');
+      const { bundle } = await import('@rendiv/bundler');
+      const { selectComposition, renderMedia, closeBrowser } = await import('@rendiv/renderer');
+
+      // Step 1: Bundle
+      const bundlePath = await bundle({
+        entryPoint,
+        onProgress: (p: number) => {
+          updateJob({ progress: p });
+        },
+      });
+
+      if (abortController.signal.aborted) {
+        updateJob({ status: 'cancelled' });
+        return;
+      }
+
+      // Step 2: Get composition metadata
+      const composition = await selectComposition(bundlePath, nextJob.compositionId, nextJob.inputProps);
+
+      if (abortController.signal.aborted) {
+        updateJob({ status: 'cancelled' });
+        return;
+      }
+
+      // Step 3: Render
+      updateJob({ status: 'rendering', renderedFrames: 0, totalFrames: composition.durationInFrames, progress: 0 });
+      await renderMedia({
+        composition,
+        serveUrl: bundlePath,
+        codec: nextJob.codec,
+        outputLocation: nextJob.outputPath,
+        inputProps: nextJob.inputProps,
+        onProgress: ({ progress, renderedFrames, totalFrames }: { progress: number; renderedFrames: number; totalFrames: number }) => {
+          if (progress < 0.9) {
+            updateJob({ status: 'rendering', renderedFrames, totalFrames, progress });
+          } else if (progress < 1) {
+            updateJob({ status: 'encoding' });
+          }
+        },
+        cancelSignal: abortController.signal,
+      });
+
+      if (abortController.signal.aborted) {
+        updateJob({ status: 'cancelled' });
+      } else {
+        updateJob({ status: 'done', progress: 1 });
+      }
+
       await closeBrowser();
-    } catch {
-      // ignore cleanup errors
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      updateJob({ status: 'error', error: message });
+      try {
+        const { closeBrowser } = await import('@rendiv/renderer');
+        await closeBrowser();
+      } catch {
+        // ignore cleanup errors
+      }
+    } finally {
+      activeJobId = null;
+      activeAbortController = null;
+      processQueue(entryPoint);
     }
-  } finally {
-    activeAbortController = null;
-    res.end();
-  }
+  })();
 }
 
-function handleCancel(_req: IncomingMessage, res: ServerResponse) {
-  if (activeAbortController) {
-    activeAbortController.abort();
-    activeAbortController = null;
-    res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ ok: true }));
-  } else {
-    res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ ok: false, message: 'No render in progress' }));
-  }
+function jsonResponse(res: ServerResponse, data: unknown, status = 200) {
+  res.writeHead(status, { 'Content-Type': 'application/json' });
+  res.end(JSON.stringify(data));
 }
 
 export function rendivStudioPlugin(options: StudioPluginOptions): Plugin {
@@ -139,16 +134,71 @@ export function rendivStudioPlugin(options: StudioPluginOptions): Plugin {
   return {
     name: 'rendiv-studio',
     configureServer(server) {
-      // Render API endpoints
+      // Render queue API endpoints
       server.middlewares.use((req, res, next) => {
-        if (req.method === 'POST' && req.url === '/__rendiv_api__/render') {
-          handleRender(req, res, entryPoint);
+        // GET /queue — return all jobs
+        if (req.method === 'GET' && req.url === '/__rendiv_api__/render/queue') {
+          jsonResponse(res, { jobs: renderJobs });
           return;
         }
-        if (req.method === 'POST' && req.url === '/__rendiv_api__/render/cancel') {
-          handleCancel(req, res);
+
+        // POST /queue/clear — clear finished jobs (must be before :id/cancel match)
+        if (req.method === 'POST' && req.url === '/__rendiv_api__/render/queue/clear') {
+          renderJobs = renderJobs.filter((j) =>
+            j.status !== 'done' && j.status !== 'error' && j.status !== 'cancelled'
+          );
+          jsonResponse(res, { ok: true });
           return;
         }
+
+        // POST /queue — add a new job
+        if (req.method === 'POST' && req.url === '/__rendiv_api__/render/queue') {
+          readBody(req).then((raw) => {
+            const body = JSON.parse(raw);
+            const job: ServerRenderJob = {
+              id: String(nextJobId++),
+              compositionId: body.compositionId,
+              compositionName: body.compositionName ?? body.compositionId,
+              codec: body.codec ?? 'mp4',
+              outputPath: body.outputPath,
+              inputProps: body.inputProps ?? {},
+              status: 'queued',
+              progress: 0,
+              renderedFrames: 0,
+              totalFrames: body.totalFrames ?? 0,
+            };
+            renderJobs.push(job);
+            processQueue(entryPoint);
+            jsonResponse(res, { job });
+          });
+          return;
+        }
+
+        // POST /queue/:id/cancel — cancel a specific job
+        const cancelMatch = req.url?.match(/^\/__rendiv_api__\/render\/queue\/([^/]+)\/cancel$/);
+        if (req.method === 'POST' && cancelMatch) {
+          const jobId = cancelMatch[1];
+          const job = renderJobs.find((j) => j.id === jobId);
+          if (job) {
+            if (job.status === 'queued') {
+              job.status = 'cancelled';
+            } else if (activeJobId === jobId && activeAbortController) {
+              activeAbortController.abort();
+            }
+          }
+          jsonResponse(res, { ok: true });
+          return;
+        }
+
+        // DELETE /queue/:id — remove a finished job
+        const deleteMatch = req.url?.match(/^\/__rendiv_api__\/render\/queue\/([^/]+)$/);
+        if (req.method === 'DELETE' && deleteMatch) {
+          const jobId = deleteMatch[1];
+          renderJobs = renderJobs.filter((j) => j.id !== jobId);
+          jsonResponse(res, { ok: true });
+          return;
+        }
+
         next();
       });
 
