@@ -5,6 +5,8 @@ export interface SeriesSequenceProps {
   durationInFrames: number;
   /** Additional offset to shift this entry. Negative values create overlaps. */
   offset?: number;
+  /** Display name for this sequence in the Studio timeline. */
+  name?: string;
   layout?: 'none' | 'absolute-fill';
   style?: CSSProperties;
   children: ReactNode;
@@ -40,6 +42,7 @@ function SeriesRoot({ children }: SeriesProps): React.ReactElement {
     const {
       durationInFrames,
       offset = 0,
+      name,
       layout,
       style,
       children: sequenceChildren,
@@ -47,11 +50,25 @@ function SeriesRoot({ children }: SeriesProps): React.ReactElement {
 
     const from = accumulatedFrom + offset;
 
+    // Derive name from the child component if not explicitly provided
+    let sequenceName = name;
+    if (!sequenceName) {
+      const childElements = Children.toArray(sequenceChildren);
+      if (childElements.length > 0) {
+        const first = childElements[0];
+        if (React.isValidElement(first) && typeof first.type !== 'string') {
+          const type = first.type as { displayName?: string; name?: string };
+          sequenceName = type.displayName || type.name;
+        }
+      }
+    }
+
     sequences.push(
       <Sequence
         key={child.key ?? sequences.length}
         from={from}
         durationInFrames={durationInFrames}
+        name={sequenceName}
         layout={layout}
         style={style}
       >

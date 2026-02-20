@@ -58,3 +58,8 @@ export {
   type ResolveConfigFunction,
 } from './context/CompositionManagerContext';
 export { FolderContext } from './context/FolderContext';
+export {
+  TimelineRegistryContext,
+  type TimelineRegistryContextValue,
+  type TimelineEntry,
+} from './context/TimelineRegistryContext';

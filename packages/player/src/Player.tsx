@@ -188,6 +188,12 @@ export const Player = forwardRef<PlayerRef, PlayerProps>((props, ref) => {
     [player]
   );
 
+  const compositionContent = (
+    <ErrorBoundary fallback={errorFallback}>
+      <Component {...inputProps} />
+    </ErrorBoundary>
+  );
+
   return (
     <div
       ref={containerRef}
@@ -214,9 +220,7 @@ export const Player = forwardRef<PlayerRef, PlayerProps>((props, ref) => {
         <RendivEnvironmentContext.Provider value={environmentValue}>
           <CompositionContext.Provider value={videoConfig}>
             <TimelineContext.Provider value={timelineValue}>
-              <ErrorBoundary fallback={errorFallback}>
-                <Component {...inputProps} />
-              </ErrorBoundary>
+              {compositionContent}
             </TimelineContext.Provider>
           </CompositionContext.Provider>
         </RendivEnvironmentContext.Provider>

@@ -64,6 +64,7 @@ export async function startStudio(options: StudioOptions): Promise<StudioResult>
     },
     optimizeDeps: {
       entries: [ENTRY_FILE],
+      exclude: ['rendiv', '@rendiv/player'],
     },
     logLevel: 'info',
   });

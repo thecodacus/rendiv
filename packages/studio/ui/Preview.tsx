@@ -1,7 +1,8 @@
 import React, { useRef, useState, useCallback, useEffect } from 'react';
 import { Player, type PlayerRef } from '@rendiv/player';
-import type { CompositionEntry } from 'rendiv';
-import { previewStyles, colors } from './styles';
+import type { TimelineEntry, CompositionEntry } from 'rendiv';
+import { Timeline } from './Timeline';
+import { previewStyles, colors, fonts } from './styles';
 
 interface PreviewProps {
   composition: CompositionEntry;
@@ -30,19 +31,43 @@ export const Preview: React.FC<PreviewProps> = ({
 }) => {
   const playerRef = useRef<PlayerRef>(null);
   const [currentFrame, setCurrentFrame] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
   const [propsOpen, setPropsOpen] = useState(false);
   const [propsText, setPropsText] = useState('');
   const [propsError, setPropsError] = useState(false);
 
+  // Timeline registry: reads from a shared global Map + listens for sync events.
+  // This avoids module identity issues (no React context) and handles effect timing
+  // (global Map captures entries even before this listener is active).
+  const [timelineEntries, setTimelineEntries] = useState<TimelineEntry[]>([]);
+
+  useEffect(() => {
+    const readEntries = () => {
+      const w = window as unknown as Record<string, unknown>;
+      const entries = w.__RENDIV_TIMELINE_ENTRIES__ as Map<string, TimelineEntry> | undefined;
+      setTimelineEntries(entries ? Array.from(entries.values()) : []);
+    };
+
+    // Read entries that were registered before this listener was set up
+    readEntries();
+
+    // Listen for future register/unregister events
+    document.addEventListener('rendiv:timeline-sync', readEntries);
+    return () => {
+      document.removeEventListener('rendiv:timeline-sync', readEntries);
+    };
+  }, []);
+
   const mergedProps = { ...composition.defaultProps, ...inputProps };
 
-  // Sync props text when composition changes
+  // Sync props editor when composition changes.
+  // Timeline entries are managed by Sequence mount/unmount lifecycle — no need to clear here.
   useEffect(() => {
-    setPropsText(JSON.stringify(mergedProps, null, 2));
+    setPropsText(JSON.stringify({ ...composition.defaultProps, ...inputProps }, null, 2));
     setPropsError(false);
   }, [composition.id]);
 
-  // Track frame updates
+  // Track frame updates and play state
   useEffect(() => {
     const player = playerRef.current;
     if (!player) return;
@@ -50,14 +75,38 @@ export const Preview: React.FC<PreviewProps> = ({
     const onFrame = (data: { frame: number }) => {
       setCurrentFrame(data.frame);
     };
+    const onPlay = () => setIsPlaying(true);
+    const onPause = () => setIsPlaying(false);
 
     player.addEventListener('frameupdate', onFrame);
-    return () => player.removeEventListener('frameupdate', onFrame);
+    player.addEventListener('play', onPlay);
+    player.addEventListener('pause', onPause);
+    return () => {
+      player.removeEventListener('frameupdate', onFrame);
+      player.removeEventListener('play', onPlay);
+      player.removeEventListener('pause', onPause);
+    };
   }, [composition.id]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
-      if (e.key === 'j' || e.key === 'J') {
+      if (e.key === ' ' || e.key === 'k' || e.key === 'K') {
+        e.preventDefault();
+        if (isPlaying) {
+          playerRef.current?.pause();
+        } else {
+          playerRef.current?.play();
+        }
+      } else if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        playerRef.current?.seekTo(Math.max(0, currentFrame - 1));
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        playerRef.current?.seekTo(Math.min(composition.durationInFrames - 1, currentFrame + 1));
+      } else if (e.key === '0') {
+        e.preventDefault();
+        playerRef.current?.seekTo(0);
+      } else if (e.key === 'j' || e.key === 'J') {
         e.preventDefault();
         const currentIdx = SPEED_STEPS.indexOf(playbackRate);
         if (currentIdx > 0) {
@@ -65,9 +114,6 @@ export const Preview: React.FC<PreviewProps> = ({
         } else if (currentIdx === 0) {
           playerRef.current?.pause();
         }
-      } else if (e.key === 'k' || e.key === 'K') {
-        e.preventDefault();
-        playerRef.current?.pause();
       } else if (e.key === 'l' || e.key === 'L') {
         e.preventDefault();
         const currentIdx = SPEED_STEPS.indexOf(playbackRate);
@@ -80,8 +126,12 @@ export const Preview: React.FC<PreviewProps> = ({
         }
       }
     },
-    [playbackRate, onPlaybackRateChange],
+    [playbackRate, onPlaybackRateChange, isPlaying, currentFrame, composition.durationInFrames],
   );
+
+  const handleSeek = useCallback((frame: number) => {
+    playerRef.current?.seekTo(frame);
+  }, []);
 
   const handlePropsChange = useCallback(
     (text: string) => {
@@ -150,11 +200,83 @@ export const Preview: React.FC<PreviewProps> = ({
           compositionHeight={composition.height}
           inputProps={mergedProps}
           playbackRate={playbackRate}
-          controls
           loop
           style={{ width: '100%', maxHeight: '100%' }}
         />
       </div>
+
+      {/* Playback controls */}
+      <div style={controlsBarStyle}>
+        <div style={controlsLeftStyle}>
+          <button
+            style={controlBtnStyle}
+            onClick={() => playerRef.current?.seekTo(0)}
+            title="Go to start (0)"
+          >
+            &#x23EE;
+          </button>
+          <button
+            style={controlBtnStyle}
+            onClick={() => playerRef.current?.seekTo(Math.max(0, currentFrame - 1))}
+            title="Step back (←)"
+          >
+            &#x23F4;
+          </button>
+          <button
+            style={{ ...controlBtnStyle, fontSize: 16, width: 36, height: 28 }}
+            onClick={() => (isPlaying ? playerRef.current?.pause() : playerRef.current?.play())}
+            title="Play/Pause (Space)"
+          >
+            {isPlaying ? '\u23F8' : '\u25B6'}
+          </button>
+          <button
+            style={controlBtnStyle}
+            onClick={() => playerRef.current?.seekTo(Math.min(composition.durationInFrames - 1, currentFrame + 1))}
+            title="Step forward (→)"
+          >
+            &#x23F5;
+          </button>
+          <button
+            style={controlBtnStyle}
+            onClick={() => playerRef.current?.seekTo(composition.durationInFrames - 1)}
+            title="Go to end"
+          >
+            &#x23ED;
+          </button>
+        </div>
+        <div style={controlsRightStyle}>
+          <span style={frameCounterStyle}>
+            {currentFrame} / {composition.durationInFrames - 1}
+          </span>
+          <span style={timeDisplayStyle}>
+            {formatTime(currentFrame, composition.fps)}
+          </span>
+          <div style={speedGroupStyle}>
+            {SPEED_STEPS.map((s) => (
+              <button
+                key={s}
+                style={{
+                  ...speedBtnStyle,
+                  backgroundColor: playbackRate === s ? colors.accentMuted : 'transparent',
+                  color: playbackRate === s ? '#fff' : colors.textSecondary,
+                }}
+                onClick={() => onPlaybackRateChange(s)}
+              >
+                {s}x
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Track-based Timeline */}
+      <Timeline
+        entries={timelineEntries}
+        currentFrame={currentFrame}
+        totalFrames={composition.durationInFrames}
+        fps={composition.fps}
+        onSeek={handleSeek}
+      />
 
       {/* Props editor */}
       {Object.keys(composition.defaultProps).length > 0 && (
@@ -183,4 +305,71 @@ export const Preview: React.FC<PreviewProps> = ({
       )}
     </div>
   );
+};
+
+// Inline styles for the playback controls bar
+
+const controlsBarStyle: React.CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  padding: '6px 12px',
+  backgroundColor: colors.surface,
+  borderRadius: 8,
+};
+
+const controlsLeftStyle: React.CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: 4,
+};
+
+const controlsRightStyle: React.CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: 12,
+};
+
+const controlBtnStyle: React.CSSProperties = {
+  background: 'none',
+  border: 'none',
+  color: colors.textPrimary,
+  cursor: 'pointer',
+  fontSize: 14,
+  width: 28,
+  height: 28,
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  borderRadius: 4,
+  padding: 0,
+};
+
+const frameCounterStyle: React.CSSProperties = {
+  fontSize: 12,
+  fontFamily: fonts.mono,
+  color: colors.textSecondary,
+  fontVariantNumeric: 'tabular-nums',
+};
+
+const timeDisplayStyle: React.CSSProperties = {
+  fontSize: 12,
+  fontFamily: fonts.mono,
+  color: colors.textPrimary,
+  fontVariantNumeric: 'tabular-nums',
+};
+
+const speedGroupStyle: React.CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: 2,
+};
+
+const speedBtnStyle: React.CSSProperties = {
+  border: 'none',
+  cursor: 'pointer',
+  fontSize: 11,
+  fontFamily: fonts.mono,
+  padding: '2px 6px',
+  borderRadius: 4,
 };
