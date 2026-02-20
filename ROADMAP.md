@@ -1,10 +1,30 @@
 # Rendiv — Roadmap
 
-> Phase 1 (MVP) is tracked in the implementation plan. This file covers Phase 2 and Phase 3.
+> Phase 1 (MVP) is tracked in the implementation plan. This file covers Phase 2 onwards.
 
 ---
 
-## Phase 2: Studio + Media Components
+## Phase 2: Core Components + Media Components ✅
+
+### Additional Core Components
+- [x] `<Series />` — renders sequences one after another without manually calculating `from` offsets
+- [x] `<Loop />` — loops a child component for a defined number of iterations
+- [x] `<Freeze />` — freezes time at a specific frame number for children
+
+### Media Components (in `packages/rendiv`)
+- [x] `<Video />` — HTML5 video synchronized with the Rendiv frame clock (props: src, startFrom, endAt, volume, playbackRate, muted)
+- [x] `<Audio />` — same as Video but audio-only
+- [x] `<Img />` — renders `<img>` and waits for full load before frame capture (uses holdRender)
+- [x] `<AnimatedImage />` — renders GIF/AVIF/animated WebP synchronized to frame clock
+- [x] `<IFrame />` — renders `<iframe>` and waits for load before capture
+
+### Enhanced holdRender
+- [x] Configurable timeout with descriptive error messages
+- [x] Automatic integration with `<Img>`, `<Video>`, `<IFrame>` (auto hold/release on load)
+
+---
+
+## Phase 2.5: Studio + OffthreadVideo + CLI Additions
 
 ### Studio (`packages/studio`)
 - [ ] Vite dev server with hot reload for compositions
@@ -19,23 +39,13 @@
 - [ ] Error overlay — display React errors per-frame without crashing preview
 - [ ] CLI command: `rendiv studio` to launch the Studio
 
-### Additional Core Components
-- [ ] `<Series />` — renders sequences one after another without manually calculating `from` offsets
-- [ ] `<Loop />` — loops a child component for a defined number of iterations
-- [ ] `<Freeze />` — freezes time at a specific frame number for children
-
-### Media Components (in `packages/rendiv`)
-- [ ] `<Video />` — HTML5 video synchronized with the Rendiv frame clock (props: src, startFrom, endAt, volume, playbackRate, muted)
-- [ ] `<Audio />` — same as Video but audio-only
+### OffthreadVideo
 - [ ] `<OffthreadVideo />` — FFmpeg-based frame extraction for pixel-perfect accuracy during rendering
-- [ ] `<Img />` — renders `<img>` and waits for full load before frame capture (uses delayRender)
-- [ ] `<AnimatedImage />` — renders GIF/AVIF/animated WebP synchronized to frame clock
-- [ ] `<IFrame />` — renders `<iframe>` and waits for load before capture
+  - Requires renderer-side FFmpeg frame extraction pipeline (Node.js ↔ browser bridge via window globals)
+  - Falls back to `<Video />` in player/studio mode
 
-### Enhanced delayRender
-- [ ] Configurable timeout with descriptive error messages
-- [ ] Automatic integration with `<Img>`, `<Video>`, `<IFrame>` (auto delay/continue on load)
-- [ ] Better dev experience: show pending delay render labels in Studio error overlay
+### Enhanced holdRender (Studio integration)
+- [ ] Show pending holdRender labels in Studio error overlay
 
 ### CLI Additions
 - [ ] `rendiv benchmark` — benchmark render performance

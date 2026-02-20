@@ -8,6 +8,16 @@ export { Sequence, type SequenceProps } from './components/Sequence';
 export { Fill } from './components/Fill';
 export { Still, type StillProps } from './components/Still';
 export { Folder, type FolderProps } from './components/Folder';
+export { Series, type SeriesProps, type SeriesSequenceProps } from './components/Series';
+export { Loop, type LoopProps } from './components/Loop';
+export { Freeze, type FreezeProps } from './components/Freeze';
+
+// Media Components
+export { Img, type ImgProps } from './components/Img';
+export { Video, type VideoProps } from './components/Video';
+export { Audio, type AudioProps } from './components/Audio';
+export { AnimatedImage, type AnimatedImageProps } from './components/AnimatedImage';
+export { IFrame, type IFrameProps } from './components/IFrame';
 
 // Animation
 export { interpolate, type InterpolateOptions, type ExtrapolationType } from './animation/interpolate';
@@ -29,6 +39,7 @@ export {
   abortRender,
   getPendingHoldCount,
   getPendingHoldLabels,
+  type HoldRenderOptions,
 } from './delay-render';
 
 // Contexts (for Player, Renderer, Studio packages)

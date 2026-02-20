@@ -107,6 +107,3 @@ Bundle (Vite build) → serve static files → Playwright headless Chromium → 
 - Tests wrap components with real context providers (no mocking)
 - Only `packages/rendiv` has tests currently
 
-## Commit Messages
-
-- Do not mention Claude Code or any AI tool in commit messages
