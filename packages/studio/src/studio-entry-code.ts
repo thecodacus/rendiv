@@ -21,15 +21,25 @@ createStudioApp(document.getElementById('root'));
 `;
 }
 
+/** Favicon SVG content (icon-only version of the Rendiv logo). */
+export const FAVICON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none">
+  <rect x="6" y="8" width="26" height="20" rx="3" stroke="#58a6ff" stroke-width="2" opacity="0.35"/>
+  <rect x="12" y="14" width="26" height="20" rx="3" stroke="#58a6ff" stroke-width="2"/>
+  <clipPath id="ic"><rect x="12" y="14" width="26" height="20" rx="3"/></clipPath>
+  <g clip-path="url(#ic)"><polygon points="12,34 30,14 38,14 38,34" fill="#58a6ff" opacity="0.25"/></g>
+  <path d="M22 20L30 24L22 28Z" fill="#58a6ff"/>
+</svg>`;
+
 /**
  * Generates the HTML template for the Studio shell.
  */
-export function generateStudioHtml(entryFileName: string): string {
+export function generateStudioHtml(entryFileName: string, faviconPath: string): string {
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/svg+xml" href="/${faviconPath}" />
   <title>Rendiv Studio</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }

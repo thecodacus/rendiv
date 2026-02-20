@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react';
 import path from 'node:path';
 import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { generateStudioEntryCode, generateStudioHtml } from './studio-entry-code.js';
+import { generateStudioEntryCode, generateStudioHtml, FAVICON_SVG } from './studio-entry-code.js';
 import { rendivStudioPlugin } from './vite-plugin-studio.js';
 
 export interface StudioOptions {
@@ -20,6 +20,7 @@ export interface StudioResult {
 const STUDIO_DIR = '.studio';
 const ENTRY_FILE = 'entry.tsx';
 const HTML_FILE = 'studio.html';
+const FAVICON_FILE = 'favicon.svg';
 
 export async function startStudio(options: StudioOptions): Promise<StudioResult> {
   const { entryPoint, port = 3000, publicDir = 'public' } = options;
@@ -39,15 +40,14 @@ export async function startStudio(options: StudioOptions): Promise<StudioResult>
 
   const studioEntryFile = `${STUDIO_DIR}/${ENTRY_FILE}`;
   const studioHtmlFile = `${STUDIO_DIR}/${HTML_FILE}`;
+  const studioFaviconFile = `${STUDIO_DIR}/${FAVICON_FILE}`;
 
   const entryCode = generateStudioEntryCode(absoluteEntry, studioUiDir, entryPoint);
-  const htmlCode = generateStudioHtml(studioEntryFile);
+  const htmlCode = generateStudioHtml(studioEntryFile, studioFaviconFile);
 
-  const entryJsPath = path.join(studioDir, ENTRY_FILE);
-  const entryHtmlPath = path.join(studioDir, HTML_FILE);
-
-  fs.writeFileSync(entryJsPath, entryCode);
-  fs.writeFileSync(entryHtmlPath, htmlCode);
+  fs.writeFileSync(path.join(studioDir, ENTRY_FILE), entryCode);
+  fs.writeFileSync(path.join(studioDir, HTML_FILE), htmlCode);
+  fs.writeFileSync(path.join(studioDir, FAVICON_FILE), FAVICON_SVG);
 
   // configFile: false prevents Vite from loading the user's vite.config.ts,
   // which may already include @vitejs/plugin-react. Adding it twice causes

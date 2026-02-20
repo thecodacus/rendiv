@@ -11,7 +11,24 @@ interface TopBarProps {
   onToggleQueue: () => void;
 }
 
-// Inline SVG icons as components to avoid external dependencies
+// Inline SVG icons
+const RendivLogo: React.FC = () => (
+  <svg width="120" height="28" viewBox="0 0 240 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="6" y="8" width="26" height="20" rx="3" stroke={colors.accent} strokeWidth="2" opacity="0.35" />
+    <rect x="12" y="14" width="26" height="20" rx="3" stroke={colors.accent} strokeWidth="2" />
+    <clipPath id="rv-frame">
+      <rect x="12" y="14" width="26" height="20" rx="3" />
+    </clipPath>
+    <g clipPath="url(#rv-frame)">
+      <polygon points="12,34 30,14 38,14 38,34" fill={colors.accent} opacity="0.25" />
+    </g>
+    <path d="M22 20L30 24L22 28Z" fill={colors.accent} />
+    <text x="52" y="33" fontFamily="system-ui, -apple-system, sans-serif" fontSize="26" fontWeight="700" fill={colors.textPrimary} letterSpacing="-0.5">
+      rendiv
+    </text>
+  </svg>
+);
+
 const RenderIcon: React.FC = () => (
   <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path d="M4 2L13 8L4 14V2Z" fill="currentColor" />
@@ -39,7 +56,7 @@ export const TopBar: React.FC<TopBarProps> = ({ composition, entryPoint, onRende
 
   return (
     <div style={topBarStyles.container}>
-      <span style={topBarStyles.title}>Rendiv Studio</span>
+      <RendivLogo />
 
       <span style={topBarStyles.compositionName}>
         {composition ? composition.id : 'No composition selected'}
