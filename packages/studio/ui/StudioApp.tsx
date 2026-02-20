@@ -207,6 +207,7 @@ const StudioApp: React.FC = () => {
         entryPoint={ENTRY_POINT}
         onRender={handleAddRender}
         queueCount={queueCount}
+        queueOpen={queueOpen}
         onToggleQueue={handleToggleQueue}
       />
 
