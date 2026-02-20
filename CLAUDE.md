@@ -73,7 +73,7 @@ pnpm clean        # Remove dist/ from all packages
 
 ## Public API Names
 
-Key exports from `rendiv` (these are Rendiv-original names, intentionally distinct from Remotion):
+Key exports from `rendiv`:
 
 | Category | Names |
 |---|---|
@@ -86,8 +86,6 @@ Key exports from `rendiv` (these are Rendiv-original names, intentionally distin
 | Render control | `holdRender`, `releaseRender`, `abortRender`, `getPendingHoldCount`, `getPendingHoldLabels` |
 | Types | `CompositionConfig`, `CompositionEntry`, `SpringConfig`, `ResolveConfigFunction`, `HoldRenderOptions` |
 | Context fields | `accumulatedOffset`, `localOffset`, `parentOffset`, `playingRef` |
-
-Do NOT reintroduce Remotion-specific names (e.g., `useCurrentFrame`, `VideoConfig`, `AbsoluteFill`, `registerRoot`, `delayRender`, `cumulatedFrom`, `imperativePlaying`, `folderName`, `calculateMetadata`, `overshootClamping`, `interpolateColors`, `measureSpring`).
 
 ## Architecture
 

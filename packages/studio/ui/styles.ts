@@ -97,17 +97,6 @@ export const topBarStyles: Record<string, CSSProperties> = {
     borderRadius: 6,
     cursor: 'pointer',
     fontFamily: fonts.sans,
-    position: 'relative' as const,
-    overflow: 'hidden',
-    minWidth: 90,
-  },
-  renderProgress: {
-    position: 'absolute' as const,
-    left: 0,
-    bottom: 0,
-    height: 3,
-    backgroundColor: colors.accent,
-    transition: 'width 0.2s ease',
   },
 };
 
