@@ -1,0 +1,26 @@
+{
+  "name": "{{PROJECT_NAME}}",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "preview": "vite dev",
+    "studio": "rendiv studio src/index.tsx",
+    "render": "rendiv render src/index.tsx MyVideo out/my-video.mp4",
+    "still": "rendiv still src/index.tsx MyVideo out/still.png",
+    "compositions": "rendiv compositions src/index.tsx"
+  },
+  "dependencies": {
+    "@rendiv/core": "^0.1.0",
+    "@rendiv/player": "^0.1.0",
+    "@rendiv/cli": "^0.1.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^4.3.0",
+    "vite": "^6.0.0",
+    "typescript": "^5.7.0"
+  }
+}

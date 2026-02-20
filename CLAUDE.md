@@ -12,14 +12,16 @@ Monorepo: pnpm workspaces + Turborepo.
 | `packages/player` | `@rendiv/player` | `vite build` (library mode, ESM+CJS) | Browser `<Player>` component |
 | `packages/bundler` | `@rendiv/bundler` | `tsc` (ESM only) | Vite-based project bundler |
 | `packages/renderer` | `@rendiv/renderer` | `tsc` (ESM only) | Playwright frames + FFmpeg stitching |
-| `packages/cli` | `@rendiv/cli` | `tsc` (ESM only) | CLI: `rendiv render/still/compositions` |
+| `packages/cli` | `@rendiv/cli` | `tsc` (ESM only) | CLI: `rendiv render/still/compositions/studio` |
+| `packages/studio` | `@rendiv/studio` | `tsc` (ESM only) | Studio dev server, Vite plugin, server-side render queue |
 | `packages/tsconfig` | `@rendiv/tsconfig` | N/A | Shared TS configs (base, react-library, node-library) |
-| `examples/hello-world` | private | vite dev | Demo compositions (HelloWorld, SeriesDemo) |
+| `examples/hello-world` | private | vite dev | Demo compositions (HelloWorld, SeriesDemo, ShowcaseDemo) |
 
 ### Dependency graph
 ```
 cli → bundler → (vite)
     → renderer → (playwright, ffmpeg)
+    → studio → bundler, renderer
 player → @rendiv/core (peer)
 examples → @rendiv/core, player, cli
 ```
@@ -113,6 +115,13 @@ The bundler writes `__rendiv_entry__.jsx` + `__rendiv_entry__.html` in the user'
 
 ### Rendering pipeline
 Bundle (Vite build) → serve static files → Playwright headless Chromium → `__RENDIV_SET_FRAME__(n)` per frame → screenshot to PNG → FFmpeg stitch to MP4/WebM.
+
+### Studio architecture
+Studio is a Vite dev server launched via `rendiv studio <entry>`. Temp files (`entry.tsx`, `studio.html`, `favicon.svg`) are written to `.studio/` in the project root (needed for Vite module resolution). Studio UI files (`packages/studio/ui/*.tsx`) ship as uncompiled source — Vite processes them at dev time.
+
+**Server-side render queue**: Render jobs live in the Vite dev server's memory (not React state), so they persist across page refreshes and continue even if the browser tab is closed. The server exposes REST endpoints under `/__rendiv_api__/render/queue` (GET queue, POST add job, POST cancel, DELETE remove, POST clear). A self-draining `processQueue()` loop picks the next `'queued'` job and runs bundle → selectComposition → renderMedia. The client polls the server (500ms when active, 1000ms when idle).
+
+**Studio UI components**: `StudioApp` (main shell + polling), `Sidebar` (composition navigator with folders), `Preview` (Player-based preview), `Timeline` (frame scrubber with entries), `TopBar` (controls, render button, queue toggle), `RenderQueue` (job list with progress/cancel/remove).
 
 ## Testing
 

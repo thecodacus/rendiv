@@ -86,10 +86,11 @@ A local preview app that launches in your browser:
 - Frame-by-frame scrubbing
 - JSON-based props editor
 - Hot reload on every file change
+- Server-side render queue (persists across page refresh)
 - One-click render trigger
 
 ```bash
-npx rendiv studio
+npx rendiv studio src/index.tsx
 ```
 
 ### ⚡ Fast Parallel Rendering
@@ -159,10 +160,11 @@ const x = noise2D(frame * 0.05, 0) * 100;
 | Package | Description |
 |---------|-------------|
 | `@rendiv/core` | Core runtime — hooks, components, animation utilities |
-| `@rendiv/cli` | CLI for studio, render, still, and benchmark commands |
+| `@rendiv/cli` | CLI for studio, render, still, and compositions commands |
 | `@rendiv/player` | Embeddable React player component |
 | `@rendiv/renderer` | Node.js/Bun server-side rendering API |
 | `@rendiv/bundler` | Vite-based bundler for compositions |
+| `@rendiv/studio` | Studio dev server — preview, timeline, render queue |
 | `@rendiv/transitions` | Transition primitives (`fade`, `slide`, `wipe`, etc.) |
 | `@rendiv/shapes` | SVG shape helpers |
 | `@rendiv/paths` | SVG path manipulation utilities |
@@ -174,7 +176,6 @@ const x = noise2D(frame * 0.05, 0) * 100;
 | `@rendiv/google-fonts` | Google Fonts integration |
 | `@rendiv/gif` | GIF rendering support |
 | `@rendiv/captions` | Auto caption/subtitle support |
-| `@rendiv/studio` | Studio UI — preview, timeline, props editor |
 
 ---
 
@@ -215,7 +216,7 @@ setRootComponent(() => (
 ### Launch Studio
 
 ```bash
-npx rendiv studio
+npx rendiv studio src/index.tsx
 ```
 
 ### Render to video
@@ -230,7 +231,7 @@ npx rendiv render src/index.tsx MyVideo out/video.mp4
 
 | Command | Description |
 |---------|-------------|
-| `rendiv studio` | Start the Studio preview server |
+| `rendiv studio <entry>` | Start the Studio preview server |
 | `rendiv render <entry> <id> <output>` | Render a composition to video |
 | `rendiv still <entry> <id> <output>` | Export a single frame as PNG/JPEG |
 | `rendiv compositions <entry>` | List all registered compositions |
@@ -262,12 +263,12 @@ await renderMedia({
 
 | Layer | Technology |
 |-------|------------|
-| Core runtime | React 18+, TypeScript 5+ |
-| Bundler | Vite 5 |
+| Core runtime | React 18/19, TypeScript 5+ |
+| Bundler | Vite 6 |
 | Headless browser | Playwright (Chromium) |
 | Frame stitching | FFmpeg |
 | Monorepo tooling | pnpm workspaces + Turborepo |
-| Testing | Vitest + Playwright E2E |
+| Testing | Vitest + jsdom |
 | License | MIT |
 
 ---
@@ -277,14 +278,17 @@ await renderMedia({
 - [x] Core hooks and composition system
 - [x] Sequence, Series, Loop, Freeze primitives
 - [x] Spring and interpolation animation engine
-- [x] Headless Playwright renderer
-- [x] Studio preview UI
-- [x] Embeddable player
-- [x] Transitions package
-- [ ] Cloud / distributed rendering (v2)
-- [ ] AI prompt-to-video integration (v2)
-- [ ] Visual timeline editor GUI (v2)
-- [ ] Collaborative editing (v2)
+- [x] Media components (Video, Audio, Img, AnimatedImage, IFrame)
+- [x] Headless Playwright renderer with parallel frame capture
+- [x] Studio with preview, timeline, and server-side render queue
+- [x] Embeddable player component
+- [ ] Transition primitives (`@rendiv/transitions`)
+- [ ] SVG shapes and path animation (`@rendiv/shapes`, `@rendiv/paths`)
+- [ ] Perlin noise (`@rendiv/noise`)
+- [ ] Motion blur effects (`@rendiv/motion-blur`)
+- [ ] Lottie, Three.js, custom fonts integrations
+- [ ] Cloud / distributed rendering
+- [ ] Visual timeline editor GUI
 
 ---
 
@@ -325,7 +329,7 @@ However, Rendiv is **not a fork, port, or derivative of Remotion's codebase**. I
 | **Headless browser** | Playwright (Chromium) | Puppeteer with custom serving strategy |
 | **Spring physics** | Semi-implicit Euler integration | Analytical closed-form solution |
 | **Bezier solver** | Newton-Raphson algorithm | Pre-computed lookup table |
-| **Bundler** | Vite 5 (first-class) | Webpack (primary) |
+| **Bundler** | Vite 6 (first-class) | Webpack (primary) |
 | **Core API naming** | `useFrame`, `useCompositionConfig`, `Fill`, `holdRender`/`releaseRender` | `useCurrentFrame`, `useVideoConfig`, `AbsoluteFill`, `delayRender`/`continueRender` |
 | **Context model** | Independent context shape design | Remotion-specific context structure |
 | **Package manager** | pnpm + Turborepo | Custom tooling |

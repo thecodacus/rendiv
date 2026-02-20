@@ -1,0 +1,9 @@
+{
+  "extends": "@rendiv/tsconfig/node-library.json",
+  "include": ["src"],
+  "exclude": ["src/template"],
+  "compilerOptions": {
+    "outDir": "dist",
+    "rootDir": "src"
+  }
+}

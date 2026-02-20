@@ -10,3 +10,4 @@ out/
 coverage/
 tmp/
 **/**/.studio/
+.claude/
