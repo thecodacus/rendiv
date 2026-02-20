@@ -1,14 +1,20 @@
-import React, { type ReactNode } from 'react';
+import React, { useContext, type ReactNode } from 'react';
+import { FolderContext } from '../context/FolderContext';
 
 export interface FolderProps {
   name: string;
   children: ReactNode;
 }
 
-export const Folder: React.FC<FolderProps> = ({ children }) => {
-  // In Phase 1, Folder is a pass-through.
-  // Phase 2 (Studio) will use the `name` prop to group compositions in the sidebar.
-  return <>{children}</>;
+export const Folder: React.FC<FolderProps> = ({ name, children }) => {
+  const parentFolder = useContext(FolderContext);
+  const fullPath = parentFolder ? `${parentFolder}/${name}` : name;
+
+  return (
+    <FolderContext.Provider value={fullPath}>
+      {children}
+    </FolderContext.Provider>
+  );
 };
 
 Folder.displayName = 'Folder';

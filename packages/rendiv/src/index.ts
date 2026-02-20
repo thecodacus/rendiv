@@ -57,3 +57,4 @@ export {
   type CompositionEntry,
   type ResolveConfigFunction,
 } from './context/CompositionManagerContext';
+export { FolderContext } from './context/FolderContext';

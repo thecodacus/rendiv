@@ -3,6 +3,7 @@ import {
   CompositionManagerContext,
   type ResolveConfigFunction,
 } from '../context/CompositionManagerContext';
+import { FolderContext } from '../context/FolderContext';
 
 export interface CompositionProps<Props extends Record<string, unknown> = Record<string, unknown>> {
   id: string;
@@ -19,6 +20,7 @@ export function Composition<Props extends Record<string, unknown> = Record<strin
   props: CompositionProps<Props>
 ): null {
   const { registerComposition, unregisterComposition } = useContext(CompositionManagerContext);
+  const folder = useContext(FolderContext);
 
   useEffect(() => {
     registerComposition({
@@ -29,7 +31,7 @@ export function Composition<Props extends Record<string, unknown> = Record<strin
       width: props.width,
       height: props.height,
       defaultProps: (props.defaultProps ?? {}) as Record<string, unknown>,
-      group: null,
+      group: folder,
       resolveConfig: props.resolveConfig as ResolveConfigFunction<Record<string, unknown>> | undefined,
       type: 'composition',
     });

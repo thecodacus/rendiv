@@ -1,5 +1,6 @@
 import { useContext, useEffect, type ComponentType, type LazyExoticComponent } from 'react';
 import { CompositionManagerContext } from '../context/CompositionManagerContext';
+import { FolderContext } from '../context/FolderContext';
 
 export interface StillProps<Props extends Record<string, unknown> = Record<string, unknown>> {
   id: string;
@@ -13,6 +14,7 @@ export function Still<Props extends Record<string, unknown> = Record<string, unk
   props: StillProps<Props>
 ): null {
   const { registerComposition, unregisterComposition } = useContext(CompositionManagerContext);
+  const folder = useContext(FolderContext);
 
   useEffect(() => {
     registerComposition({
@@ -23,7 +25,7 @@ export function Still<Props extends Record<string, unknown> = Record<string, unk
       width: props.width,
       height: props.height,
       defaultProps: (props.defaultProps ?? {}) as Record<string, unknown>,
-      group: null,
+      group: folder,
       type: 'still',
     });
     return () => unregisterComposition(props.id);

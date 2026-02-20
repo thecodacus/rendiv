@@ -8,7 +8,8 @@
     "still": "rendiv still src/index.tsx HelloWorld out/still.png",
     "still:series": "rendiv still src/index.tsx SeriesDemo out/series-demo.png --frame 90",
     "compositions": "rendiv compositions src/index.tsx",
-    "preview": "vite dev"
+    "preview": "vite dev",
+    "studio": "rendiv studio src/index.tsx"
   },
   "dependencies": {
     "rendiv": "workspace:*",
