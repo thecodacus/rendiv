@@ -1,0 +1,9 @@
+{
+  "extends": "./base.json",
+  "compilerOptions": {
+    "module": "ESNext",
+    "outDir": "dist",
+    "rootDir": "src",
+    "types": ["node"]
+  }
+}

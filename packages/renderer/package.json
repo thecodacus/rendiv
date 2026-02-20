@@ -1,0 +1,30 @@
+{
+  "name": "@rendiv/renderer",
+  "version": "0.1.0",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@ffmpeg-installer/ffmpeg": "^1.1.0",
+    "playwright": "^1.49.0"
+  },
+  "devDependencies": {
+    "@rendiv/tsconfig": "workspace:*",
+    "@types/node": "^22.0.0",
+    "typescript": "^5.7.0"
+  }
+}

@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rendiv - Hello World Preview</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #111;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px;
+    }
+    h1 { margin-bottom: 24px; font-size: 24px; font-weight: 400; }
+    #root { width: 100%; max-width: 960px; }
+  </style>
+</head>
+<body>
+  <h1>Rendiv Player Preview</h1>
+  <div id="root"></div>
+  <script type="module" src="/src/preview.tsx"></script>
+</body>
+</html>
