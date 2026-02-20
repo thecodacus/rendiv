@@ -7,7 +7,7 @@ import {
   Sequence,
   interpolate,
   spring,
-} from 'rendiv';
+} from '@rendiv/core';
 import { HelloWorld } from './HelloWorld';
 import { SeriesDemo } from './SeriesDemo';
 

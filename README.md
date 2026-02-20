@@ -5,7 +5,7 @@
 **Programmatic video and motion graphics for the open web.**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
-[![npm version](https://img.shields.io/npm/v/rendiv.svg)](https://www.npmjs.com/package/rendiv)
+[![npm version](https://img.shields.io/npm/v/@rendiv/core.svg)](https://www.npmjs.com/package/@rendiv/core)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5%2B-blue)](https://www.typescriptlang.org/)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/rendiv-dev/rendiv/pulls)
 
@@ -21,7 +21,7 @@ Fully open source. No licensing fees. No cloud dependency. Just code.
 Rendiv treats **a video as a pure function of time**. Each frame is a React component snapshot at a specific point in time. By changing what your component renders based on the current frame number, you produce animation, motion graphics, and full video productions — all in TypeScript.
 
 ```tsx
-import { useFrame, useCompositionConfig, Fill } from 'rendiv';
+import { useFrame, useCompositionConfig, Fill } from '@rendiv/core';
 
 export const MyVideo = () => {
   const frame = useFrame();
@@ -158,7 +158,7 @@ const x = noise2D(frame * 0.05, 0) * 100;
 
 | Package | Description |
 |---------|-------------|
-| `rendiv` | Core runtime — hooks, components, animation utilities |
+| `@rendiv/core` | Core runtime — hooks, components, animation utilities |
 | `@rendiv/cli` | CLI for studio, render, still, and benchmark commands |
 | `@rendiv/player` | Embeddable React player component |
 | `@rendiv/renderer` | Node.js/Bun server-side rendering API |
@@ -189,15 +189,15 @@ npm run dev
 ### Manual install
 
 ```bash
-npm install rendiv @rendiv/cli
+npm install @rendiv/core @rendiv/cli
 ```
 
 ### Register your root and composition
 
 ```tsx
 // src/index.tsx
-import { setRootComponent } from 'rendiv';
-import { Composition } from 'rendiv';
+import { setRootComponent } from '@rendiv/core';
+import { Composition } from '@rendiv/core';
 import { MyVideo } from './MyVideo';
 
 setRootComponent(() => (

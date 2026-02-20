@@ -14,7 +14,7 @@ import {
   CompositionContext,
   RendivEnvironmentContext,
   type CompositionConfig,
-} from 'rendiv';
+} from '@rendiv/core';
 import { usePlayer } from './use-player';
 import { PlayerEmitter, type PlayerEventMap } from './PlayerEmitter';
 import { PlayerControls } from './PlayerControls';

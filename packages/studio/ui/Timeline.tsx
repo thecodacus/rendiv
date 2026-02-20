@@ -1,5 +1,5 @@
 import React, { useRef, useState, useCallback, useEffect, useMemo } from 'react';
-import type { TimelineEntry } from 'rendiv';
+import type { TimelineEntry } from '@rendiv/core';
 import { colors, fonts } from './styles';
 
 interface TimelineProps {

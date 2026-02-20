@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import type { CompositionEntry } from 'rendiv';
+import type { CompositionEntry } from '@rendiv/core';
 import { topBarStyles, colors } from './styles';
 // @ts-ignore — Vite asset import, no types needed
 import logoUrl from './logo.svg';

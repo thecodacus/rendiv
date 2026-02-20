@@ -1,6 +1,6 @@
 import React, { useRef, useState, useCallback, useEffect } from 'react';
 import { Player, type PlayerRef } from '@rendiv/player';
-import type { CompositionEntry } from 'rendiv';
+import type { CompositionEntry } from '@rendiv/core';
 import { previewStyles, colors, fonts } from './styles';
 
 interface PreviewProps {

@@ -5,7 +5,7 @@ import {
   CompositionManagerContext,
   type CompositionEntry,
   type TimelineEntry,
-} from 'rendiv';
+} from '@rendiv/core';
 import { Sidebar } from './Sidebar';
 import { Preview } from './Preview';
 import { TopBar } from './TopBar';

@@ -23,7 +23,7 @@
   "peerDependencies": {
     "react": "^18.0.0 || ^19.0.0",
     "react-dom": "^18.0.0 || ^19.0.0",
-    "rendiv": "workspace:*"
+    "@rendiv/core": "workspace:*"
   },
   "devDependencies": {
     "@rendiv/tsconfig": "workspace:*",
@@ -31,7 +31,7 @@
     "@types/react-dom": "^19.0.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "rendiv": "workspace:*",
+    "@rendiv/core": "workspace:*",
     "vite": "^6.0.0",
     "vite-plugin-dts": "^4.3.0",
     "typescript": "^5.7.0"

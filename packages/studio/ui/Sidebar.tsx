@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import type { CompositionEntry } from 'rendiv';
+import type { CompositionEntry } from '@rendiv/core';
 import { sidebarStyles, colors } from './styles';
 
 interface SidebarProps {

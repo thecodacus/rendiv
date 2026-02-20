@@ -23,6 +23,9 @@ importers:
       '@rendiv/cli':
         specifier: workspace:*
         version: link:../../packages/cli
+      '@rendiv/core':
+        specifier: workspace:*
+        version: link:../../packages/rendiv
       '@rendiv/player':
         specifier: workspace:*
         version: link:../../packages/player
@@ -32,9 +35,6 @@ importers:
       react-dom:
         specifier: ^19.0.0
         version: 19.2.4(react@19.2.4)
-      rendiv:
-        specifier: workspace:*
-        version: link:../../packages/rendiv
     devDependencies:
       '@rendiv/tsconfig':
         specifier: workspace:*
@@ -107,6 +107,9 @@ importers:
 
   packages/player:
     devDependencies:
+      '@rendiv/core':
+        specifier: workspace:*
+        version: link:../rendiv
       '@rendiv/tsconfig':
         specifier: workspace:*
         version: link:../tsconfig
@@ -122,9 +125,6 @@ importers:
       react-dom:
         specifier: ^19.0.0
         version: 19.2.4(react@19.2.4)
-      rendiv:
-        specifier: workspace:*
-        version: link:../rendiv
       typescript:
         specifier: ^5.7.0
         version: 5.9.3

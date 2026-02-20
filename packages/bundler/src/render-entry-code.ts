@@ -9,7 +9,7 @@ export function generateRenderEntryCode(userEntryPoint: string): string {
 
   return `
 import '${importPath}';
-import { getRootComponent, CompositionManagerContext, TimelineContext, CompositionContext, RendivEnvironmentContext, getPendingHoldCount } from 'rendiv';
+import { getRootComponent, CompositionManagerContext, TimelineContext, CompositionContext, RendivEnvironmentContext, getPendingHoldCount } from '@rendiv/core';
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 

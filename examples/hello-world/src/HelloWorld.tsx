@@ -1,5 +1,5 @@
 import React from 'react';
-import { useFrame, useCompositionConfig, Fill, interpolate, spring } from 'rendiv';
+import { useFrame, useCompositionConfig, Fill, interpolate, spring } from '@rendiv/core';
 
 export const HelloWorld: React.FC = () => {
   const frame = useFrame();

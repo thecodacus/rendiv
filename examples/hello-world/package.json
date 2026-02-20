@@ -12,7 +12,7 @@
     "studio": "rendiv studio src/index.tsx"
   },
   "dependencies": {
-    "rendiv": "workspace:*",
+    "@rendiv/core": "workspace:*",
     "@rendiv/player": "workspace:*",
     "@rendiv/cli": "workspace:*",
     "react": "^19.0.0",

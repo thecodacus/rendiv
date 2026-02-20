@@ -1,5 +1,5 @@
 import React from "react";
-import { setRootComponent, Composition, Folder } from "rendiv";
+import { setRootComponent, Composition, Folder } from "@rendiv/core";
 import { HelloWorld } from "./HelloWorld";
 import { SeriesDemo } from "./SeriesDemo";
 import { ShowcaseDemo } from "./ShowcaseDemo";

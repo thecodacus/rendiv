@@ -10,7 +10,7 @@ import {
   interpolate,
   spring,
   blendColors,
-} from 'rendiv';
+} from '@rendiv/core';
 
 /** Scene 1: Title card with spring animation */
 function TitleScene(): React.ReactElement {

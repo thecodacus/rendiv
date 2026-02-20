@@ -8,7 +8,7 @@ Monorepo: pnpm workspaces + Turborepo.
 
 | Package | npm name | Build | Purpose |
 |---|---|---|---|
-| `packages/rendiv` | `rendiv` | `vite build` (library mode, ESM+CJS) | Core: hooks, components, animation, contexts |
+| `packages/rendiv` | `@rendiv/core` | `vite build` (library mode, ESM+CJS) | Core: hooks, components, animation, contexts |
 | `packages/player` | `@rendiv/player` | `vite build` (library mode, ESM+CJS) | Browser `<Player>` component |
 | `packages/bundler` | `@rendiv/bundler` | `tsc` (ESM only) | Vite-based project bundler |
 | `packages/renderer` | `@rendiv/renderer` | `tsc` (ESM only) | Playwright frames + FFmpeg stitching |
@@ -20,8 +20,8 @@ Monorepo: pnpm workspaces + Turborepo.
 ```
 cli → bundler → (vite)
     → renderer → (playwright, ffmpeg)
-player → rendiv (peer)
-examples → rendiv, player, cli
+player → @rendiv/core (peer)
+examples → @rendiv/core, player, cli
 ```
 
 ## Commands
@@ -73,7 +73,7 @@ pnpm clean        # Remove dist/ from all packages
 
 ## Public API Names
 
-Key exports from `rendiv`:
+Key exports from `@rendiv/core`:
 
 | Category | Names |
 |---|---|
