@@ -4,7 +4,9 @@
   "type": "module",
   "scripts": {
     "render": "rendiv render src/index.tsx HelloWorld out/hello.mp4",
+    "render:series": "rendiv render src/index.tsx SeriesDemo out/series-demo.mp4",
     "still": "rendiv still src/index.tsx HelloWorld out/still.png",
+    "still:series": "rendiv still src/index.tsx SeriesDemo out/series-demo.png --frame 90",
     "compositions": "rendiv compositions src/index.tsx",
     "preview": "vite dev"
   },

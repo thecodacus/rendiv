@@ -14,7 +14,7 @@ Monorepo: pnpm workspaces + Turborepo.
 | `packages/renderer` | `@rendiv/renderer` | `tsc` (ESM only) | Playwright frames + FFmpeg stitching |
 | `packages/cli` | `@rendiv/cli` | `tsc` (ESM only) | CLI: `rendiv render/still/compositions` |
 | `packages/tsconfig` | `@rendiv/tsconfig` | N/A | Shared TS configs (base, react-library, node-library) |
-| `examples/hello-world` | private | vite dev | Demo composition |
+| `examples/hello-world` | private | vite dev | Demo compositions (HelloWorld, SeriesDemo) |
 
 ### Dependency graph
 ```
@@ -28,7 +28,7 @@ examples → rendiv, player, cli
 
 ```bash
 pnpm build        # Build all packages (turbo, dependency-ordered)
-pnpm test         # Run all tests (24 tests in packages/rendiv)
+pnpm test         # Run all tests (76 tests in packages/rendiv)
 pnpm typecheck    # Type-check all packages
 pnpm clean        # Remove dist/ from all packages
 ```
@@ -54,11 +54,13 @@ pnpm clean        # Remove dist/ from all packages
 - Function components with named export
 - `forwardRef` when imperative ref is needed (e.g., `Fill`, `Player`)
 - `<Composition>` and `<Still>` render `null` — registration-only via `useEffect` into `CompositionManagerContext`
+- Compound component pattern: `Series` + `Series.Sequence` (marker child, throws if rendered directly)
 
 ### Contexts
 - Live in `packages/rendiv/src/context/` as `.ts` files
 - Pattern: `createContext<TypeValue>(default)` + exported interface
 - Five contexts: `TimelineContext`, `CompositionContext`, `SequenceContext`, `RendivEnvironmentContext`, `CompositionManagerContext`
+- Components like `Freeze` and `Loop` override `TimelineContext` (and optionally `SequenceContext`) to alter the frame seen by children
 
 ### Hooks
 - Live in `packages/rendiv/src/hooks/`, prefixed `use-`
@@ -77,10 +79,12 @@ Key exports from `rendiv` (these are Rendiv-original names, intentionally distin
 |---|---|
 | Hooks | `useFrame`, `useCompositionConfig` |
 | Components | `Composition`, `Sequence`, `Fill`, `Still`, `Folder` |
+| Core Components | `Series`, `Series.Sequence`, `Loop`, `Freeze` |
+| Media Components | `Img`, `Video`, `Audio`, `AnimatedImage`, `IFrame` |
 | Animation | `interpolate`, `spring`, `getSpringDuration`, `Easing`, `blendColors` |
 | Registration | `setRootComponent`, `getRootComponent` |
-| Render control | `holdRender`, `releaseRender`, `abortRender`, `getPendingHoldCount` |
-| Types | `CompositionConfig`, `CompositionEntry`, `SpringConfig`, `ResolveConfigFunction` |
+| Render control | `holdRender`, `releaseRender`, `abortRender`, `getPendingHoldCount`, `getPendingHoldLabels` |
+| Types | `CompositionConfig`, `CompositionEntry`, `SpringConfig`, `ResolveConfigFunction`, `HoldRenderOptions` |
 | Context fields | `accumulatedOffset`, `localOffset`, `parentOffset`, `playingRef` |
 
 Do NOT reintroduce Remotion-specific names (e.g., `useCurrentFrame`, `VideoConfig`, `AbsoluteFill`, `registerRoot`, `delayRender`, `cumulatedFrom`, `imperativePlaying`, `folderName`, `calculateMetadata`, `overshootClamping`, `interpolateColors`, `measureSpring`).
@@ -89,6 +93,19 @@ Do NOT reintroduce Remotion-specific names (e.g., `useCurrentFrame`, `VideoConfi
 
 ### Frame-driven rendering
 Video = function of frame number. `useFrame()` returns the current frame, offset by any `<Sequence>` nesting via `SequenceContext`.
+
+### Context override pattern
+- `<Freeze frame={N}>` overrides `TimelineContext.frame` to freeze children at frame N
+- `<Loop durationInFrames={N}>` overrides both `TimelineContext` and `SequenceContext` using modulo arithmetic so children see frames in `[0, N)`
+- `<Series>` delegates to `<Sequence>` with auto-calculated `from` offsets
+
+### holdRender pattern
+Media components (`Img`, `Video`, `IFrame`, `AnimatedImage`) automatically call `holdRender()` on mount and `releaseRender()` on load/error/unmount. `holdRender` accepts an optional `{ timeoutInMilliseconds }` that fires a descriptive error on timeout. The renderer waits for `getPendingHoldCount() === 0` before capturing each frame.
+
+### Media component environment awareness
+`Video` and `Audio` read `RendivEnvironmentContext` to adapt behavior:
+- **Rendering mode**: `Video` pauses and seeks precisely per frame with holdRender; `Audio` renders null (not captured in screenshots)
+- **Player/Studio mode**: Both sync playback naturally with drift correction
 
 ### Composition registration
 `<Composition>` registers metadata into `CompositionManagerContext` via `useEffect` and renders nothing. Player, Studio, and Renderer each provide their own context providers that wrap the actual component.
@@ -105,5 +122,6 @@ Bundle (Vite build) → serve static files → Playwright headless Chromium → 
 - Location: `packages/rendiv/src/__tests__/<subject>.test.ts[x]`
 - Uses `@testing-library/react` for component tests
 - Tests wrap components with real context providers (no mocking)
-- Only `packages/rendiv` has tests currently
-
+- Pattern: `renderAtFrame(frame, ui)` helper + `FrameDisplay` component to assert frame values
+- `_resetPendingHolds()` from `delay-render.ts` used in `beforeEach` to reset global hold state between tests
+- Only `packages/rendiv` has tests currently (76 tests across 12 files)
