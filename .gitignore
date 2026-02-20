@@ -9,3 +9,4 @@ out/
 *.log
 coverage/
 tmp/
+**/**/.studio/

@@ -17,8 +17,9 @@ export interface StudioResult {
   close: () => Promise<void>;
 }
 
-const ENTRY_FILE = '__rendiv_studio_entry__.tsx';
-const HTML_FILE = '__rendiv_studio__.html';
+const STUDIO_DIR = '.studio';
+const ENTRY_FILE = 'entry.tsx';
+const HTML_FILE = 'studio.html';
 
 export async function startStudio(options: StudioOptions): Promise<StudioResult> {
   const { entryPoint, port = 3000, publicDir = 'public' } = options;
@@ -32,12 +33,18 @@ export async function startStudio(options: StudioOptions): Promise<StudioResult>
   const thisDir = path.dirname(fileURLToPath(import.meta.url));
   const studioUiDir = path.resolve(thisDir, '..', 'ui');
 
-  // Generate and write temp entry files in the project root
-  const entryCode = generateStudioEntryCode(absoluteEntry, studioUiDir, entryPoint);
-  const htmlCode = generateStudioHtml(ENTRY_FILE);
+  // Generate and write temp entry files under .studio/
+  const studioDir = path.join(cwd, STUDIO_DIR);
+  fs.mkdirSync(studioDir, { recursive: true });
 
-  const entryJsPath = path.join(cwd, ENTRY_FILE);
-  const entryHtmlPath = path.join(cwd, HTML_FILE);
+  const studioEntryFile = `${STUDIO_DIR}/${ENTRY_FILE}`;
+  const studioHtmlFile = `${STUDIO_DIR}/${HTML_FILE}`;
+
+  const entryCode = generateStudioEntryCode(absoluteEntry, studioUiDir, entryPoint);
+  const htmlCode = generateStudioHtml(studioEntryFile);
+
+  const entryJsPath = path.join(studioDir, ENTRY_FILE);
+  const entryHtmlPath = path.join(studioDir, HTML_FILE);
 
   fs.writeFileSync(entryJsPath, entryCode);
   fs.writeFileSync(entryHtmlPath, htmlCode);
@@ -51,7 +58,7 @@ export async function startStudio(options: StudioOptions): Promise<StudioResult>
     publicDir: path.resolve(cwd, publicDir),
     plugins: [
       react(),
-      rendivStudioPlugin({ studioHtmlFileName: HTML_FILE, entryPoint: absoluteEntry }),
+      rendivStudioPlugin({ studioHtmlFileName: studioHtmlFile, entryPoint: absoluteEntry }),
     ],
     resolve: {
       // Force Vite to resolve these packages from the user's project root,
@@ -63,7 +70,7 @@ export async function startStudio(options: StudioOptions): Promise<StudioResult>
       open: true,
     },
     optimizeDeps: {
-      entries: [ENTRY_FILE],
+      entries: [studioEntryFile],
       exclude: ['rendiv', '@rendiv/player'],
     },
     logLevel: 'info',
@@ -75,8 +82,9 @@ export async function startStudio(options: StudioOptions): Promise<StudioResult>
   const url = `http://localhost:${resolvedPort}`;
 
   const cleanup = () => {
-    if (fs.existsSync(entryJsPath)) fs.unlinkSync(entryJsPath);
-    if (fs.existsSync(entryHtmlPath)) fs.unlinkSync(entryHtmlPath);
+    if (fs.existsSync(studioDir)) {
+      fs.rmSync(studioDir, { recursive: true, force: true });
+    }
   };
 
   return {

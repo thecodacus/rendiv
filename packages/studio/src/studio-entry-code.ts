@@ -38,7 +38,7 @@ export function generateStudioHtml(entryFileName: string): string {
 </head>
 <body>
   <div id="root"></div>
-  <script type="module" src="./${entryFileName}"></script>
+  <script type="module" src="/${entryFileName}"></script>
 </body>
 </html>`;
 }
