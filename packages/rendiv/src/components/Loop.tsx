@@ -42,6 +42,7 @@ export function Loop({
 
   const loopedSequence = useMemo<SequenceContextValue>(
     () => ({
+      id: null,
       from: parentSequence.accumulatedOffset,
       durationInFrames,
       parentOffset: parentSequence.accumulatedOffset,

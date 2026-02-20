@@ -1,6 +1,7 @@
 import { createContext } from 'react';
 
 export interface SequenceContextValue {
+  id: string | null;
   from: number;
   durationInFrames: number;
   parentOffset: number;
@@ -9,6 +10,7 @@ export interface SequenceContextValue {
 }
 
 export const SequenceContext = createContext<SequenceContextValue>({
+  id: null,
   from: 0,
   durationInFrames: Infinity,
   parentOffset: 0,

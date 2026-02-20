@@ -5,6 +5,7 @@ export interface TimelineEntry {
   name: string;
   from: number;
   durationInFrames: number;
+  parentId: string | null;
 }
 
 export interface TimelineRegistryContextValue {

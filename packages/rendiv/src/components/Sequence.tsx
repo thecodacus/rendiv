@@ -36,7 +36,8 @@ export const Sequence: React.FC<SequenceProps> = ({
       w.__RENDIV_TIMELINE_ENTRIES__ = new Map<string, unknown>();
     }
     const entries = w.__RENDIV_TIMELINE_ENTRIES__ as Map<string, unknown>;
-    const entry = { id, name: name ?? 'Sequence', from: absoluteFrom, durationInFrames };
+    const parentId = parentSequence.id;
+    const entry = { id, name: name ?? 'Sequence', from: absoluteFrom, durationInFrames, parentId };
     entries.set(id, entry);
     document.dispatchEvent(new CustomEvent('rendiv:timeline-sync'));
     return () => {
@@ -47,13 +48,14 @@ export const Sequence: React.FC<SequenceProps> = ({
 
   const contextValue = useMemo<SequenceContextValue>(
     () => ({
+      id,
       from: absoluteFrom,
       durationInFrames,
       parentOffset: parentSequence.accumulatedOffset,
       accumulatedOffset: absoluteFrom,
       localOffset: from,
     }),
-    [absoluteFrom, durationInFrames, parentSequence.accumulatedOffset, from]
+    [id, absoluteFrom, durationInFrames, parentSequence.accumulatedOffset, from]
   );
 
   // Not visible yet or already past

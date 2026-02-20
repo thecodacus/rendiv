@@ -10,7 +10,7 @@ import { Sidebar } from './Sidebar';
 import { Preview } from './Preview';
 import { TopBar } from './TopBar';
 import { Timeline } from './Timeline';
-import { layoutStyles } from './styles';
+import { layoutStyles, scrollbarCSS } from './styles';
 
 // Read the entry point from the generated code's data attribute (set by studio-entry-code)
 const ENTRY_POINT = (window as Record<string, unknown>).__RENDIV_STUDIO_ENTRY__ as string ?? 'src/index.tsx';
@@ -126,6 +126,7 @@ const StudioApp: React.FC = () => {
 
   return (
     <div style={layoutStyles.root}>
+      <style dangerouslySetInnerHTML={{ __html: scrollbarCSS }} />
       <TopBar composition={selectedComposition} entryPoint={ENTRY_POINT} />
 
       <div style={layoutStyles.body}>
@@ -166,6 +167,7 @@ const StudioApp: React.FC = () => {
               totalFrames={selectedComposition.durationInFrames}
               fps={selectedComposition.fps}
               onSeek={handleTimelineSeek}
+              compositionName={selectedComposition.id}
             />
           </div>
         </div>

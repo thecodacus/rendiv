@@ -95,8 +95,13 @@ export const Preview: React.FC<PreviewProps> = ({
     };
   }, [composition.id]);
 
-  const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent) => {
+  // Global keyboard shortcuts — work regardless of which panel has focus
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Skip when user is typing in an input or textarea
+      const tag = (e.target as HTMLElement)?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+
       if (e.key === ' ' || e.key === 'k' || e.key === 'K') {
         e.preventDefault();
         if (isPlaying) {
@@ -132,9 +137,10 @@ export const Preview: React.FC<PreviewProps> = ({
           playerRef.current?.play();
         }
       }
-    },
-    [playbackRate, onPlaybackRateChange, isPlaying, currentFrame, composition.durationInFrames],
-  );
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [playbackRate, onPlaybackRateChange, isPlaying, currentFrame, composition.durationInFrames]);
 
   const handlePropsChange = useCallback(
     (text: string) => {
@@ -153,7 +159,7 @@ export const Preview: React.FC<PreviewProps> = ({
   const durationSeconds = (composition.durationInFrames / composition.fps).toFixed(1);
 
   return (
-    <div style={previewStyles.container} onKeyDown={handleKeyDown} tabIndex={0}>
+    <div style={previewStyles.container}>
       {/* Metadata bar */}
       <div style={previewStyles.metadataBar}>
         <span>

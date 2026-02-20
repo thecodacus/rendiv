@@ -152,6 +152,34 @@ export const sidebarStyles: Record<string, CSSProperties> = {
   },
 };
 
+// Global scrollbar CSS — injected once via <style> in StudioApp
+export const scrollbarCSS = `
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: ${colors.border} transparent;
+}
+
+/* WebKit (Chrome, Safari, Edge) */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: ${colors.border};
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: ${colors.textSecondary};
+}
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+`;
+
 export const previewStyles: Record<string, CSSProperties> = {
   container: {
     flex: 1,

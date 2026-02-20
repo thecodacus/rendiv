@@ -8,12 +8,14 @@ interface TimelineProps {
   totalFrames: number;
   fps: number;
   onSeek: (frame: number) => void;
+  compositionName: string;
 }
 
 const LABEL_WIDTH = 280;
 const RULER_HEIGHT = 28;
 const TRACK_HEIGHT = 40;
-const MIN_TRACKS = 0;
+const INDENT_PER_DEPTH = 16;
+const COMPOSITION_ROW_ID = '__composition__';
 
 const BLOCK_COLORS = [
   { bg: 'rgba(74, 158, 255, 0.5)', border: '#4a9eff' },
@@ -24,39 +26,42 @@ const BLOCK_COLORS = [
   { bg: 'rgba(219, 171, 9, 0.5)', border: '#dbab09' },
 ];
 
-function assignTracks(
-  entries: TimelineEntry[],
-  totalFrames: number,
-): { trackIndex: number; entry: TimelineEntry }[] {
-  // Cap Infinity durations to totalFrames
-  const capped = entries.map((e) => ({
-    ...e,
-    durationInFrames: Number.isFinite(e.durationInFrames)
-      ? e.durationInFrames
-      : totalFrames - e.from,
-  }));
-  const sorted = [...capped].sort((a, b) => a.from - b.from);
-  const trackEnds: number[] = [];
-  const result: { trackIndex: number; entry: TimelineEntry }[] = [];
+interface TreeNode {
+  entry: TimelineEntry;
+  children: TreeNode[];
+}
 
-  for (const entry of sorted) {
-    const end = entry.from + entry.durationInFrames;
-    let assigned = false;
-    for (let t = 0; t < trackEnds.length; t++) {
-      if (entry.from >= trackEnds[t]) {
-        trackEnds[t] = end;
-        result.push({ trackIndex: t, entry });
-        assigned = true;
-        break;
+interface VisibleRow {
+  kind: 'composition' | 'entry';
+  depth: number;
+  id: string;
+  name: string;
+  from: number;
+  durationInFrames: number;
+  hasChildren: boolean;
+  isExpanded: boolean;
+}
+
+function buildTree(entries: TimelineEntry[]): TreeNode[] {
+  const nodeMap = new Map<string, TreeNode>();
+  for (const entry of entries) {
+    nodeMap.set(entry.id, { entry, children: [] });
+  }
+  const roots: TreeNode[] = [];
+  for (const entry of entries) {
+    const node = nodeMap.get(entry.id)!;
+    if (entry.parentId === null) {
+      roots.push(node);
+    } else {
+      const parent = nodeMap.get(entry.parentId);
+      if (parent) {
+        parent.children.push(node);
+      } else {
+        roots.push(node);
       }
     }
-    if (!assigned) {
-      trackEnds.push(end);
-      result.push({ trackIndex: trackEnds.length - 1, entry });
-    }
   }
-
-  return result;
+  return roots;
 }
 
 function getRulerTicks(
@@ -94,10 +99,23 @@ export const Timeline: React.FC<TimelineProps> = ({
   totalFrames,
   fps,
   onSeek,
+  compositionName,
 }) => {
   const timelineRef = useRef<HTMLDivElement>(null);
   const [timelineWidth, setTimelineWidth] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(
+    () => new Set([COMPOSITION_ROW_ID]),
+  );
+
+  const toggleExpanded = useCallback((id: string) => {
+    setExpandedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
 
   // Track timeline area width
   useEffect(() => {
@@ -112,15 +130,49 @@ export const Timeline: React.FC<TimelineProps> = ({
     return () => observer.disconnect();
   }, []);
 
-  // Assign entries to tracks
-  const trackAssignments = useMemo(
-    () => assignTracks(entries, totalFrames),
-    [entries, totalFrames],
-  );
-  const numTracks = Math.max(
-    MIN_TRACKS,
-    trackAssignments.reduce((max, a) => Math.max(max, a.trackIndex + 1), 0),
-  );
+  // Build visible rows from tree
+  const visibleRows = useMemo(() => {
+    const rows: VisibleRow[] = [];
+    const tree = buildTree(entries);
+
+    // Virtual composition root row
+    rows.push({
+      kind: 'composition',
+      depth: 0,
+      id: COMPOSITION_ROW_ID,
+      name: compositionName,
+      from: 0,
+      durationInFrames: totalFrames,
+      hasChildren: tree.length > 0,
+      isExpanded: expandedIds.has(COMPOSITION_ROW_ID),
+    });
+
+    if (!expandedIds.has(COMPOSITION_ROW_ID)) return rows;
+
+    function walk(nodes: TreeNode[], depth: number) {
+      const sorted = [...nodes].sort((a, b) => a.entry.from - b.entry.from);
+      for (const node of sorted) {
+        const hasChildren = node.children.length > 0;
+        const isExpanded = expandedIds.has(node.entry.id);
+        rows.push({
+          kind: 'entry',
+          depth,
+          id: node.entry.id,
+          name: node.entry.name,
+          from: node.entry.from,
+          durationInFrames: node.entry.durationInFrames,
+          hasChildren,
+          isExpanded,
+        });
+        if (hasChildren && isExpanded) {
+          walk(node.children, depth + 1);
+        }
+      }
+    }
+
+    walk(tree, 1);
+    return rows;
+  }, [entries, totalFrames, compositionName, expandedIds]);
 
   // Calculate scale: pixels per frame
   const availableWidth = timelineWidth - LABEL_WIDTH;
@@ -147,7 +199,6 @@ export const Timeline: React.FC<TimelineProps> = ({
 
   const handleMouseDown = useCallback(
     (e: React.MouseEvent) => {
-      // Only respond to clicks in the timeline area (not label column)
       const el = timelineRef.current;
       if (!el) return;
       const rect = el.getBoundingClientRect();
@@ -180,7 +231,7 @@ export const Timeline: React.FC<TimelineProps> = ({
   }, [isDragging, frameFromMouseEvent, onSeek]);
 
   const playheadLeft = LABEL_WIDTH + currentFrame * scale;
-  const totalHeight = RULER_HEIGHT + numTracks * TRACK_HEIGHT;
+  const totalHeight = RULER_HEIGHT + visibleRows.length * TRACK_HEIGHT;
 
   return (
     <div
@@ -203,7 +254,6 @@ export const Timeline: React.FC<TimelineProps> = ({
           borderBottom: `1px solid ${colors.border}`,
         }}
       >
-        {/* Label column header */}
         <div
           style={{
             width: LABEL_WIDTH,
@@ -211,7 +261,6 @@ export const Timeline: React.FC<TimelineProps> = ({
             borderRight: `1px solid ${colors.border}`,
           }}
         />
-        {/* Ruler ticks */}
         <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
           {ticks.map((tick) => (
             <div
@@ -249,84 +298,139 @@ export const Timeline: React.FC<TimelineProps> = ({
         </div>
       </div>
 
-      {/* Tracks */}
-      {Array.from({ length: numTracks }, (_, trackIdx) => (
-        <div
-          key={trackIdx}
-          style={{
-            display: 'flex',
-            height: TRACK_HEIGHT,
-            borderBottom:
-              trackIdx < numTracks - 1 ? `1px solid ${colors.border}` : undefined,
-          }}
-        >
-          {/* Track label */}
+      {/* Rows */}
+      {visibleRows.map((row, rowIdx) => {
+        const isComposition = row.kind === 'composition';
+        const colorIdx = rowIdx % BLOCK_COLORS.length;
+        const color = BLOCK_COLORS[colorIdx];
+        const cappedDuration = Number.isFinite(row.durationInFrames)
+          ? row.durationInFrames
+          : totalFrames - row.from;
+        const blockLeft = row.from * scale;
+        const blockWidth = Math.max(2, cappedDuration * scale);
+        const indent = row.depth * INDENT_PER_DEPTH;
+
+        return (
           <div
+            key={row.id}
             style={{
-              width: LABEL_WIDTH,
-              minWidth: LABEL_WIDTH,
-              borderRight: `1px solid ${colors.border}`,
               display: 'flex',
-              alignItems: 'center',
-              paddingLeft: 12,
-              fontSize: 11,
-              color: colors.textSecondary,
-              fontFamily: fonts.sans,
+              height: TRACK_HEIGHT,
+              borderBottom:
+                rowIdx < visibleRows.length - 1
+                  ? `1px solid ${colors.border}`
+                  : undefined,
             }}
           >
-            Track {trackIdx + 1}
-          </div>
-          {/* Track blocks */}
-          <div style={{ flex: 1, position: 'relative' }}>
-            {trackAssignments
-              .filter((a) => a.trackIndex === trackIdx)
-              .map((a, blockIdx) => {
-                const color = BLOCK_COLORS[blockIdx % BLOCK_COLORS.length];
-                const left = a.entry.from * scale;
-                const dur = Number.isFinite(a.entry.durationInFrames)
-                  ? a.entry.durationInFrames
-                  : totalFrames - a.entry.from;
-                const width = Math.max(2, dur * scale);
-                return (
-                  <div
-                    key={a.entry.id}
+            {/* Label column */}
+            <div
+              style={{
+                width: LABEL_WIDTH,
+                minWidth: LABEL_WIDTH,
+                borderRight: `1px solid ${colors.border}`,
+                display: 'flex',
+                alignItems: 'center',
+                paddingLeft: 12 + indent,
+                gap: 6,
+                fontSize: 11,
+                color: isComposition ? colors.textPrimary : colors.textSecondary,
+                fontFamily: fonts.sans,
+                cursor: row.hasChildren ? 'pointer' : 'default',
+                userSelect: 'none',
+              }}
+              onClick={row.hasChildren ? () => toggleExpanded(row.id) : undefined}
+            >
+              {row.hasChildren ? (
+                <span style={{ fontSize: 9, width: 10, flexShrink: 0 }}>
+                  {row.isExpanded ? '\u25BC' : '\u25B6'}
+                </span>
+              ) : (
+                <span style={{ width: 10, flexShrink: 0 }} />
+              )}
+              <span
+                style={{
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                  fontWeight: isComposition ? 600 : 400,
+                }}
+              >
+                {row.name}
+              </span>
+            </div>
+
+            {/* Track area */}
+            <div style={{ flex: 1, position: 'relative' }}>
+              {isComposition ? (
+                <div
+                  style={{
+                    position: 'absolute',
+                    left: 0,
+                    top: 4,
+                    width: Math.max(2, totalFrames * scale),
+                    height: TRACK_HEIGHT - 8,
+                    backgroundColor: 'rgba(88, 166, 255, 0.15)',
+                    border: '1px solid rgba(88, 166, 255, 0.3)',
+                    borderRadius: 4,
+                    display: 'flex',
+                    alignItems: 'center',
+                    paddingLeft: 8,
+                    overflow: 'hidden',
+                  }}
+                >
+                  <span
                     style={{
-                      position: 'absolute',
-                      left,
-                      top: 4,
-                      height: TRACK_HEIGHT - 8,
-                      width,
-                      backgroundColor: color.bg,
-                      border: `1px solid ${color.border}`,
-                      borderRadius: 4,
-                      display: 'flex',
-                      alignItems: 'center',
-                      paddingLeft: 8,
-                      paddingRight: 4,
+                      fontSize: 11,
+                      fontWeight: 600,
+                      color: colors.accent,
+                      whiteSpace: 'nowrap',
                       overflow: 'hidden',
-                      cursor: 'pointer',
+                      textOverflow: 'ellipsis',
+                      fontFamily: fonts.sans,
                     }}
-                    title={`${a.entry.name} (frame ${a.entry.from}–${a.entry.from + dur})`}
                   >
-                    <span
-                      style={{
-                        fontSize: 11,
-                        fontWeight: 500,
-                        color: '#fff',
-                        whiteSpace: 'nowrap',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        fontFamily: fonts.sans,
-                      }}
-                    >
-                      {a.entry.name}
-                    </span>
-                  </div>
-                );
-              })}
+                    {row.name}
+                  </span>
+                </div>
+              ) : (
+                <div
+                  style={{
+                    position: 'absolute',
+                    left: blockLeft,
+                    top: 4,
+                    height: TRACK_HEIGHT - 8,
+                    width: blockWidth,
+                    backgroundColor: color.bg,
+                    border: `1px solid ${color.border}`,
+                    borderRadius: 4,
+                    display: 'flex',
+                    alignItems: 'center',
+                    paddingLeft: 8,
+                    paddingRight: 4,
+                    overflow: 'hidden',
+                    cursor: 'pointer',
+                  }}
+                  title={`${row.name} (frame ${row.from}\u2013${row.from + cappedDuration})`}
+                >
+                  <span
+                    style={{
+                      fontSize: 11,
+                      fontWeight: 500,
+                      color: '#fff',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      fontFamily: fonts.sans,
+                    }}
+                  >
+                    {row.name}
+                  </span>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
 
       {/* Playhead */}
       {scale > 0 && (
@@ -342,7 +446,6 @@ export const Timeline: React.FC<TimelineProps> = ({
             zIndex: 10,
           }}
         >
-          {/* Playhead handle (triangle marker) */}
           <div
             style={{
               position: 'absolute',
