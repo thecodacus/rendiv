@@ -165,6 +165,7 @@ const x = noise2D(frame * 0.05, 0) * 100;
 | `@rendiv/renderer` | Node.js/Bun server-side rendering API |
 | `@rendiv/bundler` | Vite-based bundler for compositions |
 | `@rendiv/studio` | Studio dev server — preview, timeline, render queue |
+| `create-rendiv` | Project scaffolding CLI (`npx create-rendiv`) |
 | `@rendiv/transitions` | Transition primitives (`fade`, `slide`, `wipe`, etc.) |
 | `@rendiv/shapes` | SVG shape helpers |
 | `@rendiv/paths` | SVG path manipulation utilities |
@@ -181,31 +182,47 @@ const x = noise2D(frame * 0.05, 0) * 100;
 
 ## Getting Started
 
-```bash
-npx create-rendiv@latest
-cd my-rendiv-project
-npm run dev
-```
-
-### Manual install
+The fastest way to start is with `create-rendiv`:
 
 ```bash
-npm install @rendiv/core @rendiv/cli
+npx create-rendiv my-video-project
+cd my-video-project
 ```
 
-### Register your root and composition
+This scaffolds a complete project with a starter composition, Vite config, and all dependencies installed. Then:
+
+```bash
+# Open the Studio preview
+npx rendiv studio src/index.tsx
+
+# Render to MP4
+npm run render
+
+# Preview in browser (Vite dev server)
+npm run preview
+```
+
+### Manual setup
+
+If you prefer to set things up yourself:
+
+```bash
+npm install @rendiv/core @rendiv/cli @rendiv/player react react-dom
+npm install -D @types/react @types/react-dom @vitejs/plugin-react vite typescript
+```
+
+Create your entry point:
 
 ```tsx
 // src/index.tsx
-import { setRootComponent } from '@rendiv/core';
-import { Composition } from '@rendiv/core';
+import { setRootComponent, Composition } from '@rendiv/core';
 import { MyVideo } from './MyVideo';
 
 setRootComponent(() => (
   <Composition
     id="MyVideo"
     component={MyVideo}
-    totalFrames={150}
+    durationInFrames={150}
     fps={30}
     width={1920}
     height={1080}
@@ -213,15 +230,33 @@ setRootComponent(() => (
 ));
 ```
 
-### Launch Studio
+Create your first composition:
+
+```tsx
+// src/MyVideo.tsx
+import { useFrame, useCompositionConfig, Fill, interpolate, spring } from '@rendiv/core';
+
+export const MyVideo = () => {
+  const frame = useFrame();
+  const { fps } = useCompositionConfig();
+
+  const opacity = interpolate(frame, [0, 30], [0, 1]);
+  const scale = spring({ frame, fps, config: { damping: 12 } });
+
+  return (
+    <Fill style={{ background: '#0f0f0f', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <h1 style={{ color: 'white', fontSize: 80, opacity, transform: `scale(${scale})` }}>
+        Hello, Rendiv!
+      </h1>
+    </Fill>
+  );
+};
+```
+
+Then launch the studio or render:
 
 ```bash
 npx rendiv studio src/index.tsx
-```
-
-### Render to video
-
-```bash
 npx rendiv render src/index.tsx MyVideo out/video.mp4
 ```
 
