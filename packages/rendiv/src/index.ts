@@ -18,6 +18,7 @@ export { Video, type VideoProps } from './components/Video';
 export { Audio, type AudioProps } from './components/Audio';
 export { AnimatedImage, type AnimatedImageProps } from './components/AnimatedImage';
 export { IFrame, type IFrameProps } from './components/IFrame';
+export { OffthreadVideo, type OffthreadVideoProps } from './components/offthread-video';
 
 // Animation
 export { interpolate, type InterpolateOptions, type ExtrapolationType } from './animation/interpolate';
