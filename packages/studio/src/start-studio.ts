@@ -63,7 +63,7 @@ export async function startStudio(options: StudioOptions): Promise<StudioResult>
     resolve: {
       // Force Vite to resolve these packages from the user's project root,
       // not from the studio UI files' location (which is outside the project).
-      dedupe: ['react', 'react-dom', '@rendiv/core', '@rendiv/player', '@rendiv/transitions', '@rendiv/noise', '@rendiv/shapes', '@rendiv/paths'],
+      dedupe: ['react', 'react-dom', '@rendiv/core', '@rendiv/player', '@rendiv/transitions', '@rendiv/noise', '@rendiv/shapes', '@rendiv/paths', '@rendiv/motion-blur'],
     },
     server: {
       port,
@@ -71,7 +71,7 @@ export async function startStudio(options: StudioOptions): Promise<StudioResult>
     },
     optimizeDeps: {
       entries: [studioEntryFile],
-      exclude: ['@rendiv/core', '@rendiv/player', '@rendiv/transitions', '@rendiv/noise', '@rendiv/shapes', '@rendiv/paths'],
+      exclude: ['@rendiv/core', '@rendiv/player', '@rendiv/transitions', '@rendiv/noise', '@rendiv/shapes', '@rendiv/paths', '@rendiv/motion-blur'],
     },
     logLevel: 'info',
   });

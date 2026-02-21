@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@rendiv/core": "workspace:*",
+    "@rendiv/motion-blur": "workspace:*",
     "@rendiv/noise": "workspace:*",
     "@rendiv/paths": "workspace:*",
     "@rendiv/shapes": "workspace:*",

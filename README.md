@@ -144,13 +144,13 @@ const x = noise2D(frame * 0.05, 0) * 100;
 
 ### 💫 Motion Blur
 ```tsx
-<Trail layers={5} lagInFrames={2}>
+<MotionTrail layers={5} offset={2} fadeRate={0.6}>
   <MovingObject />
-</Trail>
+</MotionTrail>
 
-<CameraMotionBlur shutterAngle={180} samples={10}>
+<ShutterBlur angle={180} layers={10}>
   <Scene />
-</CameraMotionBlur>
+</ShutterBlur>
 ```
 
 ---
@@ -321,7 +321,7 @@ await renderMedia({
 - [x] Project scaffolding CLI (`create-rendiv`)
 - [x] SVG shapes and path animation (`@rendiv/shapes`, `@rendiv/paths`)
 - [x] Simplex noise (`@rendiv/noise`)
-- [ ] Motion blur effects (`@rendiv/motion-blur`)
+- [x] Motion blur effects (`@rendiv/motion-blur`)
 - [ ] Lottie, Three.js, custom fonts integrations
 - [ ] Cloud / distributed rendering
 - [ ] Visual timeline editor GUI
