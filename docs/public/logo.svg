@@ -1,6 +1,11 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32" fill="none">
-  <rect width="32" height="32" rx="8" fill="#0a0a1a"/>
-  <path d="M8 8 L18 8 C22 8 24 10 24 13 C24 16 22 18 18 18 L14 18 L14 24 L10 24 L10 12 L8 12 Z" fill="#6bd4ff"/>
-  <polygon points="16,14 24,24 20,24 14,17" fill="#b06bff"/>
-  <circle cx="22" cy="22" r="3" fill="#ff6b6b"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none">
+  <rect x="6" y="8" width="26" height="20" rx="3" stroke="#58a6ff" stroke-width="2" opacity="0.35"/>
+  <rect x="12" y="14" width="26" height="20" rx="3" stroke="#58a6ff" stroke-width="2"/>
+  <clipPath id="ic">
+    <rect x="12" y="14" width="26" height="20" rx="3"/>
+  </clipPath>
+  <g clip-path="url(#ic)">
+    <polygon points="12,34 30,14 38,14 38,34" fill="#58a6ff" opacity="0.25"/>
+  </g>
+  <path d="M22 20L30 24L22 28Z" fill="#58a6ff"/>
 </svg>

@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
+  <defs>
+    <linearGradient id="fav-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6bd4ff"/>
+      <stop offset="100%" stop-color="#b06bff"/>
+    </linearGradient>
+    <clipPath id="fav-clip">
+      <rect x="9" y="10" width="17" height="13" rx="2"/>
+    </clipPath>
+  </defs>
+  <rect width="32" height="32" rx="7" fill="#0a0a1a"/>
+  <rect x="4" y="6" width="17" height="13" rx="2" stroke="url(#fav-grad)" stroke-width="1.5" opacity="0.35"/>
+  <rect x="9" y="10" width="17" height="13" rx="2" stroke="url(#fav-grad)" stroke-width="1.5"/>
+  <g clip-path="url(#fav-clip)">
+    <polygon points="9,23 19,10 26,10 26,23" fill="url(#fav-grad)" opacity="0.25"/>
+  </g>
+  <path d="M15 14L21 17L15 20Z" fill="url(#fav-grad)"/>
+</svg>

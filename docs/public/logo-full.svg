@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 48" fill="none">
+  <!-- Icon: overlapping frames with render progress slice -->
+  <g>
+    <!-- Back frame (dimmer) -->
+    <rect x="6" y="8" width="26" height="20" rx="3" stroke="#58a6ff" stroke-width="2" opacity="0.35"/>
+    <!-- Front frame -->
+    <rect x="12" y="14" width="26" height="20" rx="3" stroke="#58a6ff" stroke-width="2"/>
+    <!-- Render progress: diagonal fill in front frame -->
+    <clipPath id="frame-clip">
+      <rect x="12" y="14" width="26" height="20" rx="3"/>
+    </clipPath>
+    <g clip-path="url(#frame-clip)">
+      <polygon points="12,34 30,14 38,14 38,34" fill="#58a6ff" opacity="0.25"/>
+    </g>
+    <!-- Small play triangle inside front frame -->
+    <path d="M22 20L30 24L22 28Z" fill="#58a6ff"/>
+  </g>
+  <!-- Wordmark -->
+  <text x="52" y="33" font-family="system-ui, -apple-system, sans-serif" font-size="26" font-weight="700" fill="#e6edf3" letter-spacing="-0.5">
+    rendiv
+  </text>
+</svg>

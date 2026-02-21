@@ -5,17 +5,18 @@ export default defineConfig({
   description: 'Programmatic video and motion graphics for the open web.',
   base: '/rendiv/',
   head: [
-    ['link', { rel: 'icon', href: '/rendiv/logo.svg' }],
+    ['link', { rel: 'icon', type: 'image/svg+xml', href: '/rendiv/favicon.svg' }],
     ['link', { rel: 'preconnect', href: 'https://fonts.googleapis.com' }],
     ['link', { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' }],
     ['link', { href: 'https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap', rel: 'stylesheet' }],
   ],
   themeConfig: {
-    logo: '/logo.svg',
+    logo: '/logo-nav.svg',
+    siteTitle: false,
     nav: [
       { text: 'Guide', link: '/guide/getting-started' },
       { text: 'Packages', link: '/packages/core' },
-      { text: 'GitHub', link: 'https://github.com/rendiv-dev/rendiv' },
+      { text: 'GitHub', link: 'https://github.com/thecodacus/rendiv' },
     ],
     sidebar: {
       '/guide/': [
@@ -66,7 +67,7 @@ export default defineConfig({
       ],
     },
     socialLinks: [
-      { icon: 'github', link: 'https://github.com/rendiv-dev/rendiv' },
+      { icon: 'github', link: 'https://github.com/thecodacus/rendiv' },
     ],
     search: { provider: 'local' },
     footer: {

@@ -1,13 +1,13 @@
 <div align="center">
 
-# Rendiv
+<img src="assets/hero-logo.svg" alt="Rendiv" width="280" />
 
 **The video editor built for AI.**
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![npm version](https://img.shields.io/npm/v/@rendiv/core.svg)](https://www.npmjs.com/package/@rendiv/core)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5%2B-blue)](https://www.typescriptlang.org/)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/rendiv-dev/rendiv/pulls)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/thecodacus/rendiv/pulls)
 
 Create videos programmatically with **React and TypeScript** — designed from the ground up for AI agents, LLM pipelines, and automated video production.
 Pure code. No GUI required. Fully open source.
@@ -397,7 +397,7 @@ await renderMedia({
 Rendiv is fully open source and welcomes contributions of all kinds.
 
 ```bash
-git clone https://github.com/rendiv-dev/rendiv
+git clone https://github.com/thecodacus/rendiv
 cd rendiv
 pnpm install
 pnpm dev

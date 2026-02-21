@@ -20,7 +20,13 @@
   --vp-sidebar-bg-color: #0a0a1a;
 }
 
-/* Hero section styling */
+/* Nav logo */
+.VPNavBarTitle .logo {
+  height: 28px;
+  width: auto;
+}
+
+/* Hero section */
 .VPHero .name {
   font-size: 4rem !important;
   letter-spacing: -2px;
@@ -29,14 +35,27 @@
 .VPHero .text {
   font-size: 1.5rem !important;
   max-width: 600px;
-  margin: 0 auto;
   color: var(--vp-c-text-2);
 }
 
 .VPHero .tagline {
   font-size: 1.15rem !important;
   max-width: 500px;
-  margin: 0 auto;
+}
+
+/* Hero image sizing */
+.VPHero .image-container {
+  width: 260px;
+  height: 260px;
+}
+
+.VPHero .image-container .image-bg {
+  border-radius: 24px;
+}
+
+.VPHero .VPImage {
+  max-width: 240px;
+  max-height: 240px;
 }
 
 /* Feature cards */

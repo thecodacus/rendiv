@@ -5,13 +5,16 @@ hero:
   name: Rendiv
   text: The Video Editor Built for AI
   tagline: Create videos programmatically with React and TypeScript — designed for AI agents, LLM pipelines, and automated video production. Fully open source.
+  image:
+    src: /hero-logo.svg
+    alt: Rendiv
   actions:
     - theme: brand
       text: Get Started
       link: /guide/getting-started
     - theme: alt
       text: View on GitHub
-      link: https://github.com/rendiv-dev/rendiv
+      link: https://github.com/thecodacus/rendiv
 
 features:
   - icon: 🤖
@@ -91,4 +94,4 @@ npx rendiv studio src/index.tsx
 
 ## License
 
-Apache License 2.0 — free for personal projects, commercial products, open-source libraries, and SaaS applications. See the [LICENSE](https://github.com/rendiv-dev/rendiv/blob/main/LICENSE) for the full text.
+Apache License 2.0 — free for personal projects, commercial products, open-source libraries, and SaaS applications. See the [LICENSE](https://github.com/thecodacus/rendiv/blob/main/LICENSE) for the full text.
