@@ -1,13 +1,16 @@
 {
   "name": "create-rendiv",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Create a new Rendiv video project",
   "license": "Apache-2.0",
   "type": "module",
   "bin": {
     "create-rendiv": "./dist/cli.js"
   },
-  "files": ["dist", "template"],
+  "files": [
+    "dist",
+    "template"
+  ],
   "scripts": {
     "build": "tsc && cp -r src/template dist/template",
     "typecheck": "tsc --noEmit",
