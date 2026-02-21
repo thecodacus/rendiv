@@ -398,7 +398,8 @@ await renderMedia({
 - [x] Simplex noise (`@rendiv/noise`)
 - [x] Motion blur effects (`@rendiv/motion-blur`)
 - [x] Font loading (`@rendiv/fonts`, `@rendiv/google-fonts`)
-- [ ] Lottie, Three.js integrations
+- [x] Lottie animations (`@rendiv/lottie`)
+- [x] Three.js 3D scenes (`@rendiv/three`)
 - [ ] Cloud / distributed rendering
 - [ ] Visual timeline editor GUI
 

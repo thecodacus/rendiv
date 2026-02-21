@@ -68,6 +68,8 @@ export default defineConfig({
           items: [
             { text: '@rendiv/fonts', link: '/packages/fonts' },
             { text: '@rendiv/google-fonts', link: '/packages/google-fonts' },
+            { text: '@rendiv/lottie', link: '/packages/lottie' },
+            { text: '@rendiv/three', link: '/packages/three' },
           ],
         },
       ],
