@@ -3,8 +3,8 @@ layout: home
 
 hero:
   name: Rendiv
-  text: Programmatic Video Creation
-  tagline: Build videos, animations, and motion graphics using React components and TypeScript. Fully open source.
+  text: The Video Editor Built for AI
+  tagline: Create videos programmatically with React and TypeScript — designed for AI agents, LLM pipelines, and automated video production. Fully open source.
   actions:
     - theme: brand
       text: Get Started
@@ -14,6 +14,9 @@ hero:
       link: https://github.com/rendiv-dev/rendiv
 
 features:
+  - icon: 🤖
+    title: AI-First
+    details: Videos are plain React + TypeScript — the languages LLMs understand best. AI agents can generate, modify, and iterate on compositions without any special tooling.
   - icon: ⚛️
     title: React-First
     details: Write videos as React components. Use CSS, SVG, Canvas, WebGL — any web technology that renders in a browser renders in Rendiv.
@@ -26,9 +29,6 @@ features:
   - icon: 🖥️
     title: Studio Preview
     details: Live preview with playback controls, frame scrubbing, timeline, and one-click rendering — all in your browser.
-  - icon: 🔤
-    title: Font Loading
-    details: Google Fonts and custom font loading with holdRender integration. Fonts are guaranteed ready before frame capture.
   - icon: 🔷
     title: SVG Shapes & Paths
     details: Generate circles, stars, polygons, and pies. Animate stroke-reveal, morph between shapes, and measure paths.
@@ -42,9 +42,9 @@ features:
 }
 </style>
 
-## A Video is a Function of Time
+## A Video is Code
 
-Rendiv treats every video as a pure function of the current frame number. Your React component renders once per frame — by changing what it outputs based on `useFrame()`, you produce animation.
+Rendiv treats every video as a pure function of the current frame number. No GUI, no binary project files — just React components that any developer or AI agent can read, write, and iterate on.
 
 ```tsx
 import { useFrame, Fill, interpolate, spring } from '@rendiv/core';

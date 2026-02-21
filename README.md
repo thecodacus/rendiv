@@ -2,15 +2,15 @@
 
 # Rendiv
 
-**Programmatic video and motion graphics for the open web.**
+**The video editor built for AI.**
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![npm version](https://img.shields.io/npm/v/@rendiv/core.svg)](https://www.npmjs.com/package/@rendiv/core)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5%2B-blue)](https://www.typescriptlang.org/)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/rendiv-dev/rendiv/pulls)
 
-Create videos, animations, and motion graphics using **React components and TypeScript** — rendered frame-by-frame to MP4, WebM, GIF, and more.  
-Fully open source. No licensing fees. No cloud dependency. Just code.
+Create videos programmatically with **React and TypeScript** — designed from the ground up for AI agents, LLM pipelines, and automated video production.
+Pure code. No GUI required. Fully open source.
 
 </div>
 
@@ -18,7 +18,9 @@ Fully open source. No licensing fees. No cloud dependency. Just code.
 
 ## What is Rendiv?
 
-Rendiv treats **a video as a pure function of time**. Each frame is a React component snapshot at a specific point in time. By changing what your component renders based on the current frame number, you produce animation, motion graphics, and full video productions — all in TypeScript.
+Rendiv is a **code-first video editor** where AI is a first-class citizen. Every video is a pure function of time — a React component that renders a frame given a frame number. This makes video creation fully deterministic, versionable, and trivially automatable by LLMs and AI agents.
+
+Give an AI agent your Rendiv project and a prompt. It writes React components. You get a video. No drag-and-drop. No timeline editors. Just code that any LLM can read, write, and iterate on.
 
 ```tsx
 import { useFrame, useCompositionConfig, Fill } from '@rendiv/core';
@@ -43,6 +45,9 @@ export const MyVideo = () => {
 ---
 
 ## Features
+
+### 🤖 Built for AI
+Every video is plain React + TypeScript — the languages LLMs understand best. AI agents can generate, modify, and iterate on compositions without any special tooling. Pair with Claude, GPT, or any code-generating model to produce videos from natural language prompts.
 
 ### 🎬 React-First Video Creation
 Write videos as React components. Use all of CSS, SVG, Canvas, WebGL, and Three.js to design each frame. Any web technology that renders in a browser renders in Rendiv.
@@ -167,6 +172,49 @@ const fontFamily = useLocalFont({ family: 'CustomFont', src: staticFile('custom.
   <Scene />
 </ShutterBlur>
 ```
+
+---
+
+## Why AI-First?
+
+Traditional video editors are GUI-based — impossible for AI to operate. Rendiv flips this:
+
+| Traditional Editor | Rendiv |
+|--------------------|--------|
+| Click, drag, drop in a GUI | Write React components |
+| Binary project files | Plain `.tsx` files in git |
+| Manual keyframing | `interpolate()`, `spring()`, code-driven animation |
+| Can't be automated | AI agent writes code, runs `rendiv render`, gets MP4 |
+| One-off edits | Parameterized compositions — change props, get new video |
+
+**The workflow**: Describe what you want in natural language. An AI agent writes the Rendiv composition. `rendiv render` produces the video. Iterate by editing code — something AI is already great at.
+
+```ts
+// AI generates this from: "fade in a title, then show 3 bullet points with spring animations"
+import { useFrame, Fill, Sequence, interpolate, spring } from '@rendiv/core';
+
+export const AIGeneratedVideo = () => {
+  const frame = useFrame();
+  return (
+    <Fill style={{ background: '#0a0a0a', padding: 80 }}>
+      <Sequence from={0} durationInFrames={60}>
+        <h1 style={{ color: 'white', opacity: interpolate(frame, [0, 30], [0, 1]) }}>
+          Quarterly Results
+        </h1>
+      </Sequence>
+      {['Revenue up 40%', 'New markets launched', '10k new users'].map((text, i) => (
+        <Sequence key={i} from={60 + i * 30} durationInFrames={90}>
+          <p style={{ color: '#ccc', transform: `translateX(${(1 - spring({ frame: frame - 60 - i * 30, fps: 30 })) * 100}px)` }}>
+            {text}
+          </p>
+        </Sequence>
+      ))}
+    </Fill>
+  );
+};
+```
+
+Rendiv compositions are **just functions** — deterministic, testable, and perfectly suited for AI-generated code.
 
 ---
 
@@ -386,6 +434,6 @@ However, Rendiv is **not a fork, port, or derivative of Remotion's codebase**. I
 | **Context model** | Independent context shape design | Remotion-specific context structure |
 | **Package manager** | pnpm + Turborepo | Custom tooling |
 
-The goal of Rendiv is to provide the same developer experience and power that Remotion offers, while being fully free, open, and unrestricted — so that every developer, studio, and startup can build on top of it without worrying about licensing costs or commercial terms.
+The goal of Rendiv is to be the **video editor that AI agents use** — fully free, open, and unrestricted — so that every developer, studio, and AI startup can build on top of it without worrying about licensing costs or commercial terms.
 
 We encourage you to check out [Remotion](https://www.remotion.dev) as well — if their licensing works for your use case, it is an excellent and mature product.
