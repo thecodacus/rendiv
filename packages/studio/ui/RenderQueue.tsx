@@ -19,8 +19,6 @@ export interface RenderJob {
 
 interface RenderQueueProps {
   jobs: RenderJob[];
-  open: boolean;
-  onToggle: () => void;
   onCancel: (jobId: string) => void;
   onRemove: (jobId: string) => void;
   onClear: () => void;
@@ -77,13 +75,10 @@ function overallProgress(job: RenderJob): number {
 
 export const RenderQueue: React.FC<RenderQueueProps> = ({
   jobs,
-  open,
-  onToggle,
   onCancel,
   onRemove,
   onClear,
 }) => {
-  const activeCount = jobs.filter((j) => j.status === 'queued' || j.status === 'bundling' || j.status === 'rendering' || j.status === 'encoding').length;
   const hasFinished = jobs.some((j) => j.status === 'done' || j.status === 'error' || j.status === 'cancelled');
 
   const handleCancel = useCallback((e: React.MouseEvent, jobId: string) => {
@@ -96,41 +91,21 @@ export const RenderQueue: React.FC<RenderQueueProps> = ({
     onRemove(jobId);
   }, [onRemove]);
 
-  if (!open) return null;
-
   return (
-    <div style={panelStyle}>
-      {/* Header */}
-      <div style={headerStyle}>
-        <span style={{ fontWeight: 600, fontSize: 11, textTransform: 'uppercase' as const, letterSpacing: '0.05em' }}>
-          Render Queue
-          {activeCount > 0 && (
-            <span style={{ marginLeft: 6, color: colors.accent, fontWeight: 600 }}>
-              ({activeCount})
-            </span>
-          )}
-        </span>
-        <div style={{ display: 'flex', gap: 8 }}>
-          {hasFinished && (
-            <button
-              type="button"
-              style={clearBtnStyle}
-              onClick={onClear}
-              title="Clear finished jobs"
-            >
-              Clear
-            </button>
-          )}
+    <div style={contentStyle}>
+      {/* Actions bar */}
+      {hasFinished && (
+        <div style={actionsBarStyle}>
           <button
             type="button"
-            style={closeBtnStyle}
-            onClick={onToggle}
-            title="Close panel"
+            style={clearBtnStyle}
+            onClick={onClear}
+            title="Clear finished jobs"
           >
-            {'\u2715'}
+            Clear finished
           </button>
         </div>
-      </div>
+      )}
 
       {/* Job list */}
       <div style={listStyle}>
@@ -221,23 +196,17 @@ export const RenderQueue: React.FC<RenderQueueProps> = ({
 
 // Styles
 
-const panelStyle: React.CSSProperties = {
-  width: 300,
-  minWidth: 300,
-  height: '100%',
-  backgroundColor: colors.surface,
-  borderLeft: `1px solid ${colors.border}`,
+const contentStyle: React.CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
-  flexShrink: 0,
+  flex: 1,
+  overflow: 'hidden',
 };
 
-const headerStyle: React.CSSProperties = {
+const actionsBarStyle: React.CSSProperties = {
   display: 'flex',
-  justifyContent: 'space-between',
-  alignItems: 'center',
-  padding: '12px 16px',
-  color: colors.textSecondary,
+  justifyContent: 'flex-end',
+  padding: '6px 8px',
   borderBottom: `1px solid ${colors.border}`,
   flexShrink: 0,
 };
@@ -275,15 +244,6 @@ const progressBarStyle: React.CSSProperties = {
   height: '100%',
   borderRadius: 2,
   transition: 'width 0.3s ease',
-};
-
-const closeBtnStyle: React.CSSProperties = {
-  background: 'none',
-  border: 'none',
-  color: colors.textSecondary,
-  cursor: 'pointer',
-  fontSize: 12,
-  padding: '2px 4px',
 };
 
 const clearBtnStyle: React.CSSProperties = {

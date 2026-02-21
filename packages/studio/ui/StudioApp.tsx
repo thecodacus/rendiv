@@ -13,7 +13,8 @@ import { TopBar } from './TopBar';
 import { Timeline } from './Timeline';
 import { TimelineEditor } from './TimelineEditor';
 import { RenderQueue, type RenderJob } from './RenderQueue';
-import { layoutStyles, scrollbarCSS } from './styles';
+import { Terminal } from './Terminal';
+import { layoutStyles, scrollbarCSS, colors, fonts } from './styles';
 
 // Read the entry point from the generated code's data attribute (set by studio-entry-code)
 const ENTRY_POINT = (window as Record<string, unknown>).__RENDIV_STUDIO_ENTRY__ as string ?? 'src/index.tsx';
@@ -73,8 +74,21 @@ const StudioApp: React.FC = () => {
 
   // Render queue state (server-driven)
   const [renderJobs, setRenderJobs] = useState<RenderJob[]>([]);
-  const [queueOpen, setQueueOpen] = useState(false);
   const hasActiveRef = useRef(false);
+
+  // Right panel state — tabbed panel for Queue and Agent
+  const [rightPanel, setRightPanel] = useState<'queue' | 'agent' | null>(() => {
+    const stored = localStorage.getItem('rendiv-studio:right-panel');
+    if (stored === 'queue' || stored === 'agent') return stored;
+    return null;
+  });
+  const [rightPanelWidth, setRightPanelWidth] = useState(() => {
+    const stored = localStorage.getItem('rendiv-studio:right-panel-width');
+    return stored ? Number(stored) : 360;
+  });
+  const isDraggingPanel = useRef(false);
+  const panelDragStartX = useRef(0);
+  const panelDragStartWidth = useRef(0);
 
   const handleResizeMouseDown = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
@@ -83,11 +97,23 @@ const StudioApp: React.FC = () => {
     dragStartHeight.current = timelineHeight;
   }, [timelineHeight]);
 
+  const handlePanelResizeMouseDown = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    isDraggingPanel.current = true;
+    panelDragStartX.current = e.clientX;
+    panelDragStartWidth.current = rightPanelWidth;
+  }, [rightPanelWidth]);
+
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
-      if (!isDraggingTimeline.current) return;
-      const delta = dragStartY.current - e.clientY;
-      setTimelineHeight(Math.max(120, dragStartHeight.current + delta));
+      if (isDraggingTimeline.current) {
+        const delta = dragStartY.current - e.clientY;
+        setTimelineHeight(Math.max(120, dragStartHeight.current + delta));
+      }
+      if (isDraggingPanel.current) {
+        const delta = panelDragStartX.current - e.clientX;
+        setRightPanelWidth(Math.max(280, Math.min(800, panelDragStartWidth.current + delta)));
+      }
     };
     const handleMouseUp = () => {
       if (isDraggingTimeline.current) {
@@ -95,6 +121,13 @@ const StudioApp: React.FC = () => {
         setTimelineHeight((h) => {
           localStorage.setItem('rendiv-studio:timeline-height', String(h));
           return h;
+        });
+      }
+      if (isDraggingPanel.current) {
+        isDraggingPanel.current = false;
+        setRightPanelWidth((w) => {
+          localStorage.setItem('rendiv-studio:right-panel-width', String(w));
+          return w;
         });
       }
     };
@@ -351,7 +384,8 @@ const StudioApp: React.FC = () => {
         totalFrames: selectedComposition.durationInFrames,
       }),
     });
-    setQueueOpen(true);
+    setRightPanel('queue');
+    localStorage.setItem('rendiv-studio:right-panel-tab', 'queue');
   }, [selectedComposition, inputProps]);
 
   const handleCancelJob = useCallback((jobId: string) => {
@@ -366,8 +400,18 @@ const StudioApp: React.FC = () => {
     fetch('/__rendiv_api__/render/queue/clear', { method: 'POST' });
   }, []);
 
-  const handleToggleQueue = useCallback(() => {
-    setQueueOpen((prev) => !prev);
+  const handleTogglePanel = useCallback(() => {
+    setRightPanel((prev) => {
+      if (prev !== null) {
+        // Close panel
+        localStorage.setItem('rendiv-studio:right-panel', '');
+        return null;
+      }
+      // Open to last active tab (default 'queue')
+      const tab = (localStorage.getItem('rendiv-studio:right-panel-tab') as 'queue' | 'agent') || 'queue';
+      localStorage.setItem('rendiv-studio:right-panel', tab);
+      return tab;
+    });
   }, []);
 
   const queueCount = renderJobs.filter((j) =>
@@ -384,8 +428,8 @@ const StudioApp: React.FC = () => {
         entryPoint={ENTRY_POINT}
         onRender={handleAddRender}
         queueCount={queueCount}
-        queueOpen={queueOpen}
-        onToggleQueue={handleToggleQueue}
+        panelOpen={rightPanel !== null}
+        onTogglePanel={handleTogglePanel}
       />
 
       <div style={layoutStyles.body}>
@@ -411,14 +455,67 @@ const StudioApp: React.FC = () => {
           </div>
         )}
 
-        <RenderQueue
-          jobs={renderJobs}
-          open={queueOpen}
-          onToggle={handleToggleQueue}
-          onCancel={handleCancelJob}
-          onRemove={handleRemoveJob}
-          onClear={handleClearFinished}
-        />
+        {/* Right panel — tabbed: Queue / Agent */}
+        {rightPanel !== null && (
+          <div style={{ ...rightPanelStyle, width: rightPanelWidth, minWidth: 280 }}>
+            <div
+              style={panelResizeHandleStyle}
+              onMouseDown={handlePanelResizeMouseDown}
+            />
+            <div style={tabBarStyle}>
+              <div style={{ display: 'flex', gap: 2, padding: 2, backgroundColor: colors.bg, borderRadius: 6 }}>
+                {(['queue', 'agent'] as const).map((tab) => (
+                  <button
+                    key={tab}
+                    onClick={() => {
+                      setRightPanel(tab);
+                      localStorage.setItem('rendiv-studio:right-panel', tab);
+                      localStorage.setItem('rendiv-studio:right-panel-tab', tab);
+                    }}
+                    style={{
+                      padding: '3px 10px',
+                      fontSize: 11,
+                      fontWeight: 500,
+                      border: 'none',
+                      borderRadius: 4,
+                      cursor: 'pointer',
+                      backgroundColor: rightPanel === tab ? colors.border : 'transparent',
+                      color: rightPanel === tab ? colors.textPrimary : colors.textSecondary,
+                      fontFamily: fonts.sans,
+                    }}
+                  >
+                    {tab === 'queue' ? 'Queue' : 'Agent'}
+                    {tab === 'queue' && queueCount > 0 && (
+                      <span style={{ marginLeft: 4, color: colors.accent, fontWeight: 600 }}>({queueCount})</span>
+                    )}
+                  </button>
+                ))}
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setRightPanel(null);
+                  localStorage.setItem('rendiv-studio:right-panel', '');
+                }}
+                style={tabCloseStyle}
+                title="Close panel"
+              >
+                {'\u2715'}
+              </button>
+            </div>
+            <div style={{ display: rightPanel === 'queue' ? 'flex' : 'none', flex: 1, flexDirection: 'column' as const, overflow: 'hidden' }}>
+              <RenderQueue
+                jobs={renderJobs}
+                onCancel={handleCancelJob}
+                onRemove={handleRemoveJob}
+                onClear={handleClearFinished}
+              />
+            </div>
+            <div style={{ display: rightPanel === 'agent' ? 'flex' : 'none', flex: 1, flexDirection: 'column' as const, overflow: 'hidden' }}>
+              <Terminal open={rightPanel === 'agent'} />
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Timeline — full-width resizable row */}
@@ -473,6 +570,44 @@ const StudioApp: React.FC = () => {
       </CompositionManagerContext.Provider>
     </div>
   );
+};
+
+const rightPanelStyle: React.CSSProperties = {
+  position: 'relative',
+  height: '100%',
+  backgroundColor: colors.surface,
+  borderLeft: `1px solid ${colors.border}`,
+  display: 'flex',
+  flexDirection: 'column',
+  flexShrink: 0,
+};
+
+const panelResizeHandleStyle: React.CSSProperties = {
+  position: 'absolute',
+  top: 0,
+  left: 0,
+  width: 4,
+  height: '100%',
+  cursor: 'col-resize',
+  zIndex: 10,
+};
+
+const tabBarStyle: React.CSSProperties = {
+  display: 'flex',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  padding: '6px 8px',
+  borderBottom: `1px solid ${colors.border}`,
+  flexShrink: 0,
+};
+
+const tabCloseStyle: React.CSSProperties = {
+  background: 'none',
+  border: 'none',
+  color: colors.textSecondary,
+  cursor: 'pointer',
+  fontSize: 12,
+  padding: '2px 4px',
 };
 
 export function createStudioApp(container: HTMLElement | null): void {

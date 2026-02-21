@@ -32,6 +32,42 @@ let nextJobId = 1;
 let activeJobId: string | null = null;
 let activeAbortController: AbortController | null = null;
 
+// --- Server-side terminal state (in-memory, survives page refresh) ---
+
+let terminalProcess: import('node-pty').IPty | null = null;
+let terminalCols = 80;
+let terminalRows = 24;
+
+async function tryImportNodePty(): Promise<typeof import('node-pty') | null> {
+  try {
+    const pty = await import('node-pty');
+    // Ensure spawn-helper has execute permission (pnpm may strip it)
+    if (process.platform !== 'win32') {
+      try {
+        const { createRequire } = await import('module');
+        const { resolve, dirname } = await import('path');
+        const { chmodSync, statSync } = await import('fs');
+        const ptyDir = dirname(createRequire(import.meta.url).resolve('node-pty'));
+        const helperPath = resolve(
+          ptyDir,
+          'prebuilds',
+          `${process.platform}-${process.arch}`,
+          'spawn-helper',
+        );
+        const st = statSync(helperPath, { throwIfNoEntry: false });
+        if (st && !(st.mode & 0o111)) {
+          chmodSync(helperPath, st.mode | 0o755);
+        }
+      } catch {
+        // Best-effort; if it fails, the spawn error will surface later
+      }
+    }
+    return pty;
+  } catch {
+    return null;
+  }
+}
+
 function readBody(req: IncomingMessage): Promise<string> {
   return new Promise((resolve, reject) => {
     const chunks: Buffer[] = [];
@@ -218,9 +254,89 @@ export function rendivStudioPlugin(options: StudioPluginOptions): Plugin {
         // File doesn't exist yet — that's fine, watch will be set up when it's first created
       }
 
-      // Clean up watcher when server closes
+      // Clean up watcher and terminal when server closes
       server.httpServer?.on('close', () => {
         overridesWatcher?.close();
+        if (terminalProcess) {
+          terminalProcess.kill();
+          terminalProcess = null;
+        }
+      });
+
+      // --- Terminal PTY WebSocket handlers ---
+
+      server.ws.on('rendiv:terminal-start', async (data: { cols?: number; rows?: number }) => {
+        if (terminalProcess) {
+          server.ws.send({ type: 'custom', event: 'rendiv:terminal-started', data: { pid: terminalProcess.pid } });
+          return;
+        }
+
+        const pty = await tryImportNodePty();
+        if (!pty) {
+          server.ws.send({ type: 'custom', event: 'rendiv:terminal-error', data: { message: 'node-pty is not installed. Run: pnpm add node-pty' } });
+          return;
+        }
+
+        terminalCols = data.cols ?? 80;
+        terminalRows = data.rows ?? 24;
+        const shell = process.env.SHELL || '/bin/zsh';
+
+        try {
+          terminalProcess = pty.spawn(shell, ['-l'], {
+            name: 'xterm-256color',
+            cols: terminalCols,
+            rows: terminalRows,
+            cwd: process.cwd(),
+            env: { ...process.env } as Record<string, string>,
+          });
+        } catch (err: unknown) {
+          const msg = err instanceof Error ? err.message : String(err);
+          server.ws.send({ type: 'custom', event: 'rendiv:terminal-error', data: { message: `Failed to spawn terminal: ${msg}` } });
+          return;
+        }
+
+        terminalProcess.onData((output: string) => {
+          server.ws.send({ type: 'custom', event: 'rendiv:terminal-output', data: { data: output } });
+        });
+
+        terminalProcess.onExit(({ exitCode, signal }) => {
+          terminalProcess = null;
+          server.ws.send({ type: 'custom', event: 'rendiv:terminal-exited', data: { exitCode, signal } });
+        });
+
+        server.ws.send({ type: 'custom', event: 'rendiv:terminal-started', data: { pid: terminalProcess.pid } });
+
+        // Launch claude in the shell after a short delay to let the shell initialize
+        setTimeout(() => {
+          terminalProcess?.write('claude\n');
+        }, 300);
+      });
+
+      server.ws.on('rendiv:terminal-input', (data: { data: string }) => {
+        terminalProcess?.write(data.data);
+      });
+
+      server.ws.on('rendiv:terminal-resize', (data: { cols: number; rows: number }) => {
+        if (terminalProcess && data.cols > 0 && data.rows > 0) {
+          terminalCols = data.cols;
+          terminalRows = data.rows;
+          terminalProcess.resize(data.cols, data.rows);
+        }
+      });
+
+      server.ws.on('rendiv:terminal-stop', () => {
+        if (terminalProcess) {
+          terminalProcess.kill();
+          terminalProcess = null;
+        }
+      });
+
+      server.ws.on('rendiv:terminal-status', () => {
+        server.ws.send({
+          type: 'custom',
+          event: 'rendiv:terminal-status-response',
+          data: { running: terminalProcess !== null, pid: terminalProcess?.pid ?? null },
+        });
       });
 
       // Render queue API endpoints

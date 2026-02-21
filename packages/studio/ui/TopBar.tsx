@@ -9,8 +9,8 @@ interface TopBarProps {
   entryPoint: string;
   onRender: () => void;
   queueCount: number;
-  queueOpen: boolean;
-  onToggleQueue: () => void;
+  panelOpen: boolean;
+  onTogglePanel: () => void;
 }
 
 const RenderIcon: React.FC = () => (
@@ -19,14 +19,14 @@ const RenderIcon: React.FC = () => (
   </svg>
 );
 
-const QueueIcon: React.FC<{ open: boolean }> = ({ open }) => (
+const PanelIcon: React.FC<{ open: boolean }> = ({ open }) => (
   <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
     <rect x="10" y="2" width="4" height="12" rx="1" fill={open ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.5" />
     <rect x="2" y="2" width="6" height="12" rx="1" stroke="currentColor" strokeWidth="1.5" />
   </svg>
 );
 
-export const TopBar: React.FC<TopBarProps> = ({ composition, entryPoint, onRender, queueCount, queueOpen, onToggleQueue }) => {
+export const TopBar: React.FC<TopBarProps> = ({ composition, entryPoint, onRender, queueCount, panelOpen, onTogglePanel }) => {
   const [copied, setCopied] = useState(false);
 
   const handleCopyCommand = useCallback(() => {
@@ -94,13 +94,13 @@ export const TopBar: React.FC<TopBarProps> = ({ composition, entryPoint, onRende
             alignItems: 'center',
             gap: 6,
             position: 'relative' as const,
-            color: queueOpen ? colors.accent : colors.textPrimary,
-            borderColor: queueOpen ? colors.accent : colors.border,
+            color: panelOpen ? colors.accent : colors.textPrimary,
+            borderColor: panelOpen ? colors.accent : colors.border,
           }}
-          onClick={onToggleQueue}
-          title="Toggle render queue panel"
+          onClick={onTogglePanel}
+          title="Toggle side panel"
         >
-          <QueueIcon open={queueOpen} />
+          <PanelIcon open={panelOpen} />
           {queueCount > 0 && (
             <span style={badgeStyle}>{queueCount}</span>
           )}
