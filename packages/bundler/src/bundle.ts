@@ -28,7 +28,7 @@ export async function bundle(options: BundleOptions): Promise<string> {
 
   // Read timeline overrides from .studio/ if they exist
   let timelineOverrides: Record<string, unknown> | undefined;
-  const overridesFile = path.join(cwd, '.studio', 'timeline-overrides.json');
+  const overridesFile = path.join(cwd, 'timeline-overrides.json');
   try {
     const raw = fs.readFileSync(overridesFile, 'utf-8');
     timelineOverrides = JSON.parse(raw);

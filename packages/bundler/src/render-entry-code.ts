@@ -21,7 +21,7 @@ import { getRootComponent, CompositionManagerContext, TimelineContext, Compositi
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 
-// Timeline overrides (embedded from .studio/timeline-overrides.json at bundle time)
+// Timeline overrides (embedded from timeline-overrides.json at bundle time)
 ${overridesSnippet}
 
 // Composition registry

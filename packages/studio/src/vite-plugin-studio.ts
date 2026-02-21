@@ -1,6 +1,6 @@
 import type { Plugin } from 'vite';
 import type { IncomingMessage, ServerResponse } from 'node:http';
-import { readFile, writeFile, unlink, mkdir } from 'node:fs/promises';
+import { readFile, writeFile, unlink } from 'node:fs/promises';
 import { join } from 'node:path';
 
 export interface StudioPluginOptions {
@@ -133,9 +133,8 @@ function jsonResponse(res: ServerResponse, data: unknown, status = 200) {
 export function rendivStudioPlugin(options: StudioPluginOptions): Plugin {
   const { studioHtmlFileName, entryPoint } = options;
 
-  // Timeline overrides persistence — stored in .studio/timeline-overrides.json
-  const overridesDir = join(process.cwd(), '.studio');
-  const overridesFile = join(overridesDir, 'timeline-overrides.json');
+  // Timeline overrides persistence — stored at project root so they survive server restarts
+  const overridesFile = join(process.cwd(), 'timeline-overrides.json');
 
   async function readOverrides(): Promise<Record<string, { from: number; durationInFrames: number }>> {
     try {
@@ -147,7 +146,6 @@ export function rendivStudioPlugin(options: StudioPluginOptions): Plugin {
   }
 
   async function writeOverrides(data: Record<string, { from: number; durationInFrames: number }>): Promise<void> {
-    await mkdir(overridesDir, { recursive: true });
     await writeFile(overridesFile, JSON.stringify(data, null, 2));
   }
 
