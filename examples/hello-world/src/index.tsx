@@ -4,11 +4,13 @@ import { HelloWorld } from "./HelloWorld";
 import { SeriesDemo } from "./SeriesDemo";
 import { ShowcaseDemo } from "./ShowcaseDemo";
 import { TransitionsDemo } from "./TransitionsDemo";
+import { OffthreadVideoDemo } from "./OffthreadVideoDemo";
 
 const Root: React.FC = () => {
 	return (
 		<>
 			<Folder name="Demos">
+				<Composition id="OffthreadVideoDemo" component={OffthreadVideoDemo} durationInFrames={180} fps={30} width={1920} height={1080} />
 				<Composition id="TransitionsDemo" component={TransitionsDemo} durationInFrames={280} fps={30} width={1920} height={1080} />
 				<Composition id="ShowcaseDemo" component={ShowcaseDemo} durationInFrames={495} fps={30} width={1920} height={1080} />
 				<Composition id="SeriesDemo" component={SeriesDemo} durationInFrames={270} fps={30} width={1920} height={1080} />
