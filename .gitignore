@@ -13,3 +13,4 @@ tmp/
 .claude/
 docs/.vitepress/dist/
 docs/.vitepress/cache/
+.agents/

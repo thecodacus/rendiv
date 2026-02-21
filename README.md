@@ -53,6 +53,14 @@ export const MyVideo = () => {
 ### 🤖 Built for AI
 Every video is plain React + TypeScript — the languages LLMs understand best. AI agents can generate, modify, and iterate on compositions without any special tooling. Pair with Claude, GPT, or any code-generating model to produce videos from natural language prompts.
 
+#### Agent Skills
+
+Rendiv maintains [Agent Skills](https://agentskills.io) that teach AI coding agents how to use rendiv correctly. Install them for Claude Code, Cursor, Codex, and more:
+
+```bash
+npx skills add thecodacus/rendiv
+```
+
 ### 🎬 React-First Video Creation
 Write videos as React components. Use all of CSS, SVG, Canvas, WebGL, and Three.js to design each frame. Any web technology that renders in a browser renders in Rendiv.
 

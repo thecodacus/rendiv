@@ -36,6 +36,12 @@ export default defineConfig({
             { text: 'CLI Reference', link: '/guide/cli' },
           ],
         },
+        {
+          text: 'AI',
+          items: [
+            { text: 'Agent Skills', link: '/guide/ai-skills' },
+          ],
+        },
       ],
       '/packages/': [
         {
