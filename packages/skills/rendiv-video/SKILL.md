@@ -85,6 +85,8 @@ Load the relevant rule file based on the task at hand:
 | Generate SVG shapes or manipulate paths | [shapes-and-paths.md](rules/shapes-and-paths.md) |
 | Add noise-driven motion or motion blur | [procedural-effects.md](rules/procedural-effects.md) |
 | Load Google Fonts or local font files | [typography.md](rules/typography.md) |
+| Embed Lottie animations | [lottie.md](rules/lottie.md) |
+| Add 3D scenes with Three.js / R3F | [three.md](rules/three.md) |
 | Use the CLI, Studio, or Player | [cli-and-studio.md](rules/cli-and-studio.md) |
 
 ## Critical Constraints
@@ -120,6 +122,8 @@ Load the relevant rule file based on the task at hand:
 | `@rendiv/fonts` | Local font loading with holdRender |
 | `@rendiv/google-fonts` | Google Fonts loading with holdRender |
 | `@rendiv/motion-blur` | MotionTrail and ShutterBlur components |
+| `@rendiv/lottie` | Frame-accurate Lottie animations via lottie-web |
+| `@rendiv/three` | 3D scenes via React Three Fiber with context bridging |
 
 ## Example Assets
 

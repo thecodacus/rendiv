@@ -21,7 +21,11 @@
     "@rendiv/google-fonts": "workspace:*",
     "@rendiv/transitions": "workspace:*",
     "@rendiv/player": "workspace:*",
+    "@rendiv/lottie": "workspace:*",
+    "@rendiv/three": "workspace:*",
     "@rendiv/cli": "workspace:*",
+    "three": "^0.170.0",
+    "@react-three/fiber": "^9.0.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },

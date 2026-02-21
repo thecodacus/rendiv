@@ -9,11 +9,15 @@ import { NoiseDemo } from "./NoiseDemo";
 import { ShapesDemo } from "./ShapesDemo";
 import { MotionBlurDemo } from "./MotionBlurDemo";
 import { FontsDemo } from "./FontsDemo";
+import { LottieDemo } from "./LottieDemo";
+import { ThreeDemo } from "./ThreeDemo";
 
 const Root: React.FC = () => {
 	return (
 		<>
 			<Folder name="Demos">
+				<Composition id="LottieDemo" component={LottieDemo} durationInFrames={120} fps={30} width={1920} height={1080} />
+				<Composition id="ThreeDemo" component={ThreeDemo} durationInFrames={150} fps={30} width={1920} height={1080} />
 				<Composition id="FontsDemo" component={FontsDemo} durationInFrames={150} fps={30} width={1920} height={1080} />
 				<Composition id="MotionBlurDemo" component={MotionBlurDemo} durationInFrames={150} fps={30} width={1920} height={1080} />
 				<Composition id="ShapesDemo" component={ShapesDemo} durationInFrames={150} fps={30} width={1920} height={1080} />
