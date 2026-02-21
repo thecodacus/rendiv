@@ -86,4 +86,40 @@ describe('Sequence', () => {
     // Relative frame = 55 - 30 = 25
     expect(getByTestId('frame').textContent).toBe('25');
   });
+
+  it('applies zIndex from trackIndex prop', () => {
+    const { container } = renderAtFrame(0, (
+      <Sequence from={0} trackIndex={0}>
+        <FrameDisplay />
+      </Sequence>
+    ));
+    const fill = container.querySelector('[data-testid="frame"]')!.parentElement!;
+    expect(fill.style.zIndex).toBe('10000');
+  });
+
+  it('lower trackIndex gets higher zIndex (renders in front)', () => {
+    const { container } = renderAtFrame(0, (
+      <>
+        <Sequence from={0} trackIndex={0} name="front">
+          <div data-testid="front" />
+        </Sequence>
+        <Sequence from={0} trackIndex={2} name="back">
+          <div data-testid="back" />
+        </Sequence>
+      </>
+    ));
+    const front = container.querySelector('[data-testid="front"]')!.parentElement!;
+    const back = container.querySelector('[data-testid="back"]')!.parentElement!;
+    expect(Number(front.style.zIndex)).toBeGreaterThan(Number(back.style.zIndex));
+  });
+
+  it('defaults trackIndex to 0 when not set', () => {
+    const { container } = renderAtFrame(0, (
+      <Sequence from={0}>
+        <FrameDisplay />
+      </Sequence>
+    ));
+    const fill = container.querySelector('[data-testid="frame"]')!.parentElement!;
+    expect(fill.style.zIndex).toBe('10000');
+  });
 });

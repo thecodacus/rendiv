@@ -26,8 +26,18 @@ export async function bundle(options: BundleOptions): Promise<string> {
     ? entryPoint
     : path.resolve(cwd, entryPoint);
 
+  // Read timeline overrides from .studio/ if they exist
+  let timelineOverrides: Record<string, unknown> | undefined;
+  const overridesFile = path.join(cwd, '.studio', 'timeline-overrides.json');
+  try {
+    const raw = fs.readFileSync(overridesFile, 'utf-8');
+    timelineOverrides = JSON.parse(raw);
+  } catch {
+    // No overrides file — skip
+  }
+
   // Generate the render entry code
-  const renderEntryCode = generateRenderEntryCode(absoluteEntry);
+  const renderEntryCode = generateRenderEntryCode(absoluteEntry, timelineOverrides);
 
   // Write temp files in the project directory so Vite resolves modules correctly
   const entryJsPath = path.join(cwd, '__rendiv_entry__.jsx');

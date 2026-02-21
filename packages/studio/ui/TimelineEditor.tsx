@@ -1,6 +1,6 @@
 import React, { useRef, useCallback, useMemo, useEffect, useState } from 'react';
 import type { TimelineEditorProps, TrackEntry } from './timeline/types';
-import { assignTracks, writeZIndexMap } from './timeline/track-layout';
+import { assignTracks } from './timeline/track-layout';
 import { useTimelineZoom } from './timeline/use-timeline-zoom';
 import { useTimelineDrag } from './timeline/use-timeline-drag';
 
@@ -56,11 +56,6 @@ export const TimelineEditor: React.FC<TimelineEditorProps> = ({
     () => assignTracks(entries, overrides),
     [entries, overrides],
   );
-
-  // Write z-index map so Sequence components can read track-based z-index
-  useEffect(() => {
-    writeZIndexMap(tracks);
-  }, [tracks]);
 
   const tracksRef = useRef(tracks);
   tracksRef.current = tracks;

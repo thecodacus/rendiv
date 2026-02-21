@@ -3,15 +3,26 @@
  * This code is injected into the bundle and bridges the headless browser
  * with the Rendiv renderer via window globals.
  */
-export function generateRenderEntryCode(userEntryPoint: string): string {
+export function generateRenderEntryCode(
+  userEntryPoint: string,
+  overrides?: Record<string, unknown>,
+): string {
   // Use the absolute path directly for Vite to resolve
   const importPath = userEntryPoint;
+
+  // Serialize overrides so Sequence components can read them at runtime
+  const overridesSnippet = overrides && Object.keys(overrides).length > 0
+    ? `window.__RENDIV_TIMELINE_OVERRIDES__ = new Map(Object.entries(${JSON.stringify(overrides)}));`
+    : '';
 
   return `
 import '${importPath}';
 import { getRootComponent, CompositionManagerContext, TimelineContext, CompositionContext, RendivEnvironmentContext, getPendingHoldCount } from '@rendiv/core';
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
+
+// Timeline overrides (embedded from .studio/timeline-overrides.json at bundle time)
+${overridesSnippet}
 
 // Composition registry
 const compositions = [];

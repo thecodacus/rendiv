@@ -9,6 +9,8 @@ export interface SeriesSequenceProps {
   name?: string;
   layout?: 'none' | 'absolute-fill';
   style?: CSSProperties;
+  /** Track index for z-ordering. Lower values render in front (track 0 = frontmost). */
+  trackIndex?: number;
   children: ReactNode;
 }
 
@@ -45,6 +47,7 @@ function SeriesRoot({ children }: SeriesProps): React.ReactElement {
       name,
       layout,
       style,
+      trackIndex,
       children: sequenceChildren,
     } = child.props as SeriesSequenceProps;
 
@@ -71,6 +74,7 @@ function SeriesRoot({ children }: SeriesProps): React.ReactElement {
         name={sequenceName}
         layout={layout}
         style={style}
+        trackIndex={trackIndex}
       >
         {sequenceChildren}
       </Sequence>,

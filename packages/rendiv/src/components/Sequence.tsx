@@ -11,6 +11,8 @@ export interface SequenceProps {
   name?: string;
   layout?: 'none' | 'absolute-fill';
   style?: CSSProperties;
+  /** Track index for z-ordering. Lower values render in front (track 0 = frontmost). */
+  trackIndex?: number;
   children: ReactNode;
 }
 
@@ -20,6 +22,7 @@ export const Sequence: React.FC<SequenceProps> = ({
   name,
   layout = 'absolute-fill',
   style,
+  trackIndex = 0,
   children,
 }) => {
   const parentSequence = useContext(SequenceContext);
@@ -47,7 +50,7 @@ export const Sequence: React.FC<SequenceProps> = ({
   // Read overrides from global Map (Studio mode only, zero-cost when Map doesn't exist)
   let absoluteFrom = baseAbsoluteFrom;
   let effectiveDuration = durationInFrames;
-  let trackZIndex: number | undefined;
+  let effectiveTrackIndex = trackIndex;
   if (typeof window !== 'undefined') {
     const w = window as unknown as Record<string, unknown>;
     const overrides = w.__RENDIV_TIMELINE_OVERRIDES__ as Map<string, TimelineOverride> | undefined;
@@ -55,11 +58,12 @@ export const Sequence: React.FC<SequenceProps> = ({
     if (override) {
       absoluteFrom = override.from;
       effectiveDuration = override.durationInFrames;
+      if (override.trackIndex !== undefined) {
+        effectiveTrackIndex = override.trackIndex;
+      }
     }
-    // Read z-index from track layout (Studio mode only)
-    const zMap = w.__RENDIV_TRACK_ZINDEX__ as Map<string, number> | undefined;
-    trackZIndex = zMap?.get(namePath);
   }
+  const trackZIndex = effectiveTrackIndex !== undefined ? 10000 - effectiveTrackIndex : undefined;
 
   const currentFrame = timeline.frame;
 

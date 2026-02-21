@@ -92,28 +92,3 @@ export function assignTracks(
 
   return tracks;
 }
-
-/**
- * Compute z-index values for each entry based on track position.
- * Track 0 (top) = highest z-index (renders in front).
- * Writes to a global Map so Sequence components can read during render.
- */
-export function writeZIndexMap(tracks: Track[]): void {
-  if (typeof window === 'undefined') return;
-  const w = window as unknown as Record<string, unknown>;
-  let map = w.__RENDIV_TRACK_ZINDEX__ as Map<string, number> | undefined;
-  if (!map) {
-    map = new Map();
-    w.__RENDIV_TRACK_ZINDEX__ = map;
-  }
-  map.clear();
-
-  const total = tracks.length;
-  for (const track of tracks) {
-    // Track 0 (top) gets the highest z-index
-    const z = total - track.id;
-    for (const te of track.entries) {
-      map.set(te.entry.namePath, z);
-    }
-  }
-}
