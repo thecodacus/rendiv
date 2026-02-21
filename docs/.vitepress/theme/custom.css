@@ -1,23 +1,31 @@
 :root {
+  --vp-c-brand-1: #1a8fc0;
+  --vp-c-brand-2: #1578a3;
+  --vp-c-brand-3: #116088;
+  --vp-c-brand-soft: rgba(26, 143, 192, 0.14);
+
+  --vp-font-family-base: 'Space Grotesk', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+
+  --vp-home-hero-name-color: transparent;
+  --vp-home-hero-name-background: linear-gradient(135deg, #d94545, #c06828, #a07818, #1a9955, #1a8fc0, #7733bb);
+  --vp-home-hero-image-background-image: linear-gradient(135deg, rgba(26, 143, 192, 0.2), rgba(119, 51, 187, 0.2));
+  --vp-home-hero-image-filter: blur(56px);
+}
+
+.dark {
   --vp-c-brand-1: #6bd4ff;
   --vp-c-brand-2: #58a6ff;
   --vp-c-brand-3: #4d94e6;
   --vp-c-brand-soft: rgba(107, 212, 255, 0.14);
 
-  --vp-font-family-base: 'Space Grotesk', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
-
-  --vp-home-hero-name-color: transparent;
-  --vp-home-hero-name-background: linear-gradient(135deg, #ff6b6b, #ffa06b, #ffd06b, #6bffa0, #6bd4ff, #b06bff);
-  --vp-home-hero-image-background-image: linear-gradient(135deg, rgba(107, 212, 255, 0.3), rgba(176, 107, 255, 0.3));
-  --vp-home-hero-image-filter: blur(56px);
-}
-
-.dark {
   --vp-c-bg: #0a0a1a;
   --vp-c-bg-soft: #111122;
   --vp-c-bg-mute: #1a1a2e;
   --vp-c-bg-alt: #0d0d20;
   --vp-sidebar-bg-color: #0a0a1a;
+
+  --vp-home-hero-name-background: linear-gradient(135deg, #ff6b6b, #ffa06b, #ffd06b, #6bffa0, #6bd4ff, #b06bff);
+  --vp-home-hero-image-background-image: linear-gradient(135deg, rgba(107, 212, 255, 0.3), rgba(176, 107, 255, 0.3));
 }
 
 /* Nav logo */
@@ -58,19 +66,40 @@
   max-height: 240px;
 }
 
+/* Swap hero logo for light/dark mode */
+.VPHero .VPImage {
+  content: url('/rendiv/hero-logo-light.svg');
+}
+
+.dark .VPHero .VPImage {
+  content: url('/rendiv/hero-logo.svg');
+}
+
 /* Feature cards */
 .VPFeature {
-  border: 1px solid rgba(107, 212, 255, 0.1) !important;
+  border: 1px solid rgba(26, 143, 192, 0.15) !important;
   transition: border-color 0.3s, transform 0.3s;
 }
 
 .VPFeature:hover {
-  border-color: rgba(107, 212, 255, 0.3) !important;
+  border-color: rgba(26, 143, 192, 0.4) !important;
   transform: translateY(-2px);
+}
+
+.dark .VPFeature {
+  border-color: rgba(107, 212, 255, 0.1) !important;
+}
+
+.dark .VPFeature:hover {
+  border-color: rgba(107, 212, 255, 0.3) !important;
 }
 
 /* Code blocks */
 .vp-doc div[class*='language-'] {
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.dark .vp-doc div[class*='language-'] {
   border: 1px solid rgba(255, 255, 255, 0.06);
 }
 

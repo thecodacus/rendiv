@@ -11,7 +11,7 @@ export default defineConfig({
     ['link', { href: 'https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap', rel: 'stylesheet' }],
   ],
   themeConfig: {
-    logo: '/logo-nav.svg',
+    logo: { light: '/logo-nav-light.svg', dark: '/logo-nav.svg' },
     siteTitle: false,
     nav: [
       { text: 'Guide', link: '/guide/getting-started' },

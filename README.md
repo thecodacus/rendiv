@@ -1,6 +1,10 @@
 <div align="center">
 
-<img src="assets/hero-logo.svg" alt="Rendiv" width="280" />
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/hero-logo.svg">
+  <source media="(prefers-color-scheme: light)" srcset="assets/hero-logo-light.svg">
+  <img src="assets/hero-logo-light.svg" alt="Rendiv" width="280" />
+</picture>
 
 **The video editor built for AI.**
 
