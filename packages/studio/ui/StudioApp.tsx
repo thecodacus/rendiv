@@ -18,7 +18,10 @@ const ENTRY_POINT = (window as Record<string, unknown>).__RENDIV_STUDIO_ENTRY__ 
 
 const StudioApp: React.FC = () => {
   const [compositions, setCompositions] = useState<CompositionEntry[]>([]);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(() => {
+    const hash = window.location.hash.slice(1);
+    return hash || null;
+  });
   const [inputProps, setInputProps] = useState<Record<string, unknown>>({});
   const [playbackRate, setPlaybackRate] = useState(1);
   const [currentFrame, setCurrentFrame] = useState(0);
@@ -113,12 +116,30 @@ const StudioApp: React.FC = () => {
     [compositions, registerComposition, unregisterComposition, selectedId, inputProps],
   );
 
-  // Auto-select first composition when compositions are registered
+  // Auto-select composition from URL hash, or fall back to first
   useEffect(() => {
-    if (selectedId === null && compositions.length > 0) {
-      setSelectedId(compositions[0].id);
-    }
+    if (compositions.length === 0) return;
+    if (selectedId !== null && compositions.some((c: CompositionEntry) => c.id === selectedId)) return;
+    // Hash composition no longer exists or no selection — fall back to first
+    setSelectedId(compositions[0].id);
   }, [compositions, selectedId]);
+
+  // Sync URL hash when selection changes
+  useEffect(() => {
+    if (selectedId) {
+      window.location.hash = selectedId;
+    }
+  }, [selectedId]);
+
+  // Listen for browser back/forward navigation
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash.slice(1);
+      if (hash) setSelectedId(hash);
+    };
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
 
   // Reset input props when switching compositions
   useEffect(() => {
