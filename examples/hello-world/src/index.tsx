@@ -20,7 +20,7 @@ const Root: React.FC = () => {
 				<Composition id="NoiseDemo" component={NoiseDemo} durationInFrames={150} fps={30} width={1920} height={1080} />
 				<Composition id="OffthreadVideoDemo" component={OffthreadVideoDemo} durationInFrames={180} fps={30} width={1920} height={1080} />
 				<Composition id="TransitionsDemo" component={TransitionsDemo} durationInFrames={280} fps={30} width={1920} height={1080} />
-				<Composition id="ShowcaseDemo" component={ShowcaseDemo} durationInFrames={495} fps={30} width={1920} height={1080} />
+				<Composition id="ShowcaseDemo" component={ShowcaseDemo} durationInFrames={690} fps={30} width={1920} height={1080} />
 				<Composition id="SeriesDemo" component={SeriesDemo} durationInFrames={270} fps={30} width={1920} height={1080} />
 				<Composition id="HelloWorld" component={HelloWorld} durationInFrames={90} fps={30} width={1920} height={1080} />
 			</Folder>
