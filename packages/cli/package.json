@@ -1,7 +1,7 @@
 {
   "name": "@rendiv/cli",
   "version": "0.1.0",
-  "license": "MIT",
+  "license": "Apache-2.0",
   "type": "module",
   "bin": {
     "rendiv": "./dist/cli.js"

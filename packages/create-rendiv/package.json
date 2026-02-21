@@ -2,7 +2,7 @@
   "name": "create-rendiv",
   "version": "0.1.0",
   "description": "Create a new Rendiv video project",
-  "license": "MIT",
+  "license": "Apache-2.0",
   "type": "module",
   "bin": {
     "create-rendiv": "./dist/cli.js"

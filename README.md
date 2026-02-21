@@ -4,7 +4,7 @@
 
 **Programmatic video and motion graphics for the open web.**
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![npm version](https://img.shields.io/npm/v/@rendiv/core.svg)](https://www.npmjs.com/package/@rendiv/core)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5%2B-blue)](https://www.typescriptlang.org/)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/rendiv-dev/rendiv/pulls)
@@ -319,7 +319,7 @@ await renderMedia({
 | Frame stitching | FFmpeg |
 | Monorepo tooling | pnpm workspaces + Turborepo |
 | Testing | Vitest + jsdom |
-| License | MIT |
+| License | Apache 2.0 |
 
 ---
 
@@ -361,9 +361,9 @@ Please read [CONTRIBUTING.md](./CONTRIBUTING.md) before opening a pull request.
 
 ## License
 
-MIT © Rendiv Contributors
+Apache License 2.0 © Rendiv Contributors
 
-You are free to use Rendiv in personal projects, commercial products, open-source libraries, and SaaS applications without any licensing fees or restrictions.
+You are free to use Rendiv in personal projects, commercial products, open-source libraries, and SaaS applications. See [LICENSE](./LICENSE) for the full text.
 
 ---
 
@@ -377,7 +377,7 @@ However, Rendiv is **not a fork, port, or derivative of Remotion's codebase**. I
 
 | Aspect | Rendiv | Remotion |
 |--------|--------|----------|
-| **License** | MIT — fully free for all use | Custom source-available license with commercial restrictions |
+| **License** | Apache 2.0 — fully free for all use | Custom source-available license with commercial restrictions |
 | **Headless browser** | Playwright (Chromium) | Puppeteer with custom serving strategy |
 | **Spring physics** | Semi-implicit Euler integration | Analytical closed-form solution |
 | **Bezier solver** | Newton-Raphson algorithm | Pre-computed lookup table |

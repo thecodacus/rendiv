@@ -11,3 +11,5 @@ coverage/
 tmp/
 **/**/.studio/
 .claude/
+docs/.vitepress/dist/
+docs/.vitepress/cache/
