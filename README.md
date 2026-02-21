@@ -123,7 +123,7 @@ import { MyVideo } from './MyVideo';
   <TransitionSeries.Sequence durationInFrames={60}>
     <SceneA />
   </TransitionSeries.Sequence>
-  <TransitionSeries.Transition timing={springTiming()} transition={fade()} />
+  <TransitionSeries.Transition timing={linearTiming({ durationInFrames: 15 })} presentation={fade()} />
   <TransitionSeries.Sequence durationInFrames={60}>
     <SceneB />
   </TransitionSeries.Sequence>
@@ -317,7 +317,8 @@ await renderMedia({
 - [x] Headless Playwright renderer with parallel frame capture
 - [x] Studio with preview, timeline, and server-side render queue
 - [x] Embeddable player component
-- [ ] Transition primitives (`@rendiv/transitions`)
+- [x] Transition primitives (`@rendiv/transitions`)
+- [x] Project scaffolding CLI (`create-rendiv`)
 - [ ] SVG shapes and path animation (`@rendiv/shapes`, `@rendiv/paths`)
 - [ ] Perlin noise (`@rendiv/noise`)
 - [ ] Motion blur effects (`@rendiv/motion-blur`)
