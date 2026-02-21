@@ -17,8 +17,10 @@ export interface DragOperation {
   namePath: string;
   edge: DragEdge;
   startClientX: number;
+  startClientY: number;
   originalFrom: number;
   originalDuration: number;
+  originalTrackIndex: number;
 }
 
 export interface TimelineEditorProps {

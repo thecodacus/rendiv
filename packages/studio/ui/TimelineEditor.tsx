@@ -1,6 +1,6 @@
 import React, { useRef, useCallback, useMemo, useEffect, useState } from 'react';
 import type { TimelineEditorProps, TrackEntry } from './timeline/types';
-import { assignTracks } from './timeline/track-layout';
+import { assignTracks, writeZIndexMap } from './timeline/track-layout';
 import { useTimelineZoom } from './timeline/use-timeline-zoom';
 import { useTimelineDrag } from './timeline/use-timeline-drag';
 
@@ -52,9 +52,38 @@ export const TimelineEditor: React.FC<TimelineEditorProps> = ({
     containerRef: trackAreaRef,
   });
 
+  const tracks = useMemo(
+    () => assignTracks(entries, overrides),
+    [entries, overrides],
+  );
+
+  // Write z-index map so Sequence components can read track-based z-index
+  useEffect(() => {
+    writeZIndexMap(tracks);
+  }, [tracks]);
+
+  const tracksRef = useRef(tracks);
+  tracksRef.current = tracks;
+
+  // Check whether a block can be placed on a track without overlapping other blocks
+  const canPlaceOnTrack = useCallback((namePath: string, from: number, duration: number, targetTrack: number): boolean => {
+    const currentTracks = tracksRef.current;
+    if (targetTrack >= currentTracks.length) return true; // new empty track
+    const trackEntries = currentTracks[targetTrack]?.entries ?? [];
+    const end = from + duration;
+    return !trackEntries.some((te) => {
+      if (te.entry.namePath === namePath) return false; // skip self
+      const teEnd = te.entry.from + te.entry.durationInFrames;
+      return from < teEnd && end > te.entry.from; // overlap check
+    });
+  }, []);
+
   const { startDrag } = useTimelineDrag({
     pixelsPerFrame,
+    trackHeight: TRACK_HEIGHT,
+    trackGap: TRACK_GAP,
     onOverrideChange,
+    canPlaceOnTrack,
   });
 
   // Attach wheel handler
@@ -78,13 +107,6 @@ export const TimelineEditor: React.FC<TimelineEditorProps> = ({
     window.addEventListener('click', close);
     return () => window.removeEventListener('click', close);
   }, [contextMenu]);
-
-  const overridePaths = useMemo(() => new Set(overrides.keys()), [overrides]);
-
-  const tracks = useMemo(
-    () => assignTracks(entries, overridePaths),
-    [entries, overridePaths],
-  );
 
   const totalWidth = totalFrames * pixelsPerFrame;
   const trackAreaHeight = Math.max(1, tracks.length) * (TRACK_HEIGHT + TRACK_GAP);
@@ -154,7 +176,7 @@ export const TimelineEditor: React.FC<TimelineEditorProps> = ({
     else if (relX >= width - EDGE_HIT_ZONE) edge = 'right';
 
     setSelectedPath(te.entry.namePath);
-    startDrag(te.entry.namePath, edge, e.clientX, te.entry.from, te.entry.durationInFrames);
+    startDrag(te.entry.namePath, edge, e.clientX, e.clientY, te.entry.from, te.entry.durationInFrames, te.trackIndex);
   }, [startDrag]);
 
   const handleBlockContextMenu = useCallback((e: React.MouseEvent, te: TrackEntry) => {

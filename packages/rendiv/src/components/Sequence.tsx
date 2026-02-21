@@ -47,6 +47,7 @@ export const Sequence: React.FC<SequenceProps> = ({
   // Read overrides from global Map (Studio mode only, zero-cost when Map doesn't exist)
   let absoluteFrom = baseAbsoluteFrom;
   let effectiveDuration = durationInFrames;
+  let trackZIndex: number | undefined;
   if (typeof window !== 'undefined') {
     const w = window as unknown as Record<string, unknown>;
     const overrides = w.__RENDIV_TIMELINE_OVERRIDES__ as Map<string, TimelineOverride> | undefined;
@@ -55,6 +56,9 @@ export const Sequence: React.FC<SequenceProps> = ({
       absoluteFrom = override.from;
       effectiveDuration = override.durationInFrames;
     }
+    // Read z-index from track layout (Studio mode only)
+    const zMap = w.__RENDIV_TRACK_ZINDEX__ as Map<string, number> | undefined;
+    trackZIndex = zMap?.get(namePath);
   }
 
   const currentFrame = timeline.frame;
@@ -102,7 +106,10 @@ export const Sequence: React.FC<SequenceProps> = ({
   );
 
   if (layout === 'none') return content;
-  return <Fill style={style}>{content}</Fill>;
+  const fillStyle = trackZIndex !== undefined
+    ? { ...style, zIndex: trackZIndex }
+    : style;
+  return <Fill style={fillStyle}>{content}</Fill>;
 };
 
 Sequence.displayName = 'Sequence';
