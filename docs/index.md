@@ -31,7 +31,7 @@ features:
     details: Video, Audio, Images, GIFs, and IFrames with automatic render-hold — resources load before frames are captured.
   - icon: 🖥️
     title: Studio Preview
-    details: Live preview with playback controls, frame scrubbing, timeline, and one-click rendering — all in your browser.
+    details: Live preview with playback controls, frame scrubbing, timeline, one-click rendering, and an integrated AI agent terminal — all in your browser.
   - icon: 🔷
     title: SVG Shapes & Paths
     details: Generate circles, stars, polygons, and pies. Animate stroke-reveal, morph between shapes, and measure paths.

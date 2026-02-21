@@ -134,6 +134,19 @@ Each package is independently buildable. No ordering dependency between them.
 
 ---
 
+## Phase 2.6: Agent Terminal
+
+### Integrated Agent Terminal
+- [x] Browser-based terminal in Studio using `node-pty` + `@xterm/xterm`
+- [x] Launches Claude Code (or any CLI agent) directly in the project directory
+- [x] Tabbed right panel — switch between Render Queue and Agent terminal
+- [x] PTY communication over Vite HMR WebSocket (no extra server)
+- [x] Resizable panel with persisted width
+- [x] Terminal survives page refresh (PTY runs server-side)
+- [x] Auto-fix for `node-pty` spawn-helper permissions on pnpm installs
+
+---
+
 ## Future (v2+)
 
 - Cloud / Lambda rendering
