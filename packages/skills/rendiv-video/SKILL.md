@@ -79,6 +79,7 @@ Load the relevant rule file based on the task at hand:
 | Animate with `interpolate`, `spring`, `Easing`, `blendColors` | [animation.md](rules/animation.md) |
 | Set up compositions, stills, folders, entry point | [composition-setup.md](rules/composition-setup.md) |
 | Time-shift with `Sequence`, `Series`, `Loop`, `Freeze` | [sequencing-and-timing.md](rules/sequencing-and-timing.md) |
+| Control z-ordering and timeline overrides | [timeline-overrides.md](rules/timeline-overrides.md) |
 | Embed images, video, audio, GIFs, iframes | [media-components.md](rules/media-components.md) |
 | Understand `holdRender`, environment modes, rendering pipeline | [render-lifecycle.md](rules/render-lifecycle.md) |
 | Animate between scenes with `TransitionSeries` | [transitions.md](rules/transitions.md) |

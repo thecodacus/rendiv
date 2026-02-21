@@ -53,6 +53,7 @@ import { Sequence } from '@rendiv/core';
 | `name` | `string` | — | Display name in Studio timeline |
 | `layout` | `'absolute-fill' \| 'none'` | `'absolute-fill'` | Wrapper layout |
 | `style` | `CSSProperties` | — | Additional styles |
+| `trackIndex` | `number` | `0` | Track for z-ordering. Lower = in front. See [timeline-overrides](timeline-overrides.md) |
 
 ### Layout modes
 
@@ -93,6 +94,7 @@ import { Series } from '@rendiv/core';
 | `name` | `string` | — | Display name |
 | `layout` | `'absolute-fill' \| 'none'` | `'absolute-fill'` | Wrapper layout |
 | `style` | `CSSProperties` | — | Additional styles |
+| `trackIndex` | `number` | `0` | Track for z-ordering. Lower = in front. See [timeline-overrides](timeline-overrides.md) |
 
 ### Constraints
 
