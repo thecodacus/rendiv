@@ -13,6 +13,8 @@ export async function openBrowser(): Promise<Browser> {
       '--disable-features=IsolateOrigins',
       '--disable-site-isolation-trials',
       '--no-sandbox',
+      '--use-gl=angle',
+      '--use-angle=swiftshader',
     ],
   });
   return browserInstance;
