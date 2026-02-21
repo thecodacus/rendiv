@@ -11,7 +11,11 @@
     "clean": "turbo run clean",
     "docs:dev": "pnpm --filter @rendiv/docs dev",
     "docs:build": "pnpm --filter @rendiv/docs build",
-    "docs:preview": "pnpm --filter @rendiv/docs preview"
+    "docs:preview": "pnpm --filter @rendiv/docs preview",
+    "release": "node scripts/release.mjs",
+    "release:patch": "node scripts/release.mjs patch",
+    "release:minor": "node scripts/release.mjs minor",
+    "release:major": "node scripts/release.mjs major"
   },
   "devDependencies": {
     "turbo": "^2.3.0",
