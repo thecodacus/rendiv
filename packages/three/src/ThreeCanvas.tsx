@@ -128,6 +128,7 @@ export function ThreeCanvas({
       frameloop={isRendering ? 'never' : 'always'}
       camera={camera}
       gl={glConfig}
+      resize={{ offsetSize: true }}
       onCreated={handleCreated}
       style={{ width, height, ...style }}
       className={className}
