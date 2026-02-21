@@ -1,0 +1,27 @@
+{
+  "name": "@rendiv/skills",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "rendiv studio src/index.tsx"
+  },
+  "devDependencies": {
+    "@rendiv/core": "workspace:*",
+    "@rendiv/player": "workspace:*",
+    "@rendiv/cli": "workspace:*",
+    "@rendiv/transitions": "workspace:*",
+    "@rendiv/shapes": "workspace:*",
+    "@rendiv/paths": "workspace:*",
+    "@rendiv/noise": "workspace:*",
+    "@rendiv/fonts": "workspace:*",
+    "@rendiv/google-fonts": "workspace:*",
+    "@rendiv/motion-blur": "workspace:*",
+    "@rendiv/tsconfig": "workspace:*",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "typescript": "^5.7.0"
+  }
+}
