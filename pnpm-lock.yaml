@@ -26,6 +26,9 @@ importers:
       '@rendiv/core':
         specifier: workspace:*
         version: link:../../packages/rendiv
+      '@rendiv/noise':
+        specifier: workspace:*
+        version: link:../../packages/noise
       '@rendiv/player':
         specifier: workspace:*
         version: link:../../packages/player
@@ -123,6 +126,21 @@ importers:
       '@types/node':
         specifier: ^22.0.0
         version: 22.19.11
+
+  packages/noise:
+    devDependencies:
+      '@rendiv/tsconfig':
+        specifier: workspace:*
+        version: link:../tsconfig
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+      vite:
+        specifier: ^6.0.0
+        version: 6.4.1(@types/node@22.19.11)
+      vite-plugin-dts:
+        specifier: ^4.3.0
+        version: 4.5.4(typescript@5.9.3)(vite@6.4.1)
 
   packages/player:
     devDependencies:

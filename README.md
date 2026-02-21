@@ -320,7 +320,7 @@ await renderMedia({
 - [x] Transition primitives (`@rendiv/transitions`)
 - [x] Project scaffolding CLI (`create-rendiv`)
 - [ ] SVG shapes and path animation (`@rendiv/shapes`, `@rendiv/paths`)
-- [ ] Perlin noise (`@rendiv/noise`)
+- [x] Simplex noise (`@rendiv/noise`)
 - [ ] Motion blur effects (`@rendiv/motion-blur`)
 - [ ] Lottie, Three.js, custom fonts integrations
 - [ ] Cloud / distributed rendering
