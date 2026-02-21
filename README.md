@@ -133,8 +133,8 @@ import { MyVideo } from './MyVideo';
 Built-in transitions: `fade`, `slide`, `wipe`, `flip`, `clockWipe`
 
 ### 🔷 SVG Shapes & Paths
-- `makeCircle`, `makeRect`, `makeTriangle`, `makeStar`, `makePie` — SVG shape primitives
-- `getLength`, `getPointAtLength`, `interpolatePath`, `evolvePath` — path animation utilities
+- `shapeCircle`, `shapeRect`, `shapeTriangle`, `shapeStar`, `shapePie`, `shapePolygon`, `shapeEllipse` — SVG shape primitives
+- `pathLength`, `pointOnPath`, `morphPath`, `strokeReveal` — path animation utilities
 
 ### 🌊 Perlin Noise
 ```ts
@@ -319,7 +319,7 @@ await renderMedia({
 - [x] Embeddable player component
 - [x] Transition primitives (`@rendiv/transitions`)
 - [x] Project scaffolding CLI (`create-rendiv`)
-- [ ] SVG shapes and path animation (`@rendiv/shapes`, `@rendiv/paths`)
+- [x] SVG shapes and path animation (`@rendiv/shapes`, `@rendiv/paths`)
 - [x] Simplex noise (`@rendiv/noise`)
 - [ ] Motion blur effects (`@rendiv/motion-blur`)
 - [ ] Lottie, Three.js, custom fonts integrations

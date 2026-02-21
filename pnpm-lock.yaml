@@ -29,9 +29,15 @@ importers:
       '@rendiv/noise':
         specifier: workspace:*
         version: link:../../packages/noise
+      '@rendiv/paths':
+        specifier: workspace:*
+        version: link:../../packages/paths
       '@rendiv/player':
         specifier: workspace:*
         version: link:../../packages/player
+      '@rendiv/shapes':
+        specifier: workspace:*
+        version: link:../../packages/shapes
       '@rendiv/transitions':
         specifier: workspace:*
         version: link:../../packages/transitions
@@ -142,6 +148,21 @@ importers:
         specifier: ^4.3.0
         version: 4.5.4(typescript@5.9.3)(vite@6.4.1)
 
+  packages/paths:
+    devDependencies:
+      '@rendiv/tsconfig':
+        specifier: workspace:*
+        version: link:../tsconfig
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+      vite:
+        specifier: ^6.0.0
+        version: 6.4.1(@types/node@22.19.11)
+      vite-plugin-dts:
+        specifier: ^4.3.0
+        version: 4.5.4(typescript@5.9.3)(vite@6.4.1)
+
   packages/player:
     devDependencies:
       '@rendiv/core':
@@ -223,6 +244,21 @@ importers:
       vitest:
         specifier: ^2.1.0
         version: 2.1.9(jsdom@25.0.1)
+
+  packages/shapes:
+    devDependencies:
+      '@rendiv/tsconfig':
+        specifier: workspace:*
+        version: link:../tsconfig
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+      vite:
+        specifier: ^6.0.0
+        version: 6.4.1(@types/node@22.19.11)
+      vite-plugin-dts:
+        specifier: ^4.3.0
+        version: 4.5.4(typescript@5.9.3)(vite@6.4.1)
 
   packages/studio:
     dependencies:

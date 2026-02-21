@@ -14,6 +14,8 @@
   "dependencies": {
     "@rendiv/core": "workspace:*",
     "@rendiv/noise": "workspace:*",
+    "@rendiv/paths": "workspace:*",
+    "@rendiv/shapes": "workspace:*",
     "@rendiv/transitions": "workspace:*",
     "@rendiv/player": "workspace:*",
     "@rendiv/cli": "workspace:*",

@@ -6,11 +6,13 @@ import { ShowcaseDemo } from "./ShowcaseDemo";
 import { TransitionsDemo } from "./TransitionsDemo";
 import { OffthreadVideoDemo } from "./OffthreadVideoDemo";
 import { NoiseDemo } from "./NoiseDemo";
+import { ShapesDemo } from "./ShapesDemo";
 
 const Root: React.FC = () => {
 	return (
 		<>
 			<Folder name="Demos">
+				<Composition id="ShapesDemo" component={ShapesDemo} durationInFrames={150} fps={30} width={1920} height={1080} />
 				<Composition id="NoiseDemo" component={NoiseDemo} durationInFrames={150} fps={30} width={1920} height={1080} />
 				<Composition id="OffthreadVideoDemo" component={OffthreadVideoDemo} durationInFrames={180} fps={30} width={1920} height={1080} />
 				<Composition id="TransitionsDemo" component={TransitionsDemo} durationInFrames={280} fps={30} width={1920} height={1080} />
