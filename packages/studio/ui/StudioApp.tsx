@@ -122,6 +122,25 @@ const StudioApp: React.FC = () => {
       .catch(() => {});
   }, []);
 
+  // Listen for external file changes pushed from the server via WebSocket
+  useEffect(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const hot = (import.meta as any).hot as { on: (event: string, cb: (...args: any[]) => void) => void; off?: (event: string, cb: (...args: any[]) => void) => void } | undefined;
+    if (!hot) return;
+
+    const handler = (data: { overrides: Record<string, TimelineOverride> }) => {
+      const map = new Map<string, TimelineOverride>(Object.entries(data.overrides));
+      (window as unknown as Record<string, unknown>).__RENDIV_TIMELINE_OVERRIDES__ = map;
+      setOverrides(map);
+      seekRef.current?.(currentFrame);
+    };
+
+    hot.on('rendiv:overrides-update', handler);
+    return () => {
+      hot.off?.('rendiv:overrides-update', handler);
+    };
+  }, [currentFrame]);
+
   // Debounced save to server
   const saveOverridesToServer = useCallback((map: Map<string, TimelineOverride>) => {
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current);

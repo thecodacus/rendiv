@@ -1,6 +1,7 @@
 import type { Plugin } from 'vite';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { readFile, writeFile, unlink } from 'node:fs/promises';
+import { watch, type FSWatcher } from 'node:fs';
 import { join } from 'node:path';
 
 export interface StudioPluginOptions {
@@ -145,7 +146,11 @@ export function rendivStudioPlugin(options: StudioPluginOptions): Plugin {
     }
   }
 
+  // Track when the server itself writes overrides so the file watcher can ignore self-writes
+  let lastSelfWriteTime = 0;
+
   async function writeOverrides(data: Record<string, { from: number; durationInFrames: number }>): Promise<void> {
+    lastSelfWriteTime = Date.now();
     await writeFile(overridesFile, JSON.stringify(data, null, 2));
   }
 
@@ -185,6 +190,37 @@ export function rendivStudioPlugin(options: StudioPluginOptions): Plugin {
         }
 
         next();
+      });
+
+      // Watch timeline-overrides.json for external edits and push updates to clients
+      let overridesWatcher: FSWatcher | undefined;
+      let watchDebounce: ReturnType<typeof setTimeout> | undefined;
+
+      try {
+        overridesWatcher = watch(overridesFile, () => {
+          // Ignore changes caused by our own writes (within 500ms)
+          if (Date.now() - lastSelfWriteTime < 500) return;
+
+          if (watchDebounce) clearTimeout(watchDebounce);
+          watchDebounce = setTimeout(() => {
+            readOverrides()
+              .then((overrides) => {
+                server.ws.send({
+                  type: 'custom',
+                  event: 'rendiv:overrides-update',
+                  data: { overrides },
+                });
+              })
+              .catch(() => {});
+          }, 100);
+        });
+      } catch {
+        // File doesn't exist yet — that's fine, watch will be set up when it's first created
+      }
+
+      // Clean up watcher when server closes
+      server.httpServer?.on('close', () => {
+        overridesWatcher?.close();
       });
 
       // Render queue API endpoints
