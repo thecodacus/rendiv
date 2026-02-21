@@ -104,6 +104,7 @@ A local preview app that launches in your browser:
 - JSON-based props editor
 - Hot reload on every file change
 - Server-side render queue (persists across page refresh)
+- URL-based composition routing (survives page refresh)
 - One-click render trigger
 
 ```bash
@@ -390,7 +391,7 @@ await renderMedia({
 - [x] Spring and interpolation animation engine
 - [x] Media components (Video, Audio, Img, AnimatedImage, IFrame)
 - [x] Headless Playwright renderer with parallel frame capture
-- [x] Studio with preview, timeline, and server-side render queue
+- [x] Studio with preview, timeline, server-side render queue, and URL-based composition routing
 - [x] Embeddable player component
 - [x] Transition primitives (`@rendiv/transitions`)
 - [x] Project scaffolding CLI (`create-rendiv`)
