@@ -26,6 +26,12 @@ importers:
       '@rendiv/core':
         specifier: workspace:*
         version: link:../../packages/rendiv
+      '@rendiv/fonts':
+        specifier: workspace:*
+        version: link:../../packages/fonts
+      '@rendiv/google-fonts':
+        specifier: workspace:*
+        version: link:../../packages/google-fonts
       '@rendiv/motion-blur':
         specifier: workspace:*
         version: link:../../packages/motion-blur
@@ -135,6 +141,54 @@ importers:
       '@types/node':
         specifier: ^22.0.0
         version: 22.19.11
+
+  packages/fonts:
+    devDependencies:
+      '@rendiv/core':
+        specifier: workspace:*
+        version: link:../rendiv
+      '@rendiv/tsconfig':
+        specifier: workspace:*
+        version: link:../tsconfig
+      '@types/react':
+        specifier: ^19.0.0
+        version: 19.2.14
+      react:
+        specifier: ^19.0.0
+        version: 19.2.4
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+      vite:
+        specifier: ^6.0.0
+        version: 6.4.1(@types/node@22.19.11)
+      vite-plugin-dts:
+        specifier: ^4.3.0
+        version: 4.5.4(typescript@5.9.3)(vite@6.4.1)
+
+  packages/google-fonts:
+    devDependencies:
+      '@rendiv/core':
+        specifier: workspace:*
+        version: link:../rendiv
+      '@rendiv/tsconfig':
+        specifier: workspace:*
+        version: link:../tsconfig
+      '@types/react':
+        specifier: ^19.0.0
+        version: 19.2.14
+      react:
+        specifier: ^19.0.0
+        version: 19.2.4
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+      vite:
+        specifier: ^6.0.0
+        version: 6.4.1(@types/node@22.19.11)
+      vite-plugin-dts:
+        specifier: ^4.3.0
+        version: 4.5.4(typescript@5.9.3)(vite@6.4.1)
 
   packages/motion-blur:
     devDependencies:

@@ -8,11 +8,13 @@ import { OffthreadVideoDemo } from "./OffthreadVideoDemo";
 import { NoiseDemo } from "./NoiseDemo";
 import { ShapesDemo } from "./ShapesDemo";
 import { MotionBlurDemo } from "./MotionBlurDemo";
+import { FontsDemo } from "./FontsDemo";
 
 const Root: React.FC = () => {
 	return (
 		<>
 			<Folder name="Demos">
+				<Composition id="FontsDemo" component={FontsDemo} durationInFrames={150} fps={30} width={1920} height={1080} />
 				<Composition id="MotionBlurDemo" component={MotionBlurDemo} durationInFrames={150} fps={30} width={1920} height={1080} />
 				<Composition id="ShapesDemo" component={ShapesDemo} durationInFrames={150} fps={30} width={1920} height={1080} />
 				<Composition id="NoiseDemo" component={NoiseDemo} durationInFrames={150} fps={30} width={1920} height={1080} />

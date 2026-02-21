@@ -142,6 +142,21 @@ import { noise2D, noise3D } from '@rendiv/noise';
 const x = noise2D(frame * 0.05, 0) * 100;
 ```
 
+### 🔤 Font Loading
+```tsx
+import { useFont } from '@rendiv/google-fonts';
+
+const fontFamily = useFont({ family: 'Roboto', weight: '700' });
+return <h1 style={{ fontFamily }}>Hello</h1>;
+```
+
+Load local fonts with `@rendiv/fonts`:
+```tsx
+import { useLocalFont } from '@rendiv/fonts';
+
+const fontFamily = useLocalFont({ family: 'CustomFont', src: staticFile('custom.woff2') });
+```
+
 ### 💫 Motion Blur
 ```tsx
 <MotionTrail layers={5} offset={2} fadeRate={0.6}>
@@ -322,7 +337,8 @@ await renderMedia({
 - [x] SVG shapes and path animation (`@rendiv/shapes`, `@rendiv/paths`)
 - [x] Simplex noise (`@rendiv/noise`)
 - [x] Motion blur effects (`@rendiv/motion-blur`)
-- [ ] Lottie, Three.js, custom fonts integrations
+- [x] Font loading (`@rendiv/fonts`, `@rendiv/google-fonts`)
+- [ ] Lottie, Three.js integrations
 - [ ] Cloud / distributed rendering
 - [ ] Visual timeline editor GUI
 
