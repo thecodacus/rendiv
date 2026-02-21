@@ -3,6 +3,7 @@ import { createContext } from 'react';
 export interface TimelineEntry {
   id: string;
   name: string;
+  namePath: string;
   from: number;
   durationInFrames: number;
   parentId: string | null;

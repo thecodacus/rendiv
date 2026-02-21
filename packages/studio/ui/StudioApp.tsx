@@ -5,16 +5,42 @@ import {
   CompositionManagerContext,
   type CompositionEntry,
   type TimelineEntry,
+  type TimelineOverride,
 } from '@rendiv/core';
 import { Sidebar } from './Sidebar';
 import { Preview } from './Preview';
 import { TopBar } from './TopBar';
 import { Timeline } from './Timeline';
+import { TimelineEditor } from './TimelineEditor';
 import { RenderQueue, type RenderJob } from './RenderQueue';
 import { layoutStyles, scrollbarCSS } from './styles';
 
 // Read the entry point from the generated code's data attribute (set by studio-entry-code)
 const ENTRY_POINT = (window as Record<string, unknown>).__RENDIV_STUDIO_ENTRY__ as string ?? 'src/index.tsx';
+
+const ViewToggle: React.FC<{ view: 'editor' | 'tree'; onChange: (v: 'editor' | 'tree') => void }> = ({ view, onChange }) => (
+  <div style={{ display: 'flex', gap: 2, padding: '2px', backgroundColor: '#0d1117', borderRadius: 6 }}>
+    {(['editor', 'tree'] as const).map((v) => (
+      <button
+        key={v}
+        onClick={() => onChange(v)}
+        style={{
+          padding: '3px 10px',
+          fontSize: 11,
+          fontWeight: 500,
+          border: 'none',
+          borderRadius: 4,
+          cursor: 'pointer',
+          backgroundColor: view === v ? '#30363d' : 'transparent',
+          color: view === v ? '#e6edf3' : '#8b949e',
+          fontFamily: 'system-ui, -apple-system, sans-serif',
+        }}
+      >
+        {v === 'editor' ? 'Tracks' : 'Tree'}
+      </button>
+    ))}
+  </div>
+);
 
 const StudioApp: React.FC = () => {
   const [compositions, setCompositions] = useState<CompositionEntry[]>([]);
@@ -34,6 +60,16 @@ const StudioApp: React.FC = () => {
   const isDraggingTimeline = useRef(false);
   const dragStartY = useRef(0);
   const dragStartHeight = useRef(0);
+
+  // Timeline override state
+  const [overrides, setOverrides] = useState<Map<string, TimelineOverride>>(new Map());
+  const [timelineView, setTimelineView] = useState<'editor' | 'tree'>(() => {
+    return (localStorage.getItem('rendiv-studio:timeline-view') as 'editor' | 'tree') || 'editor';
+  });
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const selectedIdRef = useRef(selectedId);
+  selectedIdRef.current = selectedId;
+  const pruneTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Render queue state (server-driven)
   const [renderJobs, setRenderJobs] = useState<RenderJob[]>([]);
@@ -70,17 +106,118 @@ const StudioApp: React.FC = () => {
     };
   }, []);
 
+  // --- Timeline overrides ---
+
+  // Fetch overrides from server on mount, populate global Map
+  useEffect(() => {
+    fetch('/__rendiv_api__/timeline/overrides')
+      .then((res) => res.ok ? res.json() : { overrides: {} })
+      .then((data: { overrides: Record<string, TimelineOverride> }) => {
+        const map = new Map<string, TimelineOverride>(Object.entries(data.overrides));
+        (window as unknown as Record<string, unknown>).__RENDIV_TIMELINE_OVERRIDES__ = map;
+        setOverrides(map);
+        // Force re-render of composition tree
+        seekRef.current?.(currentFrame);
+      })
+      .catch(() => {});
+  }, []);
+
+  // Debounced save to server
+  const saveOverridesToServer = useCallback((map: Map<string, TimelineOverride>) => {
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = setTimeout(() => {
+      const obj: Record<string, TimelineOverride> = {};
+      map.forEach((v, k) => { obj[k] = v; });
+      fetch('/__rendiv_api__/timeline/overrides', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ overrides: obj }),
+      }).catch(() => {});
+    }, 300);
+  }, []);
+  const saveOverridesToServerRef = useRef(saveOverridesToServer);
+  saveOverridesToServerRef.current = saveOverridesToServer;
+
+  const handleOverrideChange = useCallback((namePath: string, override: TimelineOverride) => {
+    const w = window as unknown as Record<string, unknown>;
+    let map = w.__RENDIV_TIMELINE_OVERRIDES__ as Map<string, TimelineOverride> | undefined;
+    if (!map) {
+      map = new Map();
+      w.__RENDIV_TIMELINE_OVERRIDES__ = map;
+    }
+    map.set(namePath, override);
+    setOverrides(new Map(map));
+    seekRef.current?.(currentFrame);
+    saveOverridesToServer(map);
+  }, [currentFrame, saveOverridesToServer]);
+
+  const handleOverrideRemove = useCallback((namePath: string) => {
+    const w = window as unknown as Record<string, unknown>;
+    const map = w.__RENDIV_TIMELINE_OVERRIDES__ as Map<string, TimelineOverride> | undefined;
+    if (map) {
+      map.delete(namePath);
+      setOverrides(new Map(map));
+      seekRef.current?.(currentFrame);
+      saveOverridesToServer(map);
+    }
+  }, [currentFrame, saveOverridesToServer]);
+
+  const handleOverridesClear = useCallback(() => {
+    const w = window as unknown as Record<string, unknown>;
+    const map = w.__RENDIV_TIMELINE_OVERRIDES__ as Map<string, TimelineOverride> | undefined;
+    if (map) map.clear();
+    setOverrides(new Map());
+    seekRef.current?.(currentFrame);
+    fetch('/__rendiv_api__/timeline/overrides', { method: 'DELETE' }).catch(() => {});
+  }, [currentFrame]);
+
+  const handleTimelineViewChange = useCallback((view: 'editor' | 'tree') => {
+    setTimelineView(view);
+    localStorage.setItem('rendiv-studio:timeline-view', view);
+  }, []);
+
   // Timeline registry: reads from a shared global Map + listens for sync events.
+  // Orphan pruning is debounced to avoid reacting to transient states — when a
+  // Sequence effect re-runs (e.g. after an override changes absoluteFrom), React
+  // runs the cleanup (which deletes the entry and dispatches sync) before the new
+  // effect re-registers it. Without debouncing, the pruning would see the entry
+  // as missing during this gap and delete the override.
   useEffect(() => {
     const readEntries = () => {
       const w = window as unknown as Record<string, unknown>;
       const entries = w.__RENDIV_TIMELINE_ENTRIES__ as Map<string, TimelineEntry> | undefined;
-      setTimelineEntries(entries ? Array.from(entries.values()) : []);
+      const list = entries ? Array.from(entries.values()) : [];
+      setTimelineEntries(list);
+
+      // Debounced orphan pruning — wait for effects to settle
+      if (pruneTimerRef.current) clearTimeout(pruneTimerRef.current);
+      pruneTimerRef.current = setTimeout(() => {
+        const currentSelectedId = selectedIdRef.current;
+        const overrideMap = w.__RENDIV_TIMELINE_OVERRIDES__ as Map<string, TimelineOverride> | undefined;
+        const currentEntries = w.__RENDIV_TIMELINE_ENTRIES__ as Map<string, TimelineEntry> | undefined;
+        const currentList = currentEntries ? Array.from(currentEntries.values()) : [];
+        if (overrideMap && overrideMap.size > 0 && currentSelectedId) {
+          const prefix = `${currentSelectedId}/`;
+          const activeNamePaths = new Set(currentList.map((e) => e.namePath));
+          let pruned = false;
+          for (const key of overrideMap.keys()) {
+            if (key.startsWith(prefix) && !activeNamePaths.has(key)) {
+              overrideMap.delete(key);
+              pruned = true;
+            }
+          }
+          if (pruned) {
+            setOverrides(new Map(overrideMap));
+            saveOverridesToServerRef.current(overrideMap);
+          }
+        }
+      }, 500);
     };
     readEntries();
     document.addEventListener('rendiv:timeline-sync', readEntries);
     return () => {
       document.removeEventListener('rendiv:timeline-sync', readEntries);
+      if (pruneTimerRef.current) clearTimeout(pruneTimerRef.current);
     };
   }, []);
 
@@ -273,14 +410,38 @@ const StudioApp: React.FC = () => {
             onMouseDown={handleResizeMouseDown}
           />
           <div style={{ flex: 1, overflow: 'auto' }}>
-            <Timeline
-              entries={timelineEntries}
-              currentFrame={currentFrame}
-              totalFrames={selectedComposition.durationInFrames}
-              fps={selectedComposition.fps}
-              onSeek={handleTimelineSeek}
-              compositionName={selectedComposition.id}
-            />
+            {timelineView === 'editor' ? (
+              <TimelineEditor
+                entries={timelineEntries}
+                currentFrame={currentFrame}
+                totalFrames={selectedComposition.durationInFrames}
+                fps={selectedComposition.fps}
+                compositionName={selectedComposition.id}
+                onSeek={handleTimelineSeek}
+                overrides={overrides}
+                onOverrideChange={handleOverrideChange}
+                onOverrideRemove={handleOverrideRemove}
+                onOverridesClear={handleOverridesClear}
+                view={timelineView}
+                onViewChange={handleTimelineViewChange}
+              />
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+                <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '4px 8px', backgroundColor: '#161b22', borderBottom: '1px solid #30363d' }}>
+                  <ViewToggle view={timelineView} onChange={handleTimelineViewChange} />
+                </div>
+                <div style={{ flex: 1, overflow: 'auto' }}>
+                  <Timeline
+                    entries={timelineEntries}
+                    currentFrame={currentFrame}
+                    totalFrames={selectedComposition.durationInFrames}
+                    fps={selectedComposition.fps}
+                    onSeek={handleTimelineSeek}
+                    compositionName={selectedComposition.id}
+                  />
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

@@ -50,7 +50,7 @@ function SeriesRoot({ children }: SeriesProps): React.ReactElement {
 
     const from = accumulatedFrom + offset;
 
-    // Derive name from the child component if not explicitly provided
+    // Derive name from the child component if not explicitly provided.
     let sequenceName = name;
     if (!sequenceName) {
       const childElements = Children.toArray(sequenceChildren);

@@ -64,3 +64,4 @@ export {
   type TimelineRegistryContextValue,
   type TimelineEntry,
 } from './context/TimelineRegistryContext';
+export { type TimelineOverride } from './types/timeline-override';

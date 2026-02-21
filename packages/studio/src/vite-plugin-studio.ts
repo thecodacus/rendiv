@@ -1,5 +1,7 @@
 import type { Plugin } from 'vite';
 import type { IncomingMessage, ServerResponse } from 'node:http';
+import { readFile, writeFile, unlink, mkdir } from 'node:fs/promises';
+import { join } from 'node:path';
 
 export interface StudioPluginOptions {
   studioHtmlFileName: string;
@@ -131,9 +133,62 @@ function jsonResponse(res: ServerResponse, data: unknown, status = 200) {
 export function rendivStudioPlugin(options: StudioPluginOptions): Plugin {
   const { studioHtmlFileName, entryPoint } = options;
 
+  // Timeline overrides persistence — stored in .studio/timeline-overrides.json
+  const overridesDir = join(process.cwd(), '.studio');
+  const overridesFile = join(overridesDir, 'timeline-overrides.json');
+
+  async function readOverrides(): Promise<Record<string, { from: number; durationInFrames: number }>> {
+    try {
+      const raw = await readFile(overridesFile, 'utf-8');
+      return JSON.parse(raw);
+    } catch {
+      return {};
+    }
+  }
+
+  async function writeOverrides(data: Record<string, { from: number; durationInFrames: number }>): Promise<void> {
+    await mkdir(overridesDir, { recursive: true });
+    await writeFile(overridesFile, JSON.stringify(data, null, 2));
+  }
+
   return {
     name: 'rendiv-studio',
     configureServer(server) {
+      // Timeline override API endpoints
+      server.middlewares.use((req, res, next) => {
+        // GET /timeline/overrides — read all overrides
+        if (req.method === 'GET' && req.url === '/__rendiv_api__/timeline/overrides') {
+          readOverrides().then((overrides) => {
+            jsonResponse(res, { overrides });
+          }).catch(() => {
+            jsonResponse(res, { overrides: {} });
+          });
+          return;
+        }
+
+        // PUT /timeline/overrides — write all overrides
+        if (req.method === 'PUT' && req.url === '/__rendiv_api__/timeline/overrides') {
+          readBody(req).then(async (raw) => {
+            const body = JSON.parse(raw);
+            await writeOverrides(body.overrides ?? {});
+            jsonResponse(res, { ok: true });
+          }).catch((err) => {
+            jsonResponse(res, { error: String(err) }, 500);
+          });
+          return;
+        }
+
+        // DELETE /timeline/overrides — clear all overrides
+        if (req.method === 'DELETE' && req.url === '/__rendiv_api__/timeline/overrides') {
+          unlink(overridesFile).catch(() => {}).then(() => {
+            jsonResponse(res, { ok: true });
+          });
+          return;
+        }
+
+        next();
+      });
+
       // Render queue API endpoints
       server.middlewares.use((req, res, next) => {
         // GET /queue — return all jobs

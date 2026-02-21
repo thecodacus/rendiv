@@ -203,6 +203,7 @@ export const Preview: React.FC<PreviewProps> = ({
           key={composition.id}
           ref={playerRef}
           component={composition.component}
+          compositionId={composition.id}
           durationInFrames={composition.durationInFrames}
           fps={composition.fps}
           compositionWidth={composition.width}

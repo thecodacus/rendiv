@@ -30,6 +30,8 @@ export interface PlayerProps {
   fps: number;
   compositionWidth: number;
   compositionHeight: number;
+  /** Composition id exposed via CompositionContext. Defaults to 'player'. */
+  compositionId?: string;
   style?: CSSProperties;
   controls?: boolean;
   loop?: boolean;
@@ -70,6 +72,7 @@ export const Player = forwardRef<PlayerRef, PlayerProps>((props, ref) => {
     fps,
     compositionWidth,
     compositionHeight,
+    compositionId = 'player',
     controls = false,
     loop = false,
     autoPlay = false,
@@ -141,14 +144,14 @@ export const Player = forwardRef<PlayerRef, PlayerProps>((props, ref) => {
 
   const videoConfig = useMemo<CompositionConfig>(
     () => ({
-      id: 'player',
+      id: compositionId,
       width: compositionWidth,
       height: compositionHeight,
       fps,
       durationInFrames,
       defaultProps: inputProps,
     }),
-    [compositionWidth, compositionHeight, fps, durationInFrames, inputProps]
+    [compositionId, compositionWidth, compositionHeight, fps, durationInFrames, inputProps]
   );
 
   const timelineValue = useMemo(
