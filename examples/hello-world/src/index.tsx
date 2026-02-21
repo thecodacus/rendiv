@@ -3,11 +3,13 @@ import { setRootComponent, Composition, Folder } from "@rendiv/core";
 import { HelloWorld } from "./HelloWorld";
 import { SeriesDemo } from "./SeriesDemo";
 import { ShowcaseDemo } from "./ShowcaseDemo";
+import { TransitionsDemo } from "./TransitionsDemo";
 
 const Root: React.FC = () => {
 	return (
 		<>
 			<Folder name="Demos">
+				<Composition id="TransitionsDemo" component={TransitionsDemo} durationInFrames={280} fps={30} width={1920} height={1080} />
 				<Composition id="ShowcaseDemo" component={ShowcaseDemo} durationInFrames={495} fps={30} width={1920} height={1080} />
 				<Composition id="SeriesDemo" component={SeriesDemo} durationInFrames={270} fps={30} width={1920} height={1080} />
 				<Composition id="HelloWorld" component={HelloWorld} durationInFrames={90} fps={30} width={1920} height={1080} />

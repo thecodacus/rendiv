@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@rendiv/core": "workspace:*",
+    "@rendiv/transitions": "workspace:*",
     "@rendiv/player": "workspace:*",
     "@rendiv/cli": "workspace:*",
     "react": "^19.0.0",
