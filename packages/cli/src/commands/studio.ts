@@ -5,8 +5,9 @@ export const studioCommand = new Command('studio')
   .description('Start the Rendiv Studio development server')
   .argument('[entry]', 'Entry file (e.g., src/index.tsx)', 'src/index.tsx')
   .option('--port <number>', 'Port number', '3000')
+  .option('--host <address>', 'Host address to bind to (e.g., 0.0.0.0 for Docker)')
   .option('--workspace <path>', 'Enable workspace mode with the given root directory')
-  .action(async (entry: string, options: { port: string; workspace?: string }) => {
+  .action(async (entry: string, options: { port: string; host?: string; workspace?: string }) => {
     const port = parseInt(options.port, 10);
 
     if (options.workspace) {
@@ -21,6 +22,7 @@ export const studioCommand = new Command('studio')
       const { url, close } = await startStudioWorkspace({
         workspaceDir,
         port,
+        host: options.host,
       });
 
       console.log(chalk.green(`  Rendiv Studio running at ${chalk.bold(url)}\n`));
@@ -44,6 +46,7 @@ export const studioCommand = new Command('studio')
       const { url, close } = await startStudio({
         entryPoint: entry,
         port,
+        host: options.host,
       });
 
       console.log(chalk.green(`  Rendiv Studio running at ${chalk.bold(url)}\n`));

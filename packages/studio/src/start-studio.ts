@@ -9,6 +9,7 @@ import { rendivStudioPlugin } from './vite-plugin-studio.js';
 export interface StudioOptions {
   entryPoint: string;
   port?: number;
+  host?: string;
   publicDir?: string;
   /** When set, Studio is workspace-aware and shows a "Back to projects" button. */
   workspaceDir?: string;
@@ -27,7 +28,7 @@ const HTML_FILE = 'studio.html';
 const FAVICON_FILE = 'favicon.svg';
 
 export async function startStudio(options: StudioOptions): Promise<StudioResult> {
-  const { entryPoint, port = 3000, publicDir = 'public', workspaceDir, onSwitchProject } = options;
+  const { entryPoint, port = 3000, host, publicDir = 'public', workspaceDir, onSwitchProject } = options;
 
   const cwd = process.cwd();
   const absoluteEntry = path.isAbsolute(entryPoint)
@@ -72,6 +73,7 @@ export async function startStudio(options: StudioOptions): Promise<StudioResult>
     },
     server: {
       port,
+      host: host || undefined,
       // Don't auto-open browser on workspace restarts — the browser is already open
       open: !onSwitchProject,
     },

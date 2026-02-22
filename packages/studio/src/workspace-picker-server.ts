@@ -12,6 +12,7 @@ import { scaffoldProject } from './scaffold-project.js';
 export interface WorkspacePickerOptions {
   workspaceDir: string;
   port: number;
+  host?: string;
   onSwitchProject: (projectPath: string | null) => void;
   openBrowser?: boolean;
 }
@@ -178,7 +179,7 @@ function workspacePickerPlugin(options: WorkspacePickerOptions): Plugin {
  * Start a minimal Vite dev server that serves the workspace picker UI.
  */
 export async function startWorkspacePicker(options: WorkspacePickerOptions): Promise<WorkspacePickerResult> {
-  const { workspaceDir, port, openBrowser = true } = options;
+  const { workspaceDir, port, host, openBrowser = true } = options;
 
   // Locate the ui/ directory shipped with this package
   const thisDir = path.dirname(fileURLToPath(import.meta.url));
@@ -213,6 +214,7 @@ export async function startWorkspacePicker(options: WorkspacePickerOptions): Pro
     ],
     server: {
       port,
+      host: host || undefined,
       open: openBrowser,
     },
     resolve: {

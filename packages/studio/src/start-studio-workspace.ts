@@ -6,6 +6,7 @@ import { startWorkspacePicker } from './workspace-picker-server.js';
 export interface WorkspaceOptions {
   workspaceDir: string;
   port?: number;
+  host?: string;
 }
 
 export interface WorkspaceResult {
@@ -45,7 +46,7 @@ function findEntryPoint(projectDir: string): string {
  * All servers run on the same port — only one is active at a time.
  */
 export async function startStudioWorkspace(options: WorkspaceOptions): Promise<WorkspaceResult> {
-  const { workspaceDir, port = 3000 } = options;
+  const { workspaceDir, port = 3000, host } = options;
 
   let currentClose: (() => Promise<void>) | null = null;
   let switching = false;
@@ -72,6 +73,7 @@ export async function startStudioWorkspace(options: WorkspaceOptions): Promise<W
           const result = await startStudio({
             entryPoint,
             port,
+            host,
             workspaceDir,
             onSwitchProject: (p: string | null) => switchTo(p),
           });
@@ -82,6 +84,7 @@ export async function startStudioWorkspace(options: WorkspaceOptions): Promise<W
           const result = await startWorkspacePicker({
             workspaceDir,
             port,
+            host,
             onSwitchProject: (p: string | null) => switchTo(p),
             openBrowser: false,
           });
@@ -95,6 +98,7 @@ export async function startStudioWorkspace(options: WorkspaceOptions): Promise<W
         const result = await startWorkspacePicker({
           workspaceDir,
           port,
+          host,
           onSwitchProject: (p: string | null) => switchTo(p),
           openBrowser: firstLaunch,
         });

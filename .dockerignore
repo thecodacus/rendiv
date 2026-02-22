@@ -1,0 +1,17 @@
+node_modules/
+dist/
+.turbo/
+*.tsbuildinfo
+out/
+.env
+.env.*
+.DS_Store
+*.log
+coverage/
+tmp/
+**/.studio/
+.claude/
+.agents/
+docs/.vitepress/dist/
+docs/.vitepress/cache/
+.git/
