@@ -83,6 +83,8 @@ export const MyVideo = () => {
 | `@rendiv/motion-blur` | Trail and camera motion blur effects |
 | `@rendiv/fonts` | Custom font loading with holdRender |
 | `@rendiv/google-fonts` | Google Fonts integration |
+| `@rendiv/gif` | Animated GIF playback with speed control and fit modes |
+| `@rendiv/captions` | SRT/Whisper parsing, word-by-word highlighting, caption overlay |
 
 ## Quick Start
 

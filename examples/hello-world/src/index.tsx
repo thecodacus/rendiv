@@ -11,11 +11,15 @@ import { MotionBlurDemo } from "./MotionBlurDemo";
 import { FontsDemo } from "./FontsDemo";
 import { LottieDemo } from "./LottieDemo";
 import { ThreeDemo } from "./ThreeDemo";
+import { GifDemo } from "./GifDemo";
+import { CaptionsDemo } from "./CaptionsDemo";
 
 const Root: React.FC = () => {
 	return (
 		<>
 			<Folder name="Demos">
+				<Composition id="GifDemo" component={GifDemo} durationInFrames={150} fps={30} width={1920} height={1080} />
+				<Composition id="CaptionsDemo" component={CaptionsDemo} durationInFrames={150} fps={30} width={1920} height={1080} />
 				<Composition id="LottieDemo" component={LottieDemo} durationInFrames={120} fps={30} width={1920} height={1080} />
 				<Composition id="ThreeDemo" component={ThreeDemo} durationInFrames={150} fps={30} width={1920} height={1080} />
 				<Composition id="FontsDemo" component={FontsDemo} durationInFrames={150} fps={30} width={1920} height={1080} />

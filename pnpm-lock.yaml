@@ -29,6 +29,9 @@ importers:
       '@react-three/fiber':
         specifier: ^9.0.0
         version: 9.5.0(@types/react@19.2.14)(react-dom@19.2.4)(react@19.2.4)(three@0.170.0)
+      '@rendiv/captions':
+        specifier: workspace:*
+        version: link:../../packages/captions
       '@rendiv/cli':
         specifier: workspace:*
         version: link:../../packages/cli
@@ -38,6 +41,9 @@ importers:
       '@rendiv/fonts':
         specifier: workspace:*
         version: link:../../packages/fonts
+      '@rendiv/gif':
+        specifier: workspace:*
+        version: link:../../packages/gif
       '@rendiv/google-fonts':
         specifier: workspace:*
         version: link:../../packages/google-fonts
@@ -113,6 +119,30 @@ importers:
         specifier: ^5.7.0
         version: 5.9.3
 
+  packages/captions:
+    devDependencies:
+      '@rendiv/core':
+        specifier: workspace:*
+        version: link:../rendiv
+      '@rendiv/tsconfig':
+        specifier: workspace:*
+        version: link:../tsconfig
+      '@types/react':
+        specifier: ^19.0.0
+        version: 19.2.14
+      react:
+        specifier: ^19.0.0
+        version: 19.2.4
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+      vite:
+        specifier: ^6.0.0
+        version: 6.4.1(@types/node@22.19.11)
+      vite-plugin-dts:
+        specifier: ^4.3.0
+        version: 4.5.4(typescript@5.9.3)(vite@6.4.1)
+
   packages/cli:
     dependencies:
       '@rendiv/bundler':
@@ -161,6 +191,34 @@ importers:
         version: 22.19.11
 
   packages/fonts:
+    devDependencies:
+      '@rendiv/core':
+        specifier: workspace:*
+        version: link:../rendiv
+      '@rendiv/tsconfig':
+        specifier: workspace:*
+        version: link:../tsconfig
+      '@types/react':
+        specifier: ^19.0.0
+        version: 19.2.14
+      react:
+        specifier: ^19.0.0
+        version: 19.2.4
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+      vite:
+        specifier: ^6.0.0
+        version: 6.4.1(@types/node@22.19.11)
+      vite-plugin-dts:
+        specifier: ^4.3.0
+        version: 4.5.4(typescript@5.9.3)(vite@6.4.1)
+
+  packages/gif:
+    dependencies:
+      gifuct-js:
+        specifier: ^2.1.2
+        version: 2.1.2
     devDependencies:
       '@rendiv/core':
         specifier: workspace:*
@@ -401,6 +459,9 @@ importers:
 
   packages/skills:
     devDependencies:
+      '@rendiv/captions':
+        specifier: workspace:*
+        version: link:../captions
       '@rendiv/cli':
         specifier: workspace:*
         version: link:../cli
@@ -410,6 +471,9 @@ importers:
       '@rendiv/fonts':
         specifier: workspace:*
         version: link:../fonts
+      '@rendiv/gif':
+        specifier: workspace:*
+        version: link:../gif
       '@rendiv/google-fonts':
         specifier: workspace:*
         version: link:../google-fonts
@@ -2961,6 +3025,12 @@ packages:
       es-object-atoms: 1.1.1
     dev: true
 
+  /gifuct-js@2.1.2:
+    resolution: {integrity: sha512-rI2asw77u0mGgwhV3qA+OEgYqaDn5UNqgs+Bx0FGwSpuqfYn+Ir6RQY5ENNQ8SbIiG/m5gVa7CD5RriO4f4Lsg==}
+    dependencies:
+      js-binary-schema-parser: 2.0.3
+    dev: false
+
   /gopd@1.2.0:
     resolution: {integrity: sha512-ZUKRh6/kUFoAiTAtTYPZJ3hw9wNxx+BIBOijnlG9PnrJsCcSjs1wyyD6vJpaYtgnzDrKYRSqf3OO6Rfa93xsRg==}
     engines: {node: '>= 0.4'}
@@ -3115,6 +3185,10 @@ packages:
   /jju@1.4.0:
     resolution: {integrity: sha512-8wb9Yw966OSxApiCt0K3yNJL8pnNeIv+OEq2YMidz4FKP6nonSRoOXc80iXY4JaN2FC11B9qsNmDsm+ZOfMROA==}
     dev: true
+
+  /js-binary-schema-parser@2.0.3:
+    resolution: {integrity: sha512-xezGJmOb4lk/M1ZZLTR/jaBHQ4gG/lqQnJqdIv4721DMggsa1bDVlHXNeHYogaIEHD9vCRv0fcL4hMA+Coarkg==}
+    dev: false
 
   /js-tokens@4.0.0:
     resolution: {integrity: sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==}

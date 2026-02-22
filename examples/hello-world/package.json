@@ -23,6 +23,8 @@
     "@rendiv/player": "workspace:*",
     "@rendiv/lottie": "workspace:*",
     "@rendiv/three": "workspace:*",
+    "@rendiv/gif": "workspace:*",
+    "@rendiv/captions": "workspace:*",
     "@rendiv/cli": "workspace:*",
     "three": "^0.170.0",
     "@react-three/fiber": "^9.0.0",

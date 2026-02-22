@@ -81,6 +81,8 @@ Load the relevant rule file based on the task at hand:
 | Time-shift with `Sequence`, `Series`, `Loop`, `Freeze` | [sequencing-and-timing.md](rules/sequencing-and-timing.md) |
 | Control z-ordering and timeline overrides | [timeline-overrides.md](rules/timeline-overrides.md) |
 | Embed images, video, audio, GIFs, iframes | [media-components.md](rules/media-components.md) |
+| Render animated GIFs with playback control | [gif.md](rules/gif.md) |
+| Add subtitles, SRT parsing, word highlighting | [captions.md](rules/captions.md) |
 | Understand `holdRender`, environment modes, rendering pipeline | [render-lifecycle.md](rules/render-lifecycle.md) |
 | Animate between scenes with `TransitionSeries` | [transitions.md](rules/transitions.md) |
 | Generate SVG shapes or manipulate paths | [shapes-and-paths.md](rules/shapes-and-paths.md) |
@@ -123,6 +125,8 @@ Load the relevant rule file based on the task at hand:
 | `@rendiv/fonts` | Local font loading with holdRender |
 | `@rendiv/google-fonts` | Google Fonts loading with holdRender |
 | `@rendiv/motion-blur` | MotionTrail and ShutterBlur components |
+| `@rendiv/gif` | Animated GIF playback with speed control and fit modes |
+| `@rendiv/captions` | SRT/Whisper parsing, word-by-word highlighting, caption overlay |
 | `@rendiv/lottie` | Frame-accurate Lottie animations via lottie-web |
 | `@rendiv/three` | 3D scenes via React Three Fiber with context bridging |
 

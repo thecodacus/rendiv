@@ -60,6 +60,36 @@ import { AnimatedImage } from '@rendiv/core';
 <AnimatedImage src="/stickers/wave.gif" style={{ width: 200 }} />
 ```
 
+## Gif (`@rendiv/gif`)
+
+Animated GIF component with playback rate control, fit modes, and cross-browser decoding via `gifuct-js`. Use this when you need more control than `<AnimatedImage>`.
+
+```tsx
+import { Gif } from '@rendiv/gif';
+
+<Gif src="/stickers/wave.gif" width={400} height={300} fit="cover" playbackRate={0.5} />
+```
+
+Props: `src`, `width`, `height`, `fit` (`fill` | `contain` | `cover`), `playbackRate`, `loop`, `style`, `className`. See the [full docs](/packages/gif).
+
+## Captions (`@rendiv/captions`)
+
+Parse SRT files or Whisper transcripts and render caption overlays with optional word-by-word highlighting.
+
+```tsx
+import { parseSrt, CaptionRenderer } from '@rendiv/captions';
+
+const captions = parseSrt(srtString);
+
+<CaptionRenderer
+  captions={captions}
+  align="bottom"
+  activeStyle={{ fontSize: 32, color: '#fff' }}
+/>
+```
+
+Supports `createHighlightedCaptions()` for TikTok/Reels-style word highlighting. See the [full docs](/packages/captions).
+
 ## IFrame
 
 Embeds an iframe with holdRender integration.
