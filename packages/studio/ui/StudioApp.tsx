@@ -18,6 +18,83 @@ import { RenderQueue, type RenderJob } from './RenderQueue';
 import { Terminal } from './Terminal';
 import { layoutStyles, scrollbarCSS, colors, fonts } from './styles';
 
+// --- Error Boundary ---
+// Catches runtime errors in user composition code so Studio chrome stays alive.
+// Resets automatically on Vite HMR updates.
+class ErrorBoundary extends React.Component<
+  { children: React.ReactNode; fallbackLabel?: string },
+  { error: Error | null }
+> {
+  constructor(props: { children: React.ReactNode; fallbackLabel?: string }) {
+    super(props);
+    this.state = { error: null };
+  }
+
+  static getDerivedStateFromError(error: Error) {
+    return { error };
+  }
+
+  componentDidMount() {
+    // Reset error state when Vite pushes a hot update
+    const hot = (import.meta as any).hot as
+      | { on: (e: string, cb: () => void) => void; off?: (e: string, cb: () => void) => void }
+      | undefined;
+    if (hot) {
+      this._hmrHandler = () => this.setState({ error: null });
+      hot.on('vite:beforeUpdate', this._hmrHandler);
+    }
+  }
+
+  componentWillUnmount() {
+    const hot = (import.meta as any).hot as
+      | { off?: (e: string, cb: () => void) => void }
+      | undefined;
+    if (hot?.off && this._hmrHandler) {
+      hot.off('vite:beforeUpdate', this._hmrHandler);
+    }
+  }
+
+  private _hmrHandler: (() => void) | null = null;
+
+  render() {
+    if (this.state.error) {
+      const label = this.props.fallbackLabel ?? 'Component';
+      return (
+        <div style={{
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column' as const,
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: 32,
+          color: '#f85149',
+          fontFamily: 'system-ui, -apple-system, sans-serif',
+          gap: 12,
+        }}>
+          <div style={{ fontSize: 14, fontWeight: 600 }}>{label} Error</div>
+          <pre style={{
+            maxWidth: '90%',
+            maxHeight: 200,
+            overflow: 'auto',
+            padding: 12,
+            borderRadius: 6,
+            backgroundColor: 'rgba(248,81,73,0.1)',
+            border: '1px solid rgba(248,81,73,0.3)',
+            fontSize: 12,
+            whiteSpace: 'pre-wrap',
+            wordBreak: 'break-word',
+            color: '#f0883e',
+          }}>
+            {this.state.error.message}
+          </pre>
+          <div style={{ fontSize: 11, color: '#8b949e' }}>Fix the error and save — Studio will recover automatically via HMR.</div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 // Read the entry point from the generated code's data attribute (set by studio-entry-code)
 const ENTRY_POINT = (window as Record<string, unknown>).__RENDIV_STUDIO_ENTRY__ as string ?? 'src/index.tsx';
 // When set, Studio was launched from a workspace and can navigate back
@@ -460,15 +537,17 @@ const StudioApp: React.FC = () => {
             onClose={() => setViewingAsset(null)}
           />
         ) : selectedComposition ? (
-          <Preview
-            composition={selectedComposition}
-            inputProps={inputProps}
-            playbackRate={playbackRate}
-            onPlaybackRateChange={setPlaybackRate}
-            onInputPropsChange={setInputProps}
-            onFrameUpdate={setCurrentFrame}
-            seekRef={seekRef}
-          />
+          <ErrorBoundary fallbackLabel="Composition">
+            <Preview
+              composition={selectedComposition}
+              inputProps={inputProps}
+              playbackRate={playbackRate}
+              onPlaybackRateChange={setPlaybackRate}
+              onInputPropsChange={setInputProps}
+              onFrameUpdate={setCurrentFrame}
+              seekRef={seekRef}
+            />
+          </ErrorBoundary>
         ) : (
           <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#8b949e' }}>
             {compositions.length === 0 ? 'Loading compositions...' : 'Select a composition'}
@@ -584,9 +663,11 @@ const StudioApp: React.FC = () => {
 
       {/* Hidden: render Root to trigger composition registration via useEffect */}
       <CompositionManagerContext.Provider value={managerValue}>
-        <div style={{ display: 'none' }}>
-          {Root ? <Root /> : null}
-        </div>
+        <ErrorBoundary fallbackLabel="Root Component">
+          <div style={{ display: 'none' }}>
+            {Root ? <Root /> : null}
+          </div>
+        </ErrorBoundary>
       </CompositionManagerContext.Provider>
     </div>
   );
