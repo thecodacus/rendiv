@@ -142,7 +142,7 @@ A subdirectory is detected as a Rendiv project if it contains a `package.json` w
 
 ## Docker
 
-Run Studio in a container for cloud-hosted or remote setups. The official Docker image includes Playwright Chromium, FFmpeg, and the integrated agent terminal. Claude Code and Codex CLI are installed automatically on first start.
+Run Studio in a container for cloud-hosted or remote setups. The official Docker image includes Playwright Chromium, FFmpeg, and the integrated agent terminal. Claude Code and Codex CLI are installed automatically on first start, and the `rendiv-video` agent skill is preloaded globally so both agents can work with rendiv projects immediately.
 
 ### Quick Start
 
@@ -205,6 +205,7 @@ services:
 | node-pty | Powers the integrated agent terminal |
 | Claude Code | Installed on first container start |
 | Codex CLI | Installed on first container start |
+| rendiv-video skill | Preloaded globally for Claude Code and Codex |
 | git, curl | General utilities |
 
 ### Cloud Hosting
