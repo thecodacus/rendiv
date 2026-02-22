@@ -78,6 +78,8 @@ export async function startStudio(options: StudioOptions): Promise<StudioResult>
       open: !onSwitchProject && !host,
       // Allow any hostname when binding to a network interface (remote/Docker)
       allowedHosts: host ? true : undefined,
+      // Enable polling for Docker/remote where native fs events don't work on mounted volumes
+      watch: host ? { usePolling: true, interval: 500 } : undefined,
     },
     optimizeDeps: {
       entries: [studioEntryFile],

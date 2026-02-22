@@ -217,6 +217,7 @@ export async function startWorkspacePicker(options: WorkspacePickerOptions): Pro
       host: host || undefined,
       open: openBrowser,
       allowedHosts: host ? true : undefined,
+      watch: host ? { usePolling: true, interval: 500 } : undefined,
     },
     resolve: {
       alias: {
