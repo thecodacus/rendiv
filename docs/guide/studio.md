@@ -140,6 +140,82 @@ This opens a project picker UI in the browser. The `--workspace` flag takes the 
 
 A subdirectory is detected as a Rendiv project if it contains a `package.json` with `@rendiv/core` in `dependencies` or `devDependencies`. The entry point is detected from the `studio` script in `package.json` (e.g., `rendiv studio src/index.tsx`), falling back to `src/index.tsx`.
 
+## Docker
+
+Run Studio in a container for cloud-hosted or remote setups. The official Docker image includes Playwright Chromium, FFmpeg, and the integrated agent terminal. Claude Code and Codex CLI are installed automatically on first start.
+
+### Quick Start
+
+```bash
+docker run -v /path/to/projects:/workspace -p 3000:3000 ghcr.io/thecodacus/rendiv-studio
+```
+
+Open `http://localhost:3000` — you'll see the workspace picker with your projects.
+
+### Custom Port
+
+```bash
+docker run -v ./projects:/workspace -p 4000:4000 \
+  ghcr.io/thecodacus/rendiv-studio \
+  rendiv studio --workspace /workspace --port 4000 --host 0.0.0.0
+```
+
+### Interactive Shell
+
+Drop into the container to use Claude Code or Codex directly:
+
+```bash
+docker run -it -v ./projects:/workspace -p 3000:3000 \
+  ghcr.io/thecodacus/rendiv-studio bash
+```
+
+### API Keys
+
+Pass your API keys as environment variables:
+
+```bash
+docker run -v ./projects:/workspace -p 3000:3000 \
+  -e ANTHROPIC_API_KEY=sk-ant-... \
+  -e OPENAI_API_KEY=sk-... \
+  ghcr.io/thecodacus/rendiv-studio
+```
+
+### Docker Compose
+
+```yaml
+services:
+  studio:
+    image: ghcr.io/thecodacus/rendiv-studio
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./projects:/workspace
+    environment:
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+```
+
+### What's Included
+
+| Component | Details |
+|-----------|---------|
+| Node.js 20 | Runtime for Studio and rendering |
+| Playwright Chromium | Headless browser for server-side frame capture |
+| FFmpeg | Video stitching (MP4, WebM, GIF) |
+| node-pty | Powers the integrated agent terminal |
+| Claude Code | Installed on first container start |
+| Codex CLI | Installed on first container start |
+| git, curl | General utilities |
+
+### Cloud Hosting
+
+The image is designed for remote access. Key details:
+
+- The server binds to `0.0.0.0` by default (accessible from outside the container)
+- Single port for everything — workspace picker, project Studio, and rendering
+- The workspace picker survives page refreshes and reconnects automatically
+- Render jobs run server-side and persist across browser reconnections
+
 ## Keyboard Shortcuts
 
 | Key | Action |
