@@ -216,6 +216,7 @@ export async function startWorkspacePicker(options: WorkspacePickerOptions): Pro
       port,
       host: host || undefined,
       open: openBrowser,
+      allowedHosts: host ? true : undefined,
     },
     resolve: {
       alias: {

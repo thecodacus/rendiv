@@ -76,6 +76,8 @@ export async function startStudio(options: StudioOptions): Promise<StudioResult>
       host: host || undefined,
       // Don't auto-open browser on workspace restarts or remote/Docker (--host)
       open: !onSwitchProject && !host,
+      // Allow any hostname when binding to a network interface (remote/Docker)
+      allowedHosts: host ? true : undefined,
     },
     optimizeDeps: {
       entries: [studioEntryFile],
