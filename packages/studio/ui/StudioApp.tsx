@@ -9,6 +9,8 @@ import {
 } from '@rendiv/core';
 import { Sidebar } from './Sidebar';
 import { Preview } from './Preview';
+import { AssetPreview } from './AssetPreview';
+import type { AssetEntry } from './AssetBrowser';
 import { TopBar } from './TopBar';
 import { Timeline } from './Timeline';
 import { TimelineEditor } from './TimelineEditor';
@@ -51,6 +53,7 @@ const StudioApp: React.FC = () => {
     const hash = window.location.hash.slice(1);
     return hash || null;
   });
+  const [viewingAsset, setViewingAsset] = useState<AssetEntry | null>(null);
   const [inputProps, setInputProps] = useState<Record<string, unknown>>({});
   const [playbackRate, setPlaybackRate] = useState(1);
   const [currentFrame, setCurrentFrame] = useState(0);
@@ -446,10 +449,17 @@ const StudioApp: React.FC = () => {
         <Sidebar
           compositions={compositions}
           selectedId={selectedId}
-          onSelect={setSelectedId}
+          onSelect={(id: string) => { setViewingAsset(null); setSelectedId(id); }}
+          selectedAssetPath={viewingAsset?.path ?? null}
+          onAssetSelect={setViewingAsset}
         />
 
-        {selectedComposition ? (
+        {viewingAsset ? (
+          <AssetPreview
+            asset={viewingAsset}
+            onClose={() => setViewingAsset(null)}
+          />
+        ) : selectedComposition ? (
           <Preview
             composition={selectedComposition}
             inputProps={inputProps}
@@ -528,8 +538,8 @@ const StudioApp: React.FC = () => {
         )}
       </div>
 
-      {/* Timeline — full-width resizable row */}
-      {selectedComposition && (
+      {/* Timeline — full-width resizable row (hidden when previewing an asset) */}
+      {selectedComposition && !viewingAsset && (
         <div style={{ ...layoutStyles.timeline, height: timelineHeight }}>
           <div
             style={layoutStyles.timelineResizeHandle}

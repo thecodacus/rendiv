@@ -1,7 +1,7 @@
 import type { Plugin } from 'vite';
 import type { IncomingMessage, ServerResponse } from 'node:http';
-import { readFile, writeFile, unlink } from 'node:fs/promises';
-import { join } from 'node:path';
+import { readFile, writeFile, unlink, readdir, stat as fsStat } from 'node:fs/promises';
+import { join, resolve, relative } from 'node:path';
 
 export interface StudioPluginOptions {
   studioHtmlFileName: string;
@@ -404,6 +404,59 @@ export function rendivStudioPlugin(options: StudioPluginOptions): Plugin {
           return;
         }
 
+        next();
+      });
+
+      // --- Assets API endpoints ---
+      const publicDir = resolve(process.cwd(), 'public');
+
+      interface AssetEntry {
+        name: string;
+        path: string;
+        type: 'file' | 'directory';
+        size: number;
+        children?: AssetEntry[];
+      }
+
+      async function listAssets(dir: string): Promise<AssetEntry[]> {
+        try {
+          const entries = await readdir(dir, { withFileTypes: true });
+          const sorted = entries.sort((a, b) => {
+            // Directories first, then alphabetical
+            if (a.isDirectory() && !b.isDirectory()) return -1;
+            if (!a.isDirectory() && b.isDirectory()) return 1;
+            return a.name.localeCompare(b.name);
+          });
+          const result: AssetEntry[] = [];
+          for (const entry of sorted) {
+            if (entry.name.startsWith('.')) continue; // skip dotfiles
+            const fullPath = join(dir, entry.name);
+            // Path traversal protection
+            if (!fullPath.startsWith(publicDir)) continue;
+            const relativePath = relative(publicDir, fullPath);
+            if (entry.isDirectory()) {
+              const children = await listAssets(fullPath);
+              result.push({ name: entry.name, path: relativePath, type: 'directory', size: 0, children });
+            } else {
+              const st = await fsStat(fullPath);
+              result.push({ name: entry.name, path: relativePath, type: 'file', size: st.size });
+            }
+          }
+          return result;
+        } catch {
+          return [];
+        }
+      }
+
+      server.middlewares.use((req, res, next) => {
+        if (req.method === 'GET' && req.url === '/__rendiv_api__/assets/list') {
+          listAssets(publicDir).then((entries) => {
+            jsonResponse(res, { entries });
+          }).catch(() => {
+            jsonResponse(res, { entries: [] });
+          });
+          return;
+        }
         next();
       });
 
