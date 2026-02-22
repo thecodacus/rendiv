@@ -11,6 +11,9 @@ interface TopBarProps {
   queueCount: number;
   panelOpen: boolean;
   onTogglePanel: () => void;
+  /** When set, shows a "Back to projects" button. */
+  workspaceDir?: string;
+  onBackToWorkspace?: () => void;
 }
 
 const RenderIcon: React.FC = () => (
@@ -26,7 +29,13 @@ const PanelIcon: React.FC<{ open: boolean }> = ({ open }) => (
   </svg>
 );
 
-export const TopBar: React.FC<TopBarProps> = ({ composition, entryPoint, onRender, queueCount, panelOpen, onTogglePanel }) => {
+const BackIcon: React.FC = () => (
+  <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M7.78 12.53a.75.75 0 0 1-1.06 0L2.47 8.28a.75.75 0 0 1 0-1.06l4.25-4.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042L4.81 7h7.44a.75.75 0 0 1 0 1.5H4.81l2.97 2.97a.75.75 0 0 1 0 1.06Z" fill="currentColor" />
+  </svg>
+);
+
+export const TopBar: React.FC<TopBarProps> = ({ composition, entryPoint, onRender, queueCount, panelOpen, onTogglePanel, workspaceDir, onBackToWorkspace }) => {
   const [copied, setCopied] = useState(false);
 
   const handleCopyCommand = useCallback(() => {
@@ -40,7 +49,28 @@ export const TopBar: React.FC<TopBarProps> = ({ composition, entryPoint, onRende
 
   return (
     <div style={topBarStyles.container}>
-      <img src={logoUrl} alt="Rendiv" width="120" height="28" />
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        {workspaceDir && onBackToWorkspace && (
+          <button
+            type="button"
+            style={{
+              ...topBarStyles.button,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 4,
+              padding: '4px 10px',
+            }}
+            onClick={onBackToWorkspace}
+            title="Back to projects"
+            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = colors.border; }}
+            onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = colors.surfaceHover; }}
+          >
+            <BackIcon />
+            Projects
+          </button>
+        )}
+        <img src={logoUrl} alt="Rendiv" width="120" height="28" />
+      </div>
 
       <span style={topBarStyles.compositionName}>
         {composition ? composition.id : 'No composition selected'}

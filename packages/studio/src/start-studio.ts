@@ -3,13 +3,17 @@ import react from '@vitejs/plugin-react';
 import path from 'node:path';
 import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { generateStudioEntryCode, generateStudioHtml, FAVICON_SVG } from './studio-entry-code.js';
+import { generateStudioEntryCode, generateStudioHtml, generateStudioGlobals, FAVICON_SVG } from './studio-entry-code.js';
 import { rendivStudioPlugin } from './vite-plugin-studio.js';
 
 export interface StudioOptions {
   entryPoint: string;
   port?: number;
   publicDir?: string;
+  /** When set, Studio is workspace-aware and shows a "Back to projects" button. */
+  workspaceDir?: string;
+  /** Callback to switch projects. Called with project path or null (back to picker). */
+  onSwitchProject?: (projectPath: string | null) => void;
 }
 
 export interface StudioResult {
@@ -23,7 +27,7 @@ const HTML_FILE = 'studio.html';
 const FAVICON_FILE = 'favicon.svg';
 
 export async function startStudio(options: StudioOptions): Promise<StudioResult> {
-  const { entryPoint, port = 3000, publicDir = 'public' } = options;
+  const { entryPoint, port = 3000, publicDir = 'public', workspaceDir, onSwitchProject } = options;
 
   const cwd = process.cwd();
   const absoluteEntry = path.isAbsolute(entryPoint)
@@ -43,7 +47,8 @@ export async function startStudio(options: StudioOptions): Promise<StudioResult>
   const studioFaviconFile = `${STUDIO_DIR}/${FAVICON_FILE}`;
 
   const entryCode = generateStudioEntryCode(absoluteEntry, studioUiDir, entryPoint);
-  const htmlCode = generateStudioHtml(studioEntryFile, studioFaviconFile);
+  const globalsScript = generateStudioGlobals(entryPoint, workspaceDir);
+  const htmlCode = generateStudioHtml(studioEntryFile, studioFaviconFile, globalsScript);
 
   fs.writeFileSync(path.join(studioDir, ENTRY_FILE), entryCode);
   fs.writeFileSync(path.join(studioDir, HTML_FILE), htmlCode);
@@ -58,7 +63,7 @@ export async function startStudio(options: StudioOptions): Promise<StudioResult>
     publicDir: path.resolve(cwd, publicDir),
     plugins: [
       react(),
-      rendivStudioPlugin({ studioHtmlFileName: studioHtmlFile, entryPoint: absoluteEntry }),
+      rendivStudioPlugin({ studioHtmlFileName: studioHtmlFile, entryPoint: absoluteEntry, workspaceDir, onSwitchProject }),
     ],
     resolve: {
       // Force Vite to resolve these packages from the user's project root,
@@ -67,7 +72,8 @@ export async function startStudio(options: StudioOptions): Promise<StudioResult>
     },
     server: {
       port,
-      open: true,
+      // Don't auto-open browser on workspace restarts — the browser is already open
+      open: !onSwitchProject,
     },
     optimizeDeps: {
       entries: [studioEntryFile],

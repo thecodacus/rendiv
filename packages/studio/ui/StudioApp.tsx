@@ -18,6 +18,8 @@ import { layoutStyles, scrollbarCSS, colors, fonts } from './styles';
 
 // Read the entry point from the generated code's data attribute (set by studio-entry-code)
 const ENTRY_POINT = (window as Record<string, unknown>).__RENDIV_STUDIO_ENTRY__ as string ?? 'src/index.tsx';
+// When set, Studio was launched from a workspace and can navigate back
+const WORKSPACE_DIR = (window as unknown as Record<string, unknown>).__RENDIV_WORKSPACE_DIR__ as string | undefined;
 
 const ViewToggle: React.FC<{ view: 'editor' | 'tree'; onChange: (v: 'editor' | 'tree') => void }> = ({ view, onChange }) => (
   <div style={{ display: 'flex', gap: 2, padding: '2px', backgroundColor: '#0d1117', borderRadius: 6 }}>
@@ -400,6 +402,12 @@ const StudioApp: React.FC = () => {
     fetch('/__rendiv_api__/render/queue/clear', { method: 'POST' });
   }, []);
 
+  const handleBackToWorkspace = useCallback(() => {
+    if (!WORKSPACE_DIR) return;
+    fetch('/__rendiv_api__/workspace/back', { method: 'POST' }).catch(() => {});
+    // Server will restart in workspace picker mode; Vite HMR will reconnect + reload
+  }, []);
+
   const handleTogglePanel = useCallback(() => {
     setRightPanel((prev) => {
       if (prev !== null) {
@@ -430,6 +438,8 @@ const StudioApp: React.FC = () => {
         queueCount={queueCount}
         panelOpen={rightPanel !== null}
         onTogglePanel={handleTogglePanel}
+        workspaceDir={WORKSPACE_DIR}
+        onBackToWorkspace={handleBackToWorkspace}
       />
 
       <div style={layoutStyles.body}>

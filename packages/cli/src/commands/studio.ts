@@ -3,27 +3,59 @@ import chalk from 'chalk';
 
 export const studioCommand = new Command('studio')
   .description('Start the Rendiv Studio development server')
-  .argument('<entry>', 'Entry file (e.g., src/index.tsx)')
+  .argument('[entry]', 'Entry file (e.g., src/index.tsx)', 'src/index.tsx')
   .option('--port <number>', 'Port number', '3000')
-  .action(async (entry: string, options: { port: string }) => {
-    const { startStudio } = await import('@rendiv/studio');
+  .option('--workspace <path>', 'Enable workspace mode with the given root directory')
+  .action(async (entry: string, options: { port: string; workspace?: string }) => {
+    const port = parseInt(options.port, 10);
 
-    console.log(chalk.cyan('\n  Starting Rendiv Studio...\n'));
+    if (options.workspace) {
+      // Workspace mode — manage multiple projects from the browser
+      const path = await import('node:path');
+      const workspaceDir = path.default.resolve(options.workspace);
 
-    const { url, close } = await startStudio({
-      entryPoint: entry,
-      port: parseInt(options.port, 10),
-    });
+      const { startStudioWorkspace } = await import('@rendiv/studio');
 
-    console.log(chalk.green(`  Rendiv Studio running at ${chalk.bold(url)}\n`));
-    console.log(chalk.gray('  Press Ctrl+C to stop\n'));
+      console.log(chalk.cyan('\n  Starting Rendiv Studio (workspace mode)...\n'));
 
-    const shutdown = async () => {
-      console.log(chalk.gray('\n  Shutting down...\n'));
-      await close();
-      process.exit(0);
-    };
+      const { url, close } = await startStudioWorkspace({
+        workspaceDir,
+        port,
+      });
 
-    process.on('SIGINT', shutdown);
-    process.on('SIGTERM', shutdown);
+      console.log(chalk.green(`  Rendiv Studio running at ${chalk.bold(url)}\n`));
+      console.log(chalk.gray(`  Workspace: ${workspaceDir}\n`));
+      console.log(chalk.gray('  Press Ctrl+C to stop\n'));
+
+      const shutdown = async () => {
+        console.log(chalk.gray('\n  Shutting down...\n'));
+        await close();
+        process.exit(0);
+      };
+
+      process.on('SIGINT', shutdown);
+      process.on('SIGTERM', shutdown);
+    } else {
+      // Single-project mode (existing behavior)
+      const { startStudio } = await import('@rendiv/studio');
+
+      console.log(chalk.cyan('\n  Starting Rendiv Studio...\n'));
+
+      const { url, close } = await startStudio({
+        entryPoint: entry,
+        port,
+      });
+
+      console.log(chalk.green(`  Rendiv Studio running at ${chalk.bold(url)}\n`));
+      console.log(chalk.gray('  Press Ctrl+C to stop\n'));
+
+      const shutdown = async () => {
+        console.log(chalk.gray('\n  Shutting down...\n'));
+        await close();
+        process.exit(0);
+      };
+
+      process.on('SIGINT', shutdown);
+      process.on('SIGTERM', shutdown);
+    }
   });

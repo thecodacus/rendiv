@@ -1,12 +1,15 @@
 import type { Plugin } from 'vite';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { readFile, writeFile, unlink } from 'node:fs/promises';
-import { watch, type FSWatcher } from 'node:fs';
 import { join } from 'node:path';
 
 export interface StudioPluginOptions {
   studioHtmlFileName: string;
   entryPoint: string;
+  /** When set, Studio is in workspace mode and shows workspace controls. */
+  workspaceDir?: string;
+  /** Callback to switch projects. Pass null to go back to workspace picker. */
+  onSwitchProject?: (projectPath: string | null) => void;
 }
 
 // --- Server-side render queue state (in-memory, survives page refresh) ---
@@ -168,7 +171,7 @@ function jsonResponse(res: ServerResponse, data: unknown, status = 200) {
 }
 
 export function rendivStudioPlugin(options: StudioPluginOptions): Plugin {
-  const { studioHtmlFileName, entryPoint } = options;
+  const { studioHtmlFileName, entryPoint, workspaceDir, onSwitchProject } = options;
 
   // Timeline overrides persistence — stored at project root so they survive server restarts
   const overridesFile = join(process.cwd(), 'timeline-overrides.json');
@@ -229,34 +232,31 @@ export function rendivStudioPlugin(options: StudioPluginOptions): Plugin {
       });
 
       // Watch timeline-overrides.json for external edits and push updates to clients
-      let overridesWatcher: FSWatcher | undefined;
+      // Uses Vite's chokidar watcher which handles atomic saves (write-temp → rename) reliably
       let watchDebounce: ReturnType<typeof setTimeout> | undefined;
 
-      try {
-        overridesWatcher = watch(overridesFile, () => {
-          // Ignore changes caused by our own writes (within 500ms)
-          if (Date.now() - lastSelfWriteTime < 500) return;
+      server.watcher.add(overridesFile);
+      server.watcher.on('change', (changedPath) => {
+        if (changedPath !== overridesFile) return;
+        // Ignore changes caused by our own writes (within 500ms)
+        if (Date.now() - lastSelfWriteTime < 500) return;
 
-          if (watchDebounce) clearTimeout(watchDebounce);
-          watchDebounce = setTimeout(() => {
-            readOverrides()
-              .then((overrides) => {
-                server.ws.send({
-                  type: 'custom',
-                  event: 'rendiv:overrides-update',
-                  data: { overrides },
-                });
-              })
-              .catch(() => {});
-          }, 100);
-        });
-      } catch {
-        // File doesn't exist yet — that's fine, watch will be set up when it's first created
-      }
+        if (watchDebounce) clearTimeout(watchDebounce);
+        watchDebounce = setTimeout(() => {
+          readOverrides()
+            .then((overrides) => {
+              server.ws.send({
+                type: 'custom',
+                event: 'rendiv:overrides-update',
+                data: { overrides },
+              });
+            })
+            .catch(() => {});
+        }, 100);
+      });
 
-      // Clean up watcher and terminal when server closes
+      // Clean up terminal when server closes
       server.httpServer?.on('close', () => {
-        overridesWatcher?.close();
         if (terminalProcess) {
           terminalProcess.kill();
           terminalProcess = null;
@@ -406,6 +406,21 @@ export function rendivStudioPlugin(options: StudioPluginOptions): Plugin {
 
         next();
       });
+
+      // --- Workspace API endpoints (only available when launched from workspace) ---
+      if (workspaceDir && onSwitchProject) {
+        server.middlewares.use((req, res, next) => {
+          // POST /workspace/back — return to workspace picker
+          if (req.method === 'POST' && req.url === '/__rendiv_api__/workspace/back') {
+            jsonResponse(res, { status: 'switching' });
+            // Delay to ensure HTTP response is flushed before server restart
+            setTimeout(() => onSwitchProject(null), 100);
+            return;
+          }
+
+          next();
+        });
+      }
 
       // Rewrite root requests to serve the studio HTML instead of the user's index.html
       server.middlewares.use((req, _res, next) => {

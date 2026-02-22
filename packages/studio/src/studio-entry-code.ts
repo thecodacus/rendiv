@@ -7,18 +7,35 @@ export function generateStudioEntryCode(
   userEntryPoint: string,
   studioUiDir: string,
   relativeEntryPoint: string,
+  workspaceDir?: string,
 ): string {
   // Normalize backslashes to forward slashes for import paths
   const normalizedEntry = userEntryPoint.replace(/\\/g, '/');
   const normalizedUiDir = studioUiDir.replace(/\\/g, '/');
 
   return `
-window.__RENDIV_STUDIO_ENTRY__ = ${JSON.stringify(relativeEntryPoint)};
 import '${normalizedEntry}';
 import { createStudioApp } from '${normalizedUiDir}/StudioApp.tsx';
 
 createStudioApp(document.getElementById('root'));
 `;
+}
+
+/**
+ * Generates a small inline script that sets global config before module scripts load.
+ * This runs synchronously before ES module imports, ensuring globals are available.
+ */
+export function generateStudioGlobals(
+  relativeEntryPoint: string,
+  workspaceDir?: string,
+): string {
+  const lines = [
+    `window.__RENDIV_STUDIO_ENTRY__ = ${JSON.stringify(relativeEntryPoint)};`,
+  ];
+  if (workspaceDir) {
+    lines.push(`window.__RENDIV_WORKSPACE_DIR__ = ${JSON.stringify(workspaceDir)};`);
+  }
+  return lines.join('\n');
 }
 
 /** Favicon SVG content (icon-only version of the Rendiv logo). */
@@ -33,7 +50,11 @@ export const FAVICON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0
 /**
  * Generates the HTML template for the Studio shell.
  */
-export function generateStudioHtml(entryFileName: string, faviconPath: string): string {
+export function generateStudioHtml(entryFileName: string, faviconPath: string, globalsScript?: string): string {
+  const globalsTag = globalsScript
+    ? `\n  <script>${globalsScript}</script>`
+    : '';
+
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -47,7 +68,7 @@ export function generateStudioHtml(entryFileName: string, faviconPath: string): 
   </style>
 </head>
 <body>
-  <div id="root"></div>
+  <div id="root"></div>${globalsTag}
   <script type="module" src="/${entryFileName}"></script>
 </body>
 </html>`;
