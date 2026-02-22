@@ -37,6 +37,12 @@ export default defineConfig({
           ],
         },
         {
+          text: 'Deployment',
+          items: [
+            { text: 'Docker', link: '/guide/docker' },
+          ],
+        },
+        {
           text: 'AI',
           items: [
             { text: 'Agent Skills', link: '/guide/ai-skills' },

@@ -15,7 +15,7 @@ npx skills add thecodacus/rendiv
 This auto-detects your installed agents (Claude Code, Cursor, Codex, etc.) and places the skill files in the correct directories.
 
 ::: tip Docker
-If you're using the [Rendiv Studio Docker image](/guide/studio#docker), the `rendiv-video` skill is preloaded globally for both Claude Code and Codex — no manual installation needed.
+If you're using the [Rendiv Studio Docker image](/guide/docker), the `rendiv-video` skill is preloaded globally for both Claude Code and Codex — no manual installation needed.
 :::
 
 ## What's Included
