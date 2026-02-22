@@ -2,10 +2,9 @@
 # Rendiv Studio Docker Image
 #
 # Provides a ready-to-run Rendiv Studio in workspace mode with:
-#   - OpenAI Codex CLI pre-installed (Apache 2.0)
 #   - Playwright Chromium + FFmpeg for server-side rendering
 #   - node-pty for the integrated agent terminal
-#   - Startup script that auto-installs Claude Code on first run
+#   - Startup script that auto-installs Claude Code + Codex CLI on first run
 #
 # Usage:
 #   docker run -v /path/to/projects:/workspace -p 3000:3000 ghcr.io/thecodacus/rendiv-studio
@@ -70,9 +69,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Install pnpm
 RUN corepack enable && corepack prepare pnpm@9.15.4 --activate
-
-# Install OpenAI Codex CLI globally (Apache 2.0 — safe to redistribute)
-RUN npm install -g @openai/codex
 
 # Copy built monorepo from builder
 WORKDIR /app
