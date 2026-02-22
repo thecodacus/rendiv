@@ -2,9 +2,10 @@
 # Rendiv Studio Docker Image
 #
 # Provides a ready-to-run Rendiv Studio in workspace mode with:
-#   - Claude Code and OpenAI Codex CLI pre-installed
+#   - OpenAI Codex CLI pre-installed (Apache 2.0)
 #   - Playwright Chromium + FFmpeg for server-side rendering
 #   - node-pty for the integrated agent terminal
+#   - Startup script that auto-installs Claude Code on first run
 #
 # Usage:
 #   docker run -v /path/to/projects:/workspace -p 3000:3000 ghcr.io/thecodacus/rendiv-studio
@@ -70,8 +71,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Install pnpm
 RUN corepack enable && corepack prepare pnpm@9.15.4 --activate
 
-# Install Claude Code and OpenAI Codex CLI globally
-RUN npm install -g @anthropic-ai/claude-code @openai/codex
+# Install OpenAI Codex CLI globally (Apache 2.0 — safe to redistribute)
+RUN npm install -g @openai/codex
 
 # Copy built monorepo from builder
 WORKDIR /app
@@ -87,10 +88,14 @@ RUN mkdir -p /workspace
 RUN ln -s /app/packages/cli/dist/cli.js /usr/local/bin/rendiv && \
     chmod +x /app/packages/cli/dist/cli.js
 
+# Copy startup script that installs Claude Code on first run
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
 # Expose the default Studio port
 EXPOSE 3000
 
 # Default: start Studio in workspace mode on the mounted /workspace directory
 WORKDIR /workspace
-ENTRYPOINT ["rendiv"]
-CMD ["studio", "--workspace", "/workspace", "--port", "3000", "--host", "0.0.0.0"]
+ENTRYPOINT ["docker-entrypoint.sh"]
+CMD ["rendiv", "studio", "--workspace", "/workspace", "--port", "3000", "--host", "0.0.0.0"]
