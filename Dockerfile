@@ -63,6 +63,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libnss3 libnspr4 libatk1.0-0 libatk-bridge2.0-0 libcups2 libdrm2 \
     libxkbcommon0 libxcomposite1 libxdamage1 libxrandr2 libgbm1 \
     libpango-1.0-0 libcairo2 libasound2 libxshmfence1 libx11-xcb1 \
+    libxfixes3 \
     # node-pty build dependencies
     make g++ python3 \
     # General utilities
@@ -76,8 +77,8 @@ RUN corepack enable && corepack prepare pnpm@9.15.4 --activate
 WORKDIR /app
 COPY --from=builder /build/ ./
 
-# Install Playwright browsers (Chromium only, for rendering)
-RUN cd /app/packages/renderer && npx playwright install chromium
+# Install Playwright browsers + system dependencies (Chromium only, for rendering)
+RUN cd /app/packages/renderer && npx playwright install --with-deps chromium
 
 # Create the workspace mount point
 RUN mkdir -p /workspace
