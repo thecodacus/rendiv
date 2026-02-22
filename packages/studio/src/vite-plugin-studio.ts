@@ -306,7 +306,7 @@ export function rendivStudioPlugin(options: StudioPluginOptions): Plugin {
 
         terminalCols = data.cols ?? 80;
         terminalRows = data.rows ?? 24;
-        const shell = process.env.SHELL || '/bin/zsh';
+        const shell = process.env.SHELL || '/bin/bash';
 
         try {
           terminalProcess = pty.spawn(shell, ['-l'], {
