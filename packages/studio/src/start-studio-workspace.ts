@@ -100,7 +100,7 @@ export async function startStudioWorkspace(options: WorkspaceOptions): Promise<W
           port,
           host,
           onSwitchProject: (p: string | null) => switchTo(p),
-          openBrowser: firstLaunch,
+          openBrowser: firstLaunch && !host,
         });
         currentClose = result.close;
       }

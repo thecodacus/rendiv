@@ -74,8 +74,8 @@ export async function startStudio(options: StudioOptions): Promise<StudioResult>
     server: {
       port,
       host: host || undefined,
-      // Don't auto-open browser on workspace restarts — the browser is already open
-      open: !onSwitchProject,
+      // Don't auto-open browser on workspace restarts or remote/Docker (--host)
+      open: !onSwitchProject && !host,
     },
     optimizeDeps: {
       entries: [studioEntryFile],
