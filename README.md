@@ -109,6 +109,7 @@ A local development environment that launches in your browser:
 - One-click render trigger
 - **Integrated agent terminal** — launch Claude Code or any CLI agent directly in Studio with a real PTY, full TUI support, and WebSocket-based communication
 - **Multi-project workspace mode** — manage multiple projects from a single Studio instance (`--workspace` flag)
+- **Docker support** — run Studio in a container with rendering, AI agents, and skills preloaded
 
 ```bash
 npx rendiv studio src/index.tsx
@@ -339,6 +340,40 @@ npx rendiv studio src/index.tsx
 npx rendiv render src/index.tsx MyVideo out/video.mp4
 ```
 
+### Docker
+
+Run Studio in a container — no local setup needed. The image includes Playwright, FFmpeg, Claude Code, Codex, and the `rendiv-video` agent skill preloaded:
+
+```bash
+docker run -v /path/to/projects:/workspace -p 3000:3000 ghcr.io/thecodacus/rendiv-studio
+```
+
+Open `http://localhost:3000` to access the workspace picker. Pass API keys for AI agents:
+
+```bash
+docker run -v ./projects:/workspace -p 3000:3000 \
+  -e ANTHROPIC_API_KEY=sk-ant-... \
+  -e OPENAI_API_KEY=sk-... \
+  ghcr.io/thecodacus/rendiv-studio
+```
+
+Or use Docker Compose:
+
+```yaml
+services:
+  studio:
+    image: ghcr.io/thecodacus/rendiv-studio
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./projects:/workspace
+    environment:
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+```
+
+See the full [Docker guide](https://thecodacus.github.io/rendiv/guide/docker) for cloud hosting, custom ports, and more.
+
 ---
 
 ## CLI Reference
@@ -408,6 +443,7 @@ await renderMedia({
 - [x] Font loading (`@rendiv/fonts`, `@rendiv/google-fonts`)
 - [x] Lottie animations (`@rendiv/lottie`)
 - [x] Three.js 3D scenes (`@rendiv/three`)
+- [x] Docker image with AI agents and preloaded skills
 - [ ] Cloud / distributed rendering
 
 ---
