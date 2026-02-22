@@ -3,6 +3,7 @@ name: Build & Publish Studio Docker Image
 on:
   push:
     branches: [master]
+    tags: ['v*']
     paths:
       - 'packages/**'
       - 'Dockerfile'
