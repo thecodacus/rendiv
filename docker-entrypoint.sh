@@ -23,4 +23,25 @@ else
   echo "  Codex CLI: $(codex --version 2>/dev/null || echo 'installed')"
 fi
 
+# --- Preload rendiv-video skills globally for all agents ---
+SKILLS_SRC="/app/packages/skills/rendiv-video"
+
+if [ -d "$SKILLS_SRC" ]; then
+  echo "Preloading rendiv-video skills..."
+
+  # Claude Code — global personal skills
+  mkdir -p "$HOME/.claude/skills"
+  if [ ! -e "$HOME/.claude/skills/rendiv-video" ]; then
+    ln -sfn "$SKILLS_SRC" "$HOME/.claude/skills/rendiv-video"
+    echo "  Claude Code: linked"
+  fi
+
+  # Codex — global personal skills
+  mkdir -p "$HOME/.codex/skills"
+  if [ ! -e "$HOME/.codex/skills/rendiv-video" ]; then
+    ln -sfn "$SKILLS_SRC" "$HOME/.codex/skills/rendiv-video"
+    echo "  Codex: linked"
+  fi
+fi
+
 exec "$@"
