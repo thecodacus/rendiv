@@ -78,7 +78,7 @@ WORKDIR /app
 COPY --from=builder /build/ ./
 
 # Install Playwright browsers (Chromium only, for rendering)
-RUN npx playwright install chromium
+RUN cd /app/packages/renderer && npx playwright install chromium
 
 # Create the workspace mount point
 RUN mkdir -p /workspace
