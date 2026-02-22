@@ -97,8 +97,9 @@ releaseRender(handle);
 ```
 
 ### 🖥 Rendiv Studio
-A local preview app that launches in your browser:
+A local development environment that launches in your browser:
 - Live preview of all registered compositions
+- **Interactive timeline editor** — drag to reposition and resize sequences, multi-track z-ordering, changes persist to `timeline-overrides.json`
 - Playback controls with keyboard shortcuts
 - Frame-by-frame scrubbing
 - JSON-based props editor
@@ -106,7 +107,8 @@ A local preview app that launches in your browser:
 - Server-side render queue (persists across page refresh)
 - URL-based composition routing (survives page refresh)
 - One-click render trigger
-- Integrated agent terminal — launch Claude Code or any CLI agent directly in Studio
+- **Integrated agent terminal** — launch Claude Code or any CLI agent directly in Studio with a real PTY, full TUI support, and WebSocket-based communication
+- **Multi-project workspace mode** — manage multiple projects from a single Studio instance (`--workspace` flag)
 
 ```bash
 npx rendiv studio src/index.tsx
@@ -344,6 +346,7 @@ npx rendiv render src/index.tsx MyVideo out/video.mp4
 | Command | Description |
 |---------|-------------|
 | `rendiv studio <entry>` | Start the Studio preview server |
+| `rendiv studio --workspace <path>` | Start Studio in multi-project workspace mode |
 | `rendiv render <entry> <id> <output>` | Render a composition to video |
 | `rendiv still <entry> <id> <output>` | Export a single frame as PNG/JPEG |
 | `rendiv compositions <entry>` | List all registered compositions |
@@ -393,7 +396,9 @@ await renderMedia({
 - [x] Media components (Video, Audio, Img, AnimatedImage, IFrame)
 - [x] Headless Playwright renderer with parallel frame capture
 - [x] Studio with preview, timeline, server-side render queue, and URL-based composition routing
+- [x] Interactive timeline editor GUI (drag-to-edit sequences, multi-track z-ordering, persistent overrides)
 - [x] Integrated agent terminal (Claude Code / CLI agents in Studio)
+- [x] Multi-project workspace mode (create, switch, and manage projects from the browser)
 - [x] Embeddable player component
 - [x] Transition primitives (`@rendiv/transitions`)
 - [x] Project scaffolding CLI (`create-rendiv`)
@@ -404,7 +409,6 @@ await renderMedia({
 - [x] Lottie animations (`@rendiv/lottie`)
 - [x] Three.js 3D scenes (`@rendiv/three`)
 - [ ] Cloud / distributed rendering
-- [ ] Visual timeline editor GUI
 
 ---
 
