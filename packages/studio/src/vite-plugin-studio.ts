@@ -1,7 +1,8 @@
 import type { Plugin } from 'vite';
 import type { IncomingMessage, ServerResponse } from 'node:http';
-import { readFile, writeFile, unlink, readdir, stat as fsStat } from 'node:fs/promises';
-import { join, resolve, relative } from 'node:path';
+import { readFile, writeFile, unlink, readdir, stat as fsStat, mkdir, rename, rmdir } from 'node:fs/promises';
+import { basename } from 'node:path';
+import { join, resolve, relative, normalize } from 'node:path';
 
 export interface StudioPluginOptions {
   studioHtmlFileName: string;
@@ -78,6 +79,32 @@ function readBody(req: IncomingMessage): Promise<string> {
     req.on('end', () => resolve(Buffer.concat(chunks).toString()));
     req.on('error', reject);
   });
+}
+
+function readRawBody(req: IncomingMessage, maxBytes: number): Promise<Buffer> {
+  return new Promise((resolve, reject) => {
+    const chunks: Buffer[] = [];
+    let totalSize = 0;
+    req.on('data', (chunk: Buffer) => {
+      totalSize += chunk.length;
+      if (totalSize > maxBytes) {
+        req.destroy();
+        reject(new Error(`File exceeds maximum size of ${Math.round(maxBytes / (1024 * 1024))}MB`));
+        return;
+      }
+      chunks.push(chunk);
+    });
+    req.on('end', () => resolve(Buffer.concat(chunks)));
+    req.on('error', reject);
+  });
+}
+
+function sanitizeFilename(name: string): string {
+  let sanitized = name.replace(/[/\\:\0]/g, '');
+  sanitized = sanitized.replace(/^\.+/, '');
+  sanitized = sanitized.replace(/\s+/g, ' ').trim();
+  if (!sanitized) sanitized = 'untitled';
+  return sanitized;
 }
 
 function processQueue(entryPoint: string): void {
@@ -457,6 +484,162 @@ export function rendivStudioPlugin(options: StudioPluginOptions): Plugin {
           });
           return;
         }
+
+        // POST /assets/upload — upload a file to the public directory
+        if (req.method === 'POST' && req.url?.startsWith('/__rendiv_api__/assets/upload')) {
+          const url = new URL(req.url, 'http://localhost');
+          const rawFilename = url.searchParams.get('filename');
+          const rawDir = url.searchParams.get('dir') ?? '';
+
+          if (!rawFilename) {
+            jsonResponse(res, { error: 'Missing filename parameter' }, 400);
+            return;
+          }
+
+          const filename = sanitizeFilename(rawFilename);
+          const normalizedDir = normalize(rawDir).replace(/\.\./g, '');
+          const targetDir = resolve(publicDir, normalizedDir);
+
+          if (!targetDir.startsWith(publicDir)) {
+            jsonResponse(res, { error: 'Invalid target directory' }, 400);
+            return;
+          }
+
+          const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB
+
+          readRawBody(req, MAX_FILE_SIZE)
+            .then(async (buffer) => {
+              await mkdir(targetDir, { recursive: true });
+              const filePath = join(targetDir, filename);
+
+              if (!filePath.startsWith(publicDir)) {
+                jsonResponse(res, { error: 'Invalid file path' }, 400);
+                return;
+              }
+
+              await writeFile(filePath, buffer);
+              const relativePath = relative(publicDir, filePath);
+              jsonResponse(res, { ok: true, path: relativePath, size: buffer.length });
+            })
+            .catch((err) => {
+              const message = err instanceof Error ? err.message : String(err);
+              jsonResponse(res, { error: message }, 500);
+            });
+          return;
+        }
+
+        // POST /assets/mkdir — create a new directory
+        if (req.method === 'POST' && req.url?.startsWith('/__rendiv_api__/assets/mkdir')) {
+          const url = new URL(req.url, 'http://localhost');
+          const rawPath = url.searchParams.get('path');
+
+          if (!rawPath) {
+            jsonResponse(res, { error: 'Missing path parameter' }, 400);
+            return;
+          }
+
+          const sanitizedPath = rawPath.split('/').map(sanitizeFilename).join('/');
+          const targetDir = resolve(publicDir, sanitizedPath);
+
+          if (!targetDir.startsWith(publicDir)) {
+            jsonResponse(res, { error: 'Invalid directory path' }, 400);
+            return;
+          }
+
+          mkdir(targetDir, { recursive: true })
+            .then(() => {
+              const relativePath = relative(publicDir, targetDir);
+              jsonResponse(res, { ok: true, path: relativePath });
+            })
+            .catch((err) => {
+              jsonResponse(res, { error: err instanceof Error ? err.message : String(err) }, 500);
+            });
+          return;
+        }
+
+        // POST /assets/move — move a file or directory
+        if (req.method === 'POST' && req.url?.startsWith('/__rendiv_api__/assets/move')) {
+          const url = new URL(req.url, 'http://localhost');
+          const fromPath = url.searchParams.get('from');
+          const toPath = url.searchParams.get('to');
+
+          if (!fromPath || !toPath) {
+            jsonResponse(res, { error: 'Missing from or to parameter' }, 400);
+            return;
+          }
+
+          const fromAbs = resolve(publicDir, fromPath);
+          let toAbs = resolve(publicDir, toPath);
+
+          if (!fromAbs.startsWith(publicDir) || !toAbs.startsWith(publicDir)) {
+            jsonResponse(res, { error: 'Invalid path' }, 400);
+            return;
+          }
+
+          (async () => {
+            try {
+              // If target is an existing directory, move the item into it
+              try {
+                const st = await fsStat(toAbs);
+                if (st.isDirectory()) {
+                  toAbs = join(toAbs, basename(fromAbs));
+                }
+              } catch {
+                // Target doesn't exist yet — that's fine, it's the new name/location
+              }
+
+              if (!toAbs.startsWith(publicDir)) {
+                jsonResponse(res, { error: 'Invalid target path' }, 400);
+                return;
+              }
+
+              // Ensure parent directory exists
+              const parentDir = join(toAbs, '..');
+              await mkdir(parentDir, { recursive: true });
+
+              await rename(fromAbs, toAbs);
+              const newRelativePath = relative(publicDir, toAbs);
+              jsonResponse(res, { ok: true, from: fromPath, to: newRelativePath });
+            } catch (err) {
+              jsonResponse(res, { error: err instanceof Error ? err.message : String(err) }, 500);
+            }
+          })();
+          return;
+        }
+
+        // DELETE /assets/delete — delete a file or empty directory
+        if (req.method === 'DELETE' && req.url?.startsWith('/__rendiv_api__/assets/delete')) {
+          const url = new URL(req.url, 'http://localhost');
+          const rawPath = url.searchParams.get('path');
+
+          if (!rawPath) {
+            jsonResponse(res, { error: 'Missing path parameter' }, 400);
+            return;
+          }
+
+          const targetPath = resolve(publicDir, rawPath);
+
+          if (!targetPath.startsWith(publicDir) || targetPath === publicDir) {
+            jsonResponse(res, { error: 'Invalid path' }, 400);
+            return;
+          }
+
+          (async () => {
+            try {
+              const st = await fsStat(targetPath);
+              if (st.isDirectory()) {
+                await rmdir(targetPath);
+              } else {
+                await unlink(targetPath);
+              }
+              jsonResponse(res, { ok: true });
+            } catch (err) {
+              jsonResponse(res, { error: err instanceof Error ? err.message : String(err) }, 500);
+            }
+          })();
+          return;
+        }
+
         next();
       });
 
