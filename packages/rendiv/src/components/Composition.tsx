@@ -36,7 +36,7 @@ export function Composition<Props extends Record<string, unknown> = Record<strin
       type: 'composition',
     });
     return () => unregisterComposition(props.id);
-  }, [props.id]);
+  }, [props.id, props.component, props.durationInFrames, props.fps, props.width, props.height, folder]);
 
   return null;
 }

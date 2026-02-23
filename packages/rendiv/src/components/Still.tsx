@@ -29,7 +29,7 @@ export function Still<Props extends Record<string, unknown> = Record<string, unk
       type: 'still',
     });
     return () => unregisterComposition(props.id);
-  }, [props.id]);
+  }, [props.id, props.component, props.width, props.height, folder]);
 
   return null;
 }
