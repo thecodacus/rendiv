@@ -1,7 +1,8 @@
 ---
 name: timeline-overrides
 description: >
-  Control z-ordering with trackIndex, persist timeline edits in
+  Control z-ordering with trackIndex, position and scale sequences with
+  x/y/scaleX/scaleY overrides, persist timeline edits in
   timeline-overrides.json, and use overrides in headless rendering.
 ---
 
@@ -54,9 +55,9 @@ import { Series } from '@rendiv/core';
 
 ## `timeline-overrides.json`
 
-Timeline overrides persist modifications to sequence timing and track assignment.
-The file lives at the **project root** (`timeline-overrides.json`) and survives
-Studio server restarts.
+Timeline overrides persist modifications to sequence timing, track assignment,
+position, and scale. The file lives at the **project root**
+(`timeline-overrides.json`) and survives Studio server restarts.
 
 ### File format
 
@@ -65,10 +66,16 @@ Studio server restarts.
   "CompositionId/SequenceName[from]": {
     "from": 10,
     "durationInFrames": 60,
-    "trackIndex": 1
+    "trackIndex": 1,
+    "x": 100,
+    "y": 50,
+    "scaleX": 0.5,
+    "scaleY": 0.5
   }
 }
 ```
+
+All fields are optional. Only include the fields you want to override.
 
 Each key is a **namePath** — a hierarchical identifier built from the composition
 ID, sequence names, and their `from` values. For nested sequences the path segments
@@ -87,13 +94,19 @@ When both a prop and an override exist, the **override wins**:
    `trackIndex` field, it replaces the prop value
 3. The final `trackIndex` is converted to `zIndex = 10000 - trackIndex`
 
-The same precedence applies to `from` and `durationInFrames`.
+The same precedence applies to `from`, `durationInFrames`, `x`, `y`, `scaleX`,
+and `scaleY`.
 
 ### How overrides are created
 
-- **Studio**: Drag sequences in the timeline editor to change their position,
-  duration, or track. The Studio saves changes to `timeline-overrides.json`
+- **Studio timeline**: Drag sequences in the timeline editor to change their
+  start frame, duration, or track. Changes are saved to `timeline-overrides.json`
   automatically.
+- **Studio position mode**: Toggle Position Mode (press `P` or click the
+  "Position" button) in the preview panel. Drag a sequence body to reposition it,
+  or drag corner handles to scale. Shift-drag for proportional scaling. Dragging
+  past the anchor flips the content (negative scale). Click "Reset" on a
+  sequence to clear its position and scale overrides.
 - **Manual**: Edit `timeline-overrides.json` directly. Use the namePath format
   shown above as keys.
 
@@ -110,9 +123,58 @@ rendiv render src/index.tsx MyComposition out/video.mp4
 
 ### Clearing overrides
 
-- **Studio**: Click "Reset All" in the timeline toolbar, or right-click a block
-  and choose "Reset Position".
+- **Studio timeline**: Click "Reset All" in the timeline toolbar, or right-click
+  a block and choose "Reset Position".
+- **Studio position mode**: Hover a sequence and click "Reset" to clear its
+  position and scale while keeping timing overrides.
 - **Manual**: Delete `timeline-overrides.json` or remove specific entries.
+
+## Position and scale overrides
+
+The `x`, `y`, `scaleX`, and `scaleY` fields offset and resize a sequence
+relative to the composition. They are applied as a CSS
+`transform: translate(x, y) scale(sX, sY)` with `transform-origin: 0 0`
+on the sequence's wrapper element.
+
+### Override fields
+
+| Field | Type | Default | Description |
+|---|---|---|---|
+| `x` | number | `0` | Horizontal offset in composition pixels |
+| `y` | number | `0` | Vertical offset in composition pixels |
+| `scaleX` | number | `1` | Horizontal scale factor (1 = 100%) |
+| `scaleY` | number | `1` | Vertical scale factor (1 = 100%) |
+
+### Negative scale (flipping)
+
+Negative values flip the content. `scaleX: -1` mirrors horizontally,
+`scaleY: -1` mirrors vertically. In Studio position mode, drag a corner
+handle past the opposite anchor to flip.
+
+### Manual override example
+
+```json
+{
+  "MyComp/Webcam[0]": {
+    "from": 0,
+    "durationInFrames": 150,
+    "trackIndex": 0,
+    "x": 1400,
+    "y": 750,
+    "scaleX": 0.3,
+    "scaleY": 0.3
+  },
+  "MyComp/Background[0]": {
+    "from": 0,
+    "durationInFrames": 150,
+    "trackIndex": 1,
+    "scaleX": -1
+  }
+}
+```
+
+The first entry places a webcam overlay at the bottom-right corner scaled to
+30%. The second flips the background horizontally.
 
 ## Overlap patterns
 
@@ -127,15 +189,31 @@ rendiv render src/index.tsx MyComposition out/video.mp4
 </Sequence>
 ```
 
-### Picture-in-picture
+### Picture-in-picture (via overrides)
+
+Define both sequences at full size in code, then use timeline overrides to
+position and scale the PiP layer:
 
 ```tsx
 <Sequence from={0} durationInFrames={150} trackIndex={1} name="Main">
   <MainVideo />
 </Sequence>
 <Sequence from={30} durationInFrames={90} trackIndex={0} name="PiP">
-  <div style={{ position: 'absolute', bottom: 20, right: 20, width: 320, height: 180 }}>
-    <PipVideo />
-  </div>
+  <PipVideo />
 </Sequence>
 ```
+
+In `timeline-overrides.json`:
+
+```json
+{
+  "MyComp/PiP[30]": {
+    "x": 1400,
+    "y": 750,
+    "scaleX": 0.25,
+    "scaleY": 0.25
+  }
+}
+```
+
+Or use Studio position mode to drag and resize the PiP layer visually.
