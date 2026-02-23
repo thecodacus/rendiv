@@ -1,7 +1,8 @@
-import React, { useRef, useState, useCallback, useEffect } from 'react';
+import React, { useRef, useState, useCallback, useEffect, useMemo } from 'react';
 import { Player, type PlayerRef } from '@rendiv/player';
-import type { CompositionEntry } from '@rendiv/core';
+import type { CompositionEntry, TimelineEntry, TimelineOverride } from '@rendiv/core';
 import { previewStyles, colors, fonts } from './styles';
+import { usePreviewDrag, type HandleType, type VisibleEntry } from './use-preview-drag';
 
 interface PreviewProps {
   composition: CompositionEntry;
@@ -11,9 +12,19 @@ interface PreviewProps {
   onInputPropsChange: (props: Record<string, unknown>) => void;
   onFrameUpdate?: (frame: number) => void;
   seekRef?: React.MutableRefObject<((frame: number) => void) | null>;
+  overrides: Map<string, TimelineOverride>;
+  onOverrideChange: (namePath: string, override: TimelineOverride) => void;
+  onPositionReset: (namePath: string) => void;
+  timelineEntries: TimelineEntry[];
 }
 
 const SPEED_STEPS = [0.25, 0.5, 1, 2, 4];
+
+// Block colors — same palette as TimelineEditor
+const BLOCK_COLORS = [
+  '#1f6feb', '#238636', '#8957e5', '#da3633',
+  '#d29922', '#1a7f37', '#6639ba', '#cf222e',
+];
 
 function formatTime(frame: number, fps: number): string {
   const totalSeconds = frame / fps;
@@ -21,6 +32,15 @@ function formatTime(frame: number, fps: number): string {
   const seconds = Math.floor(totalSeconds % 60);
   const ms = Math.floor((totalSeconds % 1) * 100);
   return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}.${String(ms).padStart(2, '0')}`;
+}
+
+function getCursorForHandle(handle: HandleType): string {
+  switch (handle) {
+    case 'move': return 'move';
+    case 'scale-tl': case 'scale-br': return 'nwse-resize';
+    case 'scale-tr': case 'scale-bl': return 'nesw-resize';
+    default: return 'default';
+  }
 }
 
 export const Preview: React.FC<PreviewProps> = ({
@@ -31,6 +51,10 @@ export const Preview: React.FC<PreviewProps> = ({
   onInputPropsChange,
   onFrameUpdate,
   seekRef,
+  overrides,
+  onOverrideChange,
+  onPositionReset,
+  timelineEntries,
 }) => {
   const playerRef = useRef<PlayerRef>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -40,6 +64,7 @@ export const Preview: React.FC<PreviewProps> = ({
   const [propsText, setPropsText] = useState('');
   const [propsError, setPropsError] = useState(false);
   const [wrapperSize, setWrapperSize] = useState({ width: 0, height: 0 });
+  const [positionMode, setPositionMode] = useState(false);
 
   // Track player wrapper dimensions to fit the player within both axes
   useEffect(() => {
@@ -67,7 +92,6 @@ export const Preview: React.FC<PreviewProps> = ({
   const mergedProps = { ...composition.defaultProps, ...inputProps };
 
   // Sync props editor when composition changes.
-  // Timeline entries are managed by Sequence mount/unmount lifecycle — no need to clear here.
   useEffect(() => {
     setPropsText(JSON.stringify({ ...composition.defaultProps, ...inputProps }, null, 2));
     setPropsError(false);
@@ -95,12 +119,45 @@ export const Preview: React.FC<PreviewProps> = ({
     };
   }, [composition.id]);
 
-  // Global keyboard shortcuts — work regardless of which panel has focus
+  // Compute player scale factor
+  const playerWidth = wrapperSize.width > 0 && wrapperSize.height > 0
+    ? Math.min(wrapperSize.width, wrapperSize.height * (composition.width / composition.height))
+    : 0;
+  const playerScale = playerWidth > 0 ? playerWidth / composition.width : 1;
+  const playerHeight = playerWidth > 0 ? playerWidth / (composition.width / composition.height) : 0;
+
+  // Position mode drag hook
+  const {
+    handleMouseDown,
+    handleOverlayMouseMove,
+    handleOverlayMouseLeave,
+    hoveredNamePath,
+    draggingNamePath,
+    handleType,
+    visibleEntries,
+  } = usePreviewDrag({
+    timelineEntries,
+    overrides,
+    currentFrame,
+    compositionWidth: composition.width,
+    compositionHeight: composition.height,
+    playerScale,
+    enabled: positionMode,
+    onOverrideChange,
+  });
+
+  // Global keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Skip when user is typing in an input or textarea
       const tag = (e.target as HTMLElement)?.tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+
+      // P key toggles position mode
+      if (e.key === 'p' || e.key === 'P') {
+        e.preventDefault();
+        setPositionMode((prev) => !prev);
+        return;
+      }
 
       if (e.key === ' ' || e.key === 'k' || e.key === 'K') {
         e.preventDefault();
@@ -158,6 +215,12 @@ export const Preview: React.FC<PreviewProps> = ({
 
   const durationSeconds = (composition.durationInFrames / composition.fps).toFixed(1);
 
+  // Build the overlay info label for dragging
+  const activeEntry = visibleEntries.find(
+    (ve) => ve.namePath === (draggingNamePath ?? hoveredNamePath),
+  );
+  const activeOverride = activeEntry ? overrides.get(activeEntry.namePath) : undefined;
+
   return (
     <div style={previewStyles.container}>
       {/* Metadata bar */}
@@ -199,24 +262,139 @@ export const Preview: React.FC<PreviewProps> = ({
 
       {/* Player */}
       <div ref={wrapperRef} style={previewStyles.playerWrapper}>
-        <Player
-          key={composition.id}
-          ref={playerRef}
-          component={composition.component}
-          compositionId={composition.id}
-          durationInFrames={composition.durationInFrames}
-          fps={composition.fps}
-          compositionWidth={composition.width}
-          compositionHeight={composition.height}
-          inputProps={mergedProps}
-          playbackRate={playbackRate}
-          loop
-          style={{
-            width: wrapperSize.width > 0 && wrapperSize.height > 0
-              ? Math.min(wrapperSize.width, wrapperSize.height * (composition.width / composition.height))
-              : '100%',
-          }}
-        />
+        <div style={{ position: 'relative', display: 'inline-block' }}>
+          <Player
+            key={composition.id}
+            ref={playerRef}
+            component={composition.component}
+            compositionId={composition.id}
+            durationInFrames={composition.durationInFrames}
+            fps={composition.fps}
+            compositionWidth={composition.width}
+            compositionHeight={composition.height}
+            inputProps={mergedProps}
+            playbackRate={playbackRate}
+            loop
+            style={{
+              width: playerWidth > 0 ? playerWidth : '100%',
+            }}
+          />
+
+          {/* Position mode overlay */}
+          {positionMode && playerWidth > 0 && (
+            <div
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: playerWidth,
+                height: playerHeight,
+                cursor: handleType ? getCursorForHandle(handleType) : 'default',
+                zIndex: 10,
+              }}
+              onMouseDown={handleMouseDown}
+              onMouseMove={handleOverlayMouseMove}
+              onMouseLeave={handleOverlayMouseLeave}
+            >
+              {visibleEntries.map((ve, i) => {
+                const bx = ve.x * playerScale;
+                const by = ve.y * playerScale;
+                const bw = ve.w * playerScale;
+                const bh = ve.h * playerScale;
+                const isHovered = ve.namePath === hoveredNamePath;
+                const isDragging = ve.namePath === draggingNamePath;
+                const isActive = isHovered || isDragging;
+                const color = BLOCK_COLORS[ve.trackIndex % BLOCK_COLORS.length];
+                const veOverride = overrides.get(ve.namePath);
+                const hasPosition = veOverride && (
+                  (veOverride.x !== undefined && veOverride.x !== 0) ||
+                  (veOverride.y !== undefined && veOverride.y !== 0) ||
+                  (veOverride.scaleX !== undefined && veOverride.scaleX !== 1) ||
+                  (veOverride.scaleY !== undefined && veOverride.scaleY !== 1)
+                );
+
+                return (
+                  <div key={ve.namePath}>
+                    {/* Bounding box */}
+                    <div
+                      style={{
+                        position: 'absolute',
+                        left: bx,
+                        top: by,
+                        width: bw,
+                        height: bh,
+                        border: `${isActive ? 2 : 1}px solid ${color}`,
+                        backgroundColor: isActive ? `${color}18` : 'transparent',
+                        borderRadius: 2,
+                        pointerEvents: 'none',
+                        boxSizing: 'border-box',
+                      }}
+                    >
+                      {/* Name label + info */}
+                      <div
+                        style={{
+                          position: 'absolute',
+                          top: 2,
+                          left: 4,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 4,
+                          pointerEvents: 'none',
+                        }}
+                      >
+                        <span
+                          style={{
+                            fontSize: 10,
+                            fontWeight: 500,
+                            color: '#fff',
+                            backgroundColor: color,
+                            padding: '1px 5px',
+                            borderRadius: 3,
+                            whiteSpace: 'nowrap',
+                            opacity: isActive ? 1 : 0.7,
+                          }}
+                        >
+                          {ve.name}
+                          {isActive && veOverride && (
+                            <span style={{ marginLeft: 6, fontSize: 9, opacity: 0.8 }}>
+                              {veOverride.x ?? 0}, {veOverride.y ?? 0}
+                              {(veOverride.scaleX !== undefined && veOverride.scaleX !== 1) ||
+                              (veOverride.scaleY !== undefined && veOverride.scaleY !== 1)
+                                ? ` ${Math.round((veOverride.scaleX ?? 1) * 100)}%x${Math.round((veOverride.scaleY ?? 1) * 100)}%`
+                                : ''}
+                            </span>
+                          )}
+                        </span>
+                        {isActive && hasPosition && (
+                          <button
+                            style={resetOverlayBtnStyle}
+                            onMouseDown={(e) => {
+                              e.stopPropagation();
+                              onPositionReset(ve.namePath);
+                            }}
+                            title="Reset position & scale"
+                          >
+                            Reset
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Corner handles (only on active entry) */}
+                    {isActive && (
+                      <>
+                        <CornerHandle x={bx} y={by} color={color} />
+                        <CornerHandle x={bx + bw} y={by} color={color} />
+                        <CornerHandle x={bx} y={by + bh} color={color} />
+                        <CornerHandle x={bx + bw} y={by + bh} color={color} />
+                      </>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Playback controls */}
@@ -232,7 +410,7 @@ export const Preview: React.FC<PreviewProps> = ({
           <button
             style={controlBtnStyle}
             onClick={() => playerRef.current?.seekTo(Math.max(0, currentFrame - 1))}
-            title="Step back (←)"
+            title="Step back (\u2190)"
           >
             &#x23F4;
           </button>
@@ -246,7 +424,7 @@ export const Preview: React.FC<PreviewProps> = ({
           <button
             style={controlBtnStyle}
             onClick={() => playerRef.current?.seekTo(Math.min(composition.durationInFrames - 1, currentFrame + 1))}
-            title="Step forward (→)"
+            title="Step forward (\u2192)"
           >
             &#x23F5;
           </button>
@@ -259,6 +437,18 @@ export const Preview: React.FC<PreviewProps> = ({
           </button>
         </div>
         <div style={controlsRightStyle}>
+          {/* Position mode toggle */}
+          <button
+            style={{
+              ...positionBtnStyle,
+              backgroundColor: positionMode ? colors.accentMuted : 'transparent',
+              color: positionMode ? '#fff' : colors.textSecondary,
+            }}
+            onClick={() => setPositionMode((prev) => !prev)}
+            title="Position mode (P)"
+          >
+            Position
+          </button>
           <span style={frameCounterStyle}>
             {currentFrame} / {composition.durationInFrames - 1}
           </span>
@@ -311,6 +501,24 @@ export const Preview: React.FC<PreviewProps> = ({
     </div>
   );
 };
+
+// Small square handle rendered at corners of the bounding box
+const CornerHandle: React.FC<{ x: number; y: number; color: string }> = ({ x, y, color }) => (
+  <div
+    style={{
+      position: 'absolute',
+      left: x - 4,
+      top: y - 4,
+      width: 8,
+      height: 8,
+      backgroundColor: color,
+      border: '1px solid #fff',
+      borderRadius: 1,
+      pointerEvents: 'none',
+      boxSizing: 'border-box',
+    }}
+  />
+);
 
 // Inline styles for the playback controls bar
 
@@ -377,4 +585,28 @@ const speedBtnStyle: React.CSSProperties = {
   fontFamily: fonts.mono,
   padding: '2px 6px',
   borderRadius: 4,
+};
+
+const positionBtnStyle: React.CSSProperties = {
+  border: `1px solid ${colors.border}`,
+  cursor: 'pointer',
+  fontSize: 11,
+  fontWeight: 500,
+  fontFamily: fonts.sans,
+  padding: '3px 8px',
+  borderRadius: 4,
+};
+
+const resetOverlayBtnStyle: React.CSSProperties = {
+  pointerEvents: 'auto',
+  padding: '1px 5px',
+  fontSize: 9,
+  fontWeight: 500,
+  color: colors.error,
+  backgroundColor: 'rgba(248,81,73,0.15)',
+  border: '1px solid rgba(248,81,73,0.3)',
+  borderRadius: 3,
+  cursor: 'pointer',
+  fontFamily: fonts.sans,
+  whiteSpace: 'nowrap',
 };

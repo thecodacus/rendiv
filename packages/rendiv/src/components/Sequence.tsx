@@ -51,6 +51,10 @@ export const Sequence: React.FC<SequenceProps> = ({
   let absoluteFrom = baseAbsoluteFrom;
   let effectiveDuration = durationInFrames;
   let effectiveTrackIndex = trackIndex;
+  let offsetX = 0;
+  let offsetY = 0;
+  let scaleX = 1;
+  let scaleY = 1;
   if (typeof window !== 'undefined') {
     const w = window as unknown as Record<string, unknown>;
     const overrides = w.__RENDIV_TIMELINE_OVERRIDES__ as Map<string, TimelineOverride> | undefined;
@@ -61,6 +65,10 @@ export const Sequence: React.FC<SequenceProps> = ({
       if (override.trackIndex !== undefined) {
         effectiveTrackIndex = override.trackIndex;
       }
+      if (override.x !== undefined) offsetX = override.x;
+      if (override.y !== undefined) offsetY = override.y;
+      if (override.scaleX !== undefined) scaleX = override.scaleX;
+      if (override.scaleY !== undefined) scaleY = override.scaleY;
     }
   }
   const trackZIndex = effectiveTrackIndex !== undefined ? 10000 - effectiveTrackIndex : undefined;
@@ -77,7 +85,7 @@ export const Sequence: React.FC<SequenceProps> = ({
     }
     const entries = w.__RENDIV_TIMELINE_ENTRIES__ as Map<string, unknown>;
     const parentId = parentSequence.id;
-    const entry = { id, name: displayName, namePath, from: absoluteFrom, durationInFrames: effectiveDuration, parentId };
+    const entry = { id, name: displayName, namePath, from: absoluteFrom, durationInFrames: effectiveDuration, parentId, trackIndex: effectiveTrackIndex };
     entries.set(id, entry);
     document.dispatchEvent(new CustomEvent('rendiv:timeline-sync'));
     return () => {
@@ -109,11 +117,40 @@ export const Sequence: React.FC<SequenceProps> = ({
     </SequenceContext.Provider>
   );
 
-  if (layout === 'none') return content;
-  const fillStyle = trackZIndex !== undefined
-    ? { ...style, zIndex: trackZIndex }
-    : style;
-  return <Fill style={fillStyle}>{content}</Fill>;
+  // Build transform from position + scale overrides
+  const hasTransform = offsetX !== 0 || offsetY !== 0 || scaleX !== 1 || scaleY !== 1;
+  const transformParts: string[] = [];
+  if (offsetX !== 0 || offsetY !== 0) transformParts.push(`translate(${offsetX}px, ${offsetY}px)`);
+  if (scaleX !== 1 || scaleY !== 1) transformParts.push(`scale(${scaleX}, ${scaleY})`);
+
+  if (layout === 'none') {
+    // When layout='none' but there are position/scale overrides, wrap in a
+    // positioned container so the transform applies to the entire subtree
+    // (e.g. TransitionSeries scenes that manage their own Fill wrappers).
+    if (hasTransform) {
+      const wrapStyle: CSSProperties = {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        width: '100%',
+        height: '100%',
+        transform: transformParts.join(' '),
+        transformOrigin: '0 0',
+        ...(trackZIndex !== undefined && { zIndex: trackZIndex }),
+      };
+      return <div style={wrapStyle} data-rendiv-namepath={namePath}>{content}</div>;
+    }
+    return content;
+  }
+
+  const fillStyle: CSSProperties = {
+    ...style,
+    ...(trackZIndex !== undefined && { zIndex: trackZIndex }),
+    ...(hasTransform && { transform: transformParts.join(' '), transformOrigin: '0 0' }),
+  };
+  return <Fill style={fillStyle} data-rendiv-namepath={namePath}>{content}</Fill>;
 };
 
 Sequence.displayName = 'Sequence';

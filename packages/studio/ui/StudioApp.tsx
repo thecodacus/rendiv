@@ -281,7 +281,31 @@ const StudioApp: React.FC = () => {
       map = new Map();
       w.__RENDIV_TIMELINE_OVERRIDES__ = map;
     }
-    map.set(namePath, override);
+    // Merge with existing override so callers that only set timing fields
+    // don't wipe position/scale, and vice versa.
+    const existing = map.get(namePath);
+    const merged = existing ? { ...existing, ...override } : override;
+    map.set(namePath, merged);
+    setOverrides(new Map(map));
+    seekRef.current?.(currentFrame);
+    saveOverridesToServer(map);
+  }, [currentFrame, saveOverridesToServer]);
+
+  const handlePositionReset = useCallback((namePath: string) => {
+    const w = window as unknown as Record<string, unknown>;
+    const map = w.__RENDIV_TIMELINE_OVERRIDES__ as Map<string, TimelineOverride> | undefined;
+    if (!map) return;
+    const existing = map.get(namePath);
+    if (!existing) return;
+    // Remove position/scale fields, keep timing fields
+    const { x, y, scaleX, scaleY, ...timing } = existing;
+    // If only position fields existed, remove the override entirely
+    if (Object.keys(timing).length === 0 ||
+        (timing.from === undefined && timing.durationInFrames === undefined && timing.trackIndex === undefined)) {
+      map.delete(namePath);
+    } else {
+      map.set(namePath, timing as TimelineOverride);
+    }
     setOverrides(new Map(map));
     seekRef.current?.(currentFrame);
     saveOverridesToServer(map);
@@ -551,6 +575,10 @@ const StudioApp: React.FC = () => {
               onInputPropsChange={setInputProps}
               onFrameUpdate={setCurrentFrame}
               seekRef={seekRef}
+              overrides={overrides}
+              onOverrideChange={handleOverrideChange}
+              onPositionReset={handlePositionReset}
+              timelineEntries={timelineEntries}
             />
           </ErrorBoundary>
         ) : (
