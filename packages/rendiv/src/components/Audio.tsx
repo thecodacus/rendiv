@@ -26,6 +26,7 @@ export function Audio({
   muted = false,
 }: AudioProps): React.ReactElement | null {
   const audioRef = useRef<HTMLAudioElement>(null);
+  const lastSeekRef = useRef(0);
   const timeline = useContext(TimelineContext);
   const sequence = useContext(SequenceContext);
   const composition = useContext(CompositionContext);
@@ -38,16 +39,27 @@ export function Audio({
   const audioFrame = localFrame + startFrom;
   const currentTime = audioFrame / fps;
 
-  // Sync audio playback in player/studio mode
+  // Sync volume and muted
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    audio.volume = volume;
+    audio.muted = muted;
+  }, [volume, muted]);
+
+  // Sync playback rate
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    audio.playbackRate = playbackRate;
+  }, [playbackRate]);
+
+  // Sync currentTime and play/pause state
   useEffect(() => {
     if (isRendering) return;
 
     const audio = audioRef.current;
     if (!audio) return;
-
-    audio.volume = volume;
-    audio.muted = muted;
-    audio.playbackRate = playbackRate;
 
     // Past the end — pause
     if (endAt !== undefined && audioFrame >= endAt) {
@@ -55,10 +67,15 @@ export function Audio({
       return;
     }
 
-    // Correct drift
+    // Correct drift — use a relaxed threshold (0.3s) and a 500ms cooldown
+    // after each seek to avoid rapid repeated seeks that cause audio pops.
     const drift = Math.abs(audio.currentTime - currentTime);
-    if (drift > 0.1) {
-      audio.currentTime = currentTime;
+    if (drift > 0.3) {
+      const now = performance.now();
+      if (now - lastSeekRef.current > 500) {
+        audio.currentTime = currentTime;
+        lastSeekRef.current = now;
+      }
     }
 
     if (timeline.playing && audio.paused) {
@@ -68,7 +85,7 @@ export function Audio({
     } else if (!timeline.playing && !audio.paused) {
       audio.pause();
     }
-  }, [localFrame, isRendering, currentTime, timeline.playing, volume, muted, playbackRate, endAt, audioFrame]);
+  }, [localFrame, isRendering, currentTime, timeline.playing, endAt, audioFrame]);
 
   // In rendering mode, audio is not captured via screenshots
   if (isRendering) return null;
