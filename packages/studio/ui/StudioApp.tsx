@@ -156,6 +156,9 @@ const StudioApp: React.FC = () => {
   selectedIdRef.current = selectedId;
   const pruneTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Media info state (audio/video source registration from compositions)
+  const [mediaInfo, setMediaInfo] = useState<Map<string, { type: 'audio' | 'video'; src: string }>>(new Map());
+
   // Render queue state (server-driven)
   const [renderJobs, setRenderJobs] = useState<RenderJob[]>([]);
   const hasActiveRef = useRef(false);
@@ -334,6 +337,18 @@ const StudioApp: React.FC = () => {
   const handleTimelineViewChange = useCallback((view: 'editor' | 'tree') => {
     setTimelineView(view);
     localStorage.setItem('rendiv-studio:timeline-view', view);
+  }, []);
+
+  // Media info registry: reads from __RENDIV_MEDIA_INFO__ + listens for sync events
+  useEffect(() => {
+    const readMedia = () => {
+      const w = window as unknown as Record<string, unknown>;
+      const info = w.__RENDIV_MEDIA_INFO__ as Map<string, { type: 'audio' | 'video'; src: string }> | undefined;
+      setMediaInfo(info ? new Map(info) : new Map());
+    };
+    readMedia();
+    document.addEventListener('rendiv:media-sync', readMedia);
+    return () => document.removeEventListener('rendiv:media-sync', readMedia);
   }, []);
 
   // Timeline registry: reads from a shared global Map + listens for sync events.
@@ -672,6 +687,7 @@ const StudioApp: React.FC = () => {
                 onOverridesClear={handleOverridesClear}
                 view={timelineView}
                 onViewChange={handleTimelineViewChange}
+                mediaInfo={mediaInfo}
               />
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>

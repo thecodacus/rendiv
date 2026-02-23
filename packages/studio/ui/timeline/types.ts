@@ -23,6 +23,11 @@ export interface DragOperation {
   originalTrackIndex: number;
 }
 
+export interface MediaInfo {
+  type: 'audio' | 'video';
+  src: string;
+}
+
 export interface TimelineEditorProps {
   entries: TimelineEntry[];
   currentFrame: number;
@@ -36,4 +41,5 @@ export interface TimelineEditorProps {
   onOverridesClear: () => void;
   view: 'editor' | 'tree';
   onViewChange: (view: 'editor' | 'tree') => void;
+  mediaInfo: Map<string, MediaInfo>;
 }

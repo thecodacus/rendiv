@@ -87,6 +87,25 @@ export function Audio({
     }
   }, [localFrame, isRendering, currentTime, timeline.playing, endAt, audioFrame]);
 
+  // Register media info for Studio timeline visualization
+  useEffect(() => {
+    if (isRendering) return;
+    if (typeof window === 'undefined') return;
+    const seqId = sequence.id;
+    if (!seqId) return;
+    const w = window as unknown as Record<string, unknown>;
+    if (!w.__RENDIV_MEDIA_INFO__) {
+      w.__RENDIV_MEDIA_INFO__ = new Map<string, { type: string; src: string }>();
+    }
+    const mediaMap = w.__RENDIV_MEDIA_INFO__ as Map<string, { type: string; src: string }>;
+    mediaMap.set(seqId, { type: 'audio', src });
+    document.dispatchEvent(new CustomEvent('rendiv:media-sync'));
+    return () => {
+      mediaMap.delete(seqId);
+      document.dispatchEvent(new CustomEvent('rendiv:media-sync'));
+    };
+  }, [src, sequence.id, isRendering]);
+
   // In rendering mode, audio is not captured via screenshots
   if (isRendering) return null;
 

@@ -3,6 +3,8 @@ import type { TimelineEditorProps, TrackEntry } from './timeline/types';
 import { assignTracks } from './timeline/track-layout';
 import { useTimelineZoom } from './timeline/use-timeline-zoom';
 import { useTimelineDrag } from './timeline/use-timeline-drag';
+import { WaveformBlock } from './timeline/WaveformBlock';
+import { ThumbnailBlock } from './timeline/ThumbnailBlock';
 
 const TRACK_HEIGHT = 32;
 const TRACK_GAP = 2;
@@ -42,6 +44,7 @@ export const TimelineEditor: React.FC<TimelineEditorProps> = ({
   onOverridesClear,
   view,
   onViewChange,
+  mediaInfo,
 }) => {
   const trackAreaRef = useRef<HTMLDivElement>(null);
   const [selectedPath, setSelectedPath] = useState<string | null>(null);
@@ -323,6 +326,9 @@ export const TimelineEditor: React.FC<TimelineEditorProps> = ({
                 const top = te.trackIndex * (TRACK_HEIGHT + TRACK_GAP);
                 const isSelected = te.entry.namePath === selectedPath;
                 const color = getBlockColor(te.trackIndex);
+                const media = mediaInfo.get(te.entry.id);
+                const blockHeight = TRACK_HEIGHT - 4;
+                const hasMedia = media && width > 20;
 
                 return (
                   <div
@@ -335,7 +341,7 @@ export const TimelineEditor: React.FC<TimelineEditorProps> = ({
                       left,
                       top: top + 2,
                       width,
-                      height: TRACK_HEIGHT - 4,
+                      height: blockHeight,
                       backgroundColor: color,
                       opacity: isSelected ? 1 : 0.75,
                       borderRadius: 4,
@@ -348,6 +354,14 @@ export const TimelineEditor: React.FC<TimelineEditorProps> = ({
                       boxSizing: 'border-box',
                     }}
                   >
+                    {/* Media visualization background */}
+                    {hasMedia && media.type === 'audio' && (
+                      <WaveformBlock src={media.src} width={width} height={blockHeight} color={color} />
+                    )}
+                    {hasMedia && media.type === 'video' && (
+                      <ThumbnailBlock src={media.src} width={width} height={blockHeight} />
+                    )}
+
                     {/* Left resize handle */}
                     <div style={{ ...edgeHandleStyle, left: 0, cursor: 'ew-resize' }} />
 
@@ -362,6 +376,9 @@ export const TimelineEditor: React.FC<TimelineEditorProps> = ({
                       whiteSpace: 'nowrap',
                       pointerEvents: 'none',
                       fontWeight: 500,
+                      position: hasMedia ? 'relative' as const : undefined,
+                      zIndex: hasMedia ? 1 : undefined,
+                      textShadow: hasMedia ? '0 1px 3px rgba(0,0,0,0.8)' : undefined,
                     }}>
                       {te.entry.name}
                       {te.hasOverride && (
