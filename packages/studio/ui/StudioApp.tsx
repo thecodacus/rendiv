@@ -18,7 +18,7 @@ import { Timeline } from './Timeline';
 import { TimelineEditor } from './TimelineEditor';
 import { RenderQueue, type RenderJob } from './RenderQueue';
 import { Terminal } from './Terminal';
-import { layoutStyles, scrollbarCSS, colors, fonts } from './styles';
+import { layoutStyles, scrollbarCSS, colors, fonts, tabToggleStyles } from './styles';
 
 // --- Error Boundary ---
 // Catches runtime errors in user composition code so Studio chrome stays alive.
@@ -69,8 +69,8 @@ class ErrorBoundary extends React.Component<
           alignItems: 'center',
           justifyContent: 'center',
           padding: 32,
-          color: '#f85149',
-          fontFamily: 'system-ui, -apple-system, sans-serif',
+          color: colors.error,
+          fontFamily: fonts.sans,
           gap: 12,
         }}>
           <div style={{ fontSize: 14, fontWeight: 600 }}>{label} Error</div>
@@ -85,11 +85,11 @@ class ErrorBoundary extends React.Component<
             fontSize: 12,
             whiteSpace: 'pre-wrap',
             wordBreak: 'break-word',
-            color: '#f0883e',
+            color: '#e0a060',
           }}>
             {this.state.error.message}
           </pre>
-          <div style={{ fontSize: 11, color: '#8b949e' }}>Fix the error and save — Studio will recover automatically via HMR.</div>
+          <div style={{ fontSize: 11, color: colors.textSecondary }}>Fix the error and save — Studio will recover automatically via HMR.</div>
         </div>
       );
     }
@@ -103,22 +103,12 @@ const ENTRY_POINT = (window as Record<string, unknown>).__RENDIV_STUDIO_ENTRY__ 
 const WORKSPACE_DIR = (window as unknown as Record<string, unknown>).__RENDIV_WORKSPACE_DIR__ as string | undefined;
 
 const ViewToggle: React.FC<{ view: 'editor' | 'tree'; onChange: (v: 'editor' | 'tree') => void }> = ({ view, onChange }) => (
-  <div style={{ display: 'flex', gap: 2, padding: '2px', backgroundColor: '#0d1117', borderRadius: 6 }}>
+  <div style={tabToggleStyles.container}>
     {(['editor', 'tree'] as const).map((v) => (
       <button
         key={v}
         onClick={() => onChange(v)}
-        style={{
-          padding: '3px 10px',
-          fontSize: 11,
-          fontWeight: 500,
-          border: 'none',
-          borderRadius: 4,
-          cursor: 'pointer',
-          backgroundColor: view === v ? '#30363d' : 'transparent',
-          color: view === v ? '#e6edf3' : '#8b949e',
-          fontFamily: 'system-ui, -apple-system, sans-serif',
-        }}
+        style={tabToggleStyles.button(view === v)}
       >
         {v === 'editor' ? 'Tracks' : 'Tree'}
       </button>
@@ -479,7 +469,14 @@ const StudioApp: React.FC = () => {
         const res = await fetch('/__rendiv_api__/render/queue');
         if (res.ok) {
           const data = await res.json();
-          if (!cancelled) setRenderJobs(data.jobs);
+          if (!cancelled) {
+            setRenderJobs((prev) => {
+              // Only update if jobs actually changed to avoid unnecessary re-renders
+              if (prev.length === data.jobs.length &&
+                  JSON.stringify(prev) === JSON.stringify(data.jobs)) return prev;
+              return data.jobs;
+            });
+          }
         }
       } catch {
         // server unreachable, ignore
@@ -597,7 +594,7 @@ const StudioApp: React.FC = () => {
             />
           </ErrorBoundary>
         ) : (
-          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#8b949e' }}>
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: colors.textSecondary }}>
             {compositions.length === 0 ? 'Loading compositions...' : 'Select a composition'}
           </div>
         )}
@@ -626,7 +623,7 @@ const StudioApp: React.FC = () => {
                       border: 'none',
                       borderRadius: 4,
                       cursor: 'pointer',
-                      backgroundColor: rightPanel === tab ? colors.border : 'transparent',
+                      backgroundColor: rightPanel === tab ? colors.accentBg : 'transparent',
                       color: rightPanel === tab ? colors.textPrimary : colors.textSecondary,
                       fontFamily: fonts.sans,
                     }}
@@ -691,7 +688,7 @@ const StudioApp: React.FC = () => {
               />
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-                <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '4px 8px', backgroundColor: '#161b22', borderBottom: '1px solid #30363d' }}>
+                <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '4px 8px', backgroundColor: colors.surface }}>
                   <ViewToggle view={timelineView} onChange={handleTimelineViewChange} />
                 </div>
                 <div style={{ flex: 1, overflow: 'auto' }}>
@@ -726,7 +723,6 @@ const rightPanelStyle: React.CSSProperties = {
   position: 'relative',
   height: '100%',
   backgroundColor: colors.surface,
-  borderLeft: `1px solid ${colors.border}`,
   display: 'flex',
   flexDirection: 'column',
   flexShrink: 0,
@@ -747,7 +743,6 @@ const tabBarStyle: React.CSSProperties = {
   justifyContent: 'space-between',
   alignItems: 'center',
   padding: '6px 8px',
-  borderBottom: `1px solid ${colors.border}`,
   flexShrink: 0,
 };
 

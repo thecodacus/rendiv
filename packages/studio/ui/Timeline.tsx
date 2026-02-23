@@ -18,12 +18,12 @@ const INDENT_PER_DEPTH = 16;
 const COMPOSITION_ROW_ID = '__composition__';
 
 const BLOCK_COLORS = [
-  { bg: 'rgba(74, 158, 255, 0.5)', border: '#4a9eff' },
-  { bg: 'rgba(188, 140, 255, 0.5)', border: '#bc8cff' },
-  { bg: 'rgba(63, 185, 80, 0.5)', border: '#3fb950' },
-  { bg: 'rgba(240, 136, 62, 0.5)', border: '#f0883e' },
-  { bg: 'rgba(248, 81, 73, 0.5)', border: '#f85149' },
-  { bg: 'rgba(219, 171, 9, 0.5)', border: '#dbab09' },
+  { bg: 'rgba(0, 212, 255, 0.4)', border: '#00d4ff' },
+  { bg: 'rgba(137, 87, 229, 0.4)', border: '#8957e5' },
+  { bg: 'rgba(40, 200, 64, 0.4)', border: '#28c840' },
+  { bg: 'rgba(212, 160, 23, 0.4)', border: '#d4a017' },
+  { bg: 'rgba(248, 81, 73, 0.4)', border: '#f85149' },
+  { bg: 'rgba(0, 136, 204, 0.4)', border: '#0088cc' },
 ];
 
 interface TreeNode {
@@ -251,14 +251,12 @@ export const Timeline: React.FC<TimelineProps> = ({
         style={{
           display: 'flex',
           height: RULER_HEIGHT,
-          borderBottom: `1px solid ${colors.border}`,
         }}
       >
         <div
           style={{
             width: LABEL_WIDTH,
             minWidth: LABEL_WIDTH,
-            borderRight: `1px solid ${colors.border}`,
           }}
         />
         <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
@@ -316,10 +314,7 @@ export const Timeline: React.FC<TimelineProps> = ({
             style={{
               display: 'flex',
               height: TRACK_HEIGHT,
-              borderBottom:
-                rowIdx < visibleRows.length - 1
-                  ? `1px solid ${colors.border}`
-                  : undefined,
+              borderBottom: `1px solid ${colors.border}`,
             }}
           >
             {/* Label column */}
@@ -327,7 +322,6 @@ export const Timeline: React.FC<TimelineProps> = ({
               style={{
                 width: LABEL_WIDTH,
                 minWidth: LABEL_WIDTH,
-                borderRight: `1px solid ${colors.border}`,
                 display: 'flex',
                 alignItems: 'center',
                 paddingLeft: 12 + indent,
@@ -369,8 +363,8 @@ export const Timeline: React.FC<TimelineProps> = ({
                     top: 4,
                     width: Math.max(2, totalFrames * scale),
                     height: TRACK_HEIGHT - 8,
-                    backgroundColor: 'rgba(88, 166, 255, 0.15)',
-                    border: '1px solid rgba(88, 166, 255, 0.3)',
+                    backgroundColor: colors.accentBgSubtle,
+                    border: `1px solid ${colors.borderStrong}`,
                     borderRadius: 4,
                     display: 'flex',
                     alignItems: 'center',

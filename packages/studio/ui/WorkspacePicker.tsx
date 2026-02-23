@@ -1,23 +1,24 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
 
-// Inline colors/fonts to match Studio theme (same as styles.ts)
+// Desaturated dark theme — matching Studio's styles.ts
 const colors = {
-  bg: '#0d1117',
-  surface: '#161b22',
-  surfaceHover: '#1c2128',
-  border: '#30363d',
-  textPrimary: '#e6edf3',
-  textSecondary: '#8b949e',
-  accent: '#58a6ff',
-  accentMuted: '#1f6feb',
-  badge: '#238636',
+  bg: '#0e0e12',
+  surface: '#161619',
+  surfaceHover: '#1e1e22',
+  border: 'rgba(255,255,255,0.06)',
+  textPrimary: '#e0e0e0',
+  textSecondary: '#6b6b78',
+  accent: '#00d4ff',
+  accentMuted: '#0088cc',
+  badge: '#28c840',
   error: '#f85149',
+  warning: '#d4a017',
 };
 
 const fonts = {
-  sans: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-  mono: '"SF Mono", "Fira Code", Consolas, "Liberation Mono", Menlo, monospace',
+  sans: 'Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+  mono: '"JetBrains Mono", "SF Mono", "Fira Code", Consolas, "Liberation Mono", Menlo, monospace',
 };
 
 interface WorkspaceProject {
@@ -232,13 +233,11 @@ const WorkspacePicker: React.FC = () => {
                     onClick={() => handleOpenProject(project)}
                     onMouseEnter={(e) => {
                       if (project.hasNodeModules) {
-                        e.currentTarget.style.borderColor = colors.accent;
                         e.currentTarget.style.backgroundColor = colors.surfaceHover;
                       }
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.borderColor = colors.border;
-                      e.currentTarget.style.backgroundColor = colors.surface;
+                      e.currentTarget.style.backgroundColor = '';
                     }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -262,8 +261,8 @@ const WorkspacePicker: React.FC = () => {
                         </>
                       ) : (
                         <>
-                          <div style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: '#d29922' }} />
-                          <span style={{ fontSize: 11, color: '#d29922' }}>Missing node_modules</span>
+                          <div style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: '#d4a017' }} />
+                          <span style={{ fontSize: 11, color: '#d4a017' }}>Missing node_modules</span>
                         </>
                       )}
                     </div>
@@ -287,15 +286,16 @@ const WorkspacePicker: React.FC = () => {
 // --- Styles ---
 
 const globalCSS = `
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
 * { margin: 0; padding: 0; box-sizing: border-box; }
 * {
   scrollbar-width: thin;
-  scrollbar-color: ${colors.border} transparent;
+  scrollbar-color: rgba(255,255,255,0.08) transparent;
 }
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: ${colors.border}; border-radius: 4px; }
-::-webkit-scrollbar-thumb:hover { background: ${colors.textSecondary}; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.15); }
 `;
 
 const rootStyle: React.CSSProperties = {
@@ -315,7 +315,6 @@ const headerStyle: React.CSSProperties = {
   height: 48,
   padding: '0 24px',
   backgroundColor: colors.surface,
-  borderBottom: `1px solid ${colors.border}`,
   flexShrink: 0,
 };
 
@@ -350,10 +349,11 @@ const gridStyle: React.CSSProperties = {
 
 const cardStyle: React.CSSProperties = {
   padding: 16,
-  backgroundColor: colors.surface,
-  border: `1px solid ${colors.border}`,
-  borderRadius: 8,
-  transition: 'border-color 0.15s, background-color 0.15s',
+  background: 'linear-gradient(170deg, #161619 0%, #111114 100%)',
+  border: 'none',
+  borderRadius: 12,
+  boxShadow: '0 4px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.03)',
+  transition: 'background-color 0.15s',
 };
 
 const newButtonStyle: React.CSSProperties = {
@@ -361,17 +361,17 @@ const newButtonStyle: React.CSSProperties = {
   fontSize: 13,
   fontWeight: 600,
   color: '#fff',
-  backgroundColor: colors.accentMuted,
+  background: 'linear-gradient(135deg, #0088cc 0%, #00b8d9 100%)',
   border: 'none',
   borderRadius: 6,
   cursor: 'pointer',
   fontFamily: fonts.sans,
+  boxShadow: '0 0 12px rgba(0,212,255,0.25)',
 };
 
 const createFormStyle: React.CSSProperties = {
   padding: 16,
   backgroundColor: colors.surface,
-  border: `1px solid ${colors.border}`,
   borderRadius: 8,
   marginBottom: 20,
 };
@@ -383,7 +383,7 @@ const inputStyle: React.CSSProperties = {
   fontFamily: fonts.mono,
   backgroundColor: colors.bg,
   color: colors.textPrimary,
-  border: `1px solid ${colors.border}`,
+  border: 'none',
   borderRadius: 6,
   outline: 'none',
 };
@@ -393,12 +393,13 @@ const actionButtonStyle: React.CSSProperties = {
   fontSize: 13,
   fontWeight: 600,
   color: '#fff',
-  backgroundColor: colors.accentMuted,
+  background: 'linear-gradient(135deg, #0088cc 0%, #00b8d9 100%)',
   border: 'none',
   borderRadius: 6,
   cursor: 'pointer',
   fontFamily: fonts.sans,
   whiteSpace: 'nowrap',
+  boxShadow: '0 0 12px rgba(0,212,255,0.25)',
 };
 
 const cancelButtonStyle: React.CSSProperties = {
@@ -406,8 +407,8 @@ const cancelButtonStyle: React.CSSProperties = {
   fontSize: 13,
   fontWeight: 500,
   color: colors.textSecondary,
-  backgroundColor: 'transparent',
-  border: `1px solid ${colors.border}`,
+  backgroundColor: colors.surfaceHover,
+  border: 'none',
   borderRadius: 6,
   cursor: 'pointer',
   fontFamily: fonts.sans,

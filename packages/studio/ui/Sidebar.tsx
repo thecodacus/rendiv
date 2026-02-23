@@ -73,16 +73,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ compositions, selectedId, onSe
         key={comp.id}
         style={style}
         onClick={() => onSelect(comp.id)}
-        onMouseEnter={(e) => {
-          if (!isSelected) {
-            e.currentTarget.style.backgroundColor = colors.surfaceHover;
-          }
-        }}
-        onMouseLeave={(e) => {
-          if (!isSelected) {
-            e.currentTarget.style.backgroundColor = 'transparent';
-          }
-        }}
+        data-sidebar-item=""
+        data-selected={isSelected ? 'true' : undefined}
       >
         <span>{comp.id}</span>
         <span
@@ -113,7 +105,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ compositions, selectedId, onSe
         alignItems: 'center',
         justifyContent: 'center',
         padding: '8px 12px',
-        borderBottom: `1px solid ${colors.border}`,
         flexShrink: 0,
       }}>
         <div style={{ display: 'flex', gap: 2, padding: 2, backgroundColor: colors.bg, borderRadius: 6 }}>
@@ -128,7 +119,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ compositions, selectedId, onSe
                 border: 'none',
                 borderRadius: 4,
                 cursor: 'pointer',
-                backgroundColor: activeTab === tab ? colors.border : 'transparent',
+                backgroundColor: activeTab === tab ? colors.accentBg : 'transparent',
                 color: activeTab === tab ? colors.textPrimary : colors.textSecondary,
                 fontFamily: fonts.sans,
               }}

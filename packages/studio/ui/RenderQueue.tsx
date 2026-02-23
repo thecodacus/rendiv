@@ -207,7 +207,6 @@ const actionsBarStyle: React.CSSProperties = {
   display: 'flex',
   justifyContent: 'flex-end',
   padding: '6px 8px',
-  borderBottom: `1px solid ${colors.border}`,
   flexShrink: 0,
 };
 
@@ -235,7 +234,7 @@ const jobStyle: React.CSSProperties = {
 
 const progressTrackStyle: React.CSSProperties = {
   height: 3,
-  backgroundColor: colors.border,
+  backgroundColor: colors.surfaceHover,
   borderRadius: 2,
   overflow: 'hidden',
 };
@@ -248,13 +247,14 @@ const progressBarStyle: React.CSSProperties = {
 
 const clearBtnStyle: React.CSSProperties = {
   background: 'none',
-  border: `1px solid ${colors.border}`,
+  border: 'none',
   color: colors.textSecondary,
   cursor: 'pointer',
   fontSize: 10,
   padding: '2px 8px',
   borderRadius: 4,
   fontFamily: fonts.sans,
+  backgroundColor: colors.surfaceHover,
 };
 
 const cancelBtnStyle: React.CSSProperties = {

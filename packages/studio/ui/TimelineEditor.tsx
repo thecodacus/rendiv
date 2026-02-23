@@ -5,21 +5,28 @@ import { useTimelineZoom } from './timeline/use-timeline-zoom';
 import { useTimelineDrag } from './timeline/use-timeline-drag';
 import { WaveformBlock } from './timeline/WaveformBlock';
 import { ThumbnailBlock } from './timeline/ThumbnailBlock';
+import { colors, fonts, tabToggleStyles, buttonStyles, contextMenuStyles } from './styles';
 
 const TRACK_HEIGHT = 32;
 const TRACK_GAP = 2;
 const RULER_HEIGHT = 28;
-const LABEL_WIDTH = 140;
+const LABEL_WIDTH = 280;
 const TOOLBAR_HEIGHT = 32;
 const EDGE_HIT_ZONE = 6;
 
-// Block colors — cycle through a palette
-const BLOCK_COLORS = [
-  '#1f6feb', '#238636', '#8957e5', '#da3633',
-  '#d29922', '#1a7f37', '#6639ba', '#cf222e',
+// Block colors — each entry is [from, to] for a smooth same-hue gradient (like the Render button)
+const BLOCK_COLORS: [string, string][] = [
+  ['#0088cc', '#00b8d9'],  // cyan
+  ['#1a9f4a', '#34d058'],  // green
+  ['#6639b7', '#a371f7'],  // purple
+  ['#c73838', '#f47067'],  // red
+  ['#a08020', '#d4b830'],  // gold
+  ['#147a3a', '#22c55e'],  // emerald
+  ['#5b2dac', '#9b72f2'],  // violet
+  ['#a03028', '#ef6b5e'],  // coral
 ];
 
-function getBlockColor(index: number): string {
+function getBlockColor(index: number): [string, string] {
   return BLOCK_COLORS[index % BLOCK_COLORS.length];
 }
 
@@ -204,19 +211,19 @@ export const TimelineEditor: React.FC<TimelineEditorProps> = ({
       {/* Toolbar */}
       <div style={toolbarStyle}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ fontSize: 11, color: '#8b949e' }}>{compositionName}</span>
-          <span style={{ fontSize: 11, color: '#484f58' }}>|</span>
-          <span style={{ fontSize: 11, color: '#8b949e', fontFamily: 'monospace' }}>
+          <span style={{ fontSize: 11, color: colors.textSecondary }}>{compositionName}</span>
+          <span style={{ fontSize: 11, color: colors.textMuted }}>|</span>
+          <span style={{ fontSize: 11, color: colors.textSecondary, fontFamily: fonts.mono }}>
             {formatTimecode(currentFrame, fps)} / {formatTimecode(totalFrames, fps)}
           </span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           {hasOverrides && (
-            <button onClick={onOverridesClear} style={resetBtnStyle} title="Reset all overrides">
+            <button onClick={onOverridesClear} style={buttonStyles.danger} title="Reset all overrides">
               Reset All
             </button>
           )}
-          <label style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, color: '#8b949e' }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, color: colors.textSecondary }}>
             Zoom
             <input
               type="range"
@@ -225,7 +232,7 @@ export const TimelineEditor: React.FC<TimelineEditorProps> = ({
               step={0.1}
               value={pixelsPerFrame}
               onChange={handleZoomChange}
-              style={{ width: 80, accentColor: '#58a6ff' }}
+              style={{ width: 80, accentColor: colors.accent }}
             />
           </label>
           <ViewToggle view={view} onChange={onViewChange} />
@@ -236,14 +243,14 @@ export const TimelineEditor: React.FC<TimelineEditorProps> = ({
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
         {/* Track labels */}
         <div style={labelsContainerStyle}>
-          <div style={{ height: RULER_HEIGHT, borderBottom: '1px solid #30363d' }} />
+          <div style={{ height: RULER_HEIGHT }} />
           {tracks.map((track) => (
             <div key={track.id} style={trackLabelStyle}>
-              <span style={{ fontSize: 10, color: '#484f58' }}>Track {track.id + 1}</span>
+              <span style={{ fontSize: 10, color: colors.textMuted }}>Track {track.id + 1}</span>
             </div>
           ))}
           {tracks.length === 0 && (
-            <div style={{ ...trackLabelStyle, color: '#484f58', fontStyle: 'italic' }}>
+            <div style={{ ...trackLabelStyle, color: colors.textMuted, fontStyle: 'italic' }}>
               No sequences
             </div>
           )}
@@ -275,7 +282,7 @@ export const TimelineEditor: React.FC<TimelineEditorProps> = ({
                 <div style={{
                   width: 1,
                   height: tick.major ? 10 : 5,
-                  backgroundColor: tick.major ? '#484f58' : '#30363d',
+                  backgroundColor: tick.major ? colors.textMuted : colors.border,
                 }} />
                 {tick.label && (
                   <span style={{
@@ -283,8 +290,8 @@ export const TimelineEditor: React.FC<TimelineEditorProps> = ({
                     top: 2,
                     left: 2,
                     fontSize: 9,
-                    color: '#8b949e',
-                    fontFamily: 'monospace',
+                    color: colors.textSecondary,
+                    fontFamily: fonts.mono,
                     whiteSpace: 'nowrap',
                     pointerEvents: 'none',
                   }}>
@@ -313,7 +320,8 @@ export const TimelineEditor: React.FC<TimelineEditorProps> = ({
                   left: 0,
                   width: totalWidth,
                   height: TRACK_HEIGHT,
-                  backgroundColor: track.id % 2 === 0 ? '#161b22' : '#1c2128',
+                  backgroundColor: track.id % 2 === 0 ? colors.surface : colors.surfaceHover,
+                  borderBottom: `1px solid ${colors.border}`,
                 }}
               />
             ))}
@@ -325,7 +333,7 @@ export const TimelineEditor: React.FC<TimelineEditorProps> = ({
                 const width = Math.max(2, te.entry.durationInFrames * pixelsPerFrame);
                 const top = te.trackIndex * (TRACK_HEIGHT + TRACK_GAP);
                 const isSelected = te.entry.namePath === selectedPath;
-                const color = getBlockColor(te.trackIndex);
+                const [colorStart, colorEnd] = getBlockColor(te.trackIndex);
                 const media = mediaInfo.get(te.entry.id);
                 const blockHeight = TRACK_HEIGHT - 4;
                 const hasMedia = media && width > 20;
@@ -342,10 +350,11 @@ export const TimelineEditor: React.FC<TimelineEditorProps> = ({
                       top: top + 2,
                       width,
                       height: blockHeight,
-                      backgroundColor: color,
-                      opacity: isSelected ? 1 : 0.75,
+                      background: `linear-gradient(135deg, ${colorStart} 0%, ${colorEnd} 100%)`,
+                      opacity: isSelected ? 1 : 0.85,
                       borderRadius: 4,
-                      border: isSelected ? '1px solid #58a6ff' : '1px solid transparent',
+                      border: isSelected ? `1px solid ${colors.accent}` : '1px solid transparent',
+                      boxShadow: isSelected ? '0 0 8px rgba(0,212,255,0.4)' : undefined,
                       cursor: 'grab',
                       display: 'flex',
                       alignItems: 'center',
@@ -356,7 +365,7 @@ export const TimelineEditor: React.FC<TimelineEditorProps> = ({
                   >
                     {/* Media visualization background */}
                     {hasMedia && media.type === 'audio' && (
-                      <WaveformBlock src={media.src} width={width} height={blockHeight} color={color} />
+                      <WaveformBlock src={media.src} width={width} height={blockHeight} color={colorStart} />
                     )}
                     {hasMedia && media.type === 'video' && (
                       <ThumbnailBlock src={media.src} width={width} height={blockHeight} />
@@ -423,11 +432,11 @@ export const TimelineEditor: React.FC<TimelineEditorProps> = ({
       {/* Selection info bar */}
       {selectedPath && (
         <div style={infoBarStyle}>
-          <span style={{ fontSize: 11, color: '#e6edf3', fontFamily: 'monospace' }}>{selectedPath}</span>
+          <span style={{ fontSize: 11, color: colors.textPrimary, fontFamily: fonts.mono }}>{selectedPath}</span>
           {overrides.has(selectedPath) && (
             <button
               onClick={() => { onOverrideRemove(selectedPath); setSelectedPath(null); }}
-              style={resetBtnStyle}
+              style={buttonStyles.danger}
             >
               Reset Position
             </button>
@@ -437,17 +446,17 @@ export const TimelineEditor: React.FC<TimelineEditorProps> = ({
 
       {/* Context menu */}
       {contextMenu && (
-        <div style={{ ...contextMenuStyle, left: contextMenu.x, top: contextMenu.y }}>
+        <div style={{ ...contextMenuStyles.container, left: contextMenu.x, top: contextMenu.y }}>
           {overrides.has(contextMenu.namePath) && (
             <div
-              style={contextMenuItemStyle}
+              style={contextMenuStyles.item}
               onClick={() => { onOverrideRemove(contextMenu.namePath); setContextMenu(null); }}
             >
               Reset Position
             </div>
           )}
           <div
-            style={contextMenuItemStyle}
+            style={contextMenuStyles.item}
             onClick={() => { setSelectedPath(contextMenu.namePath); setContextMenu(null); }}
           >
             Select
@@ -458,24 +467,14 @@ export const TimelineEditor: React.FC<TimelineEditorProps> = ({
   );
 };
 
-// --- View Toggle (same style as StudioApp) ---
+// --- View Toggle (uses shared tab styles) ---
 const ViewToggle: React.FC<{ view: 'editor' | 'tree'; onChange: (v: 'editor' | 'tree') => void }> = ({ view, onChange }) => (
-  <div style={{ display: 'flex', gap: 2, padding: '2px', backgroundColor: '#0d1117', borderRadius: 6 }}>
+  <div style={tabToggleStyles.container}>
     {(['editor', 'tree'] as const).map((v) => (
       <button
         key={v}
         onClick={() => onChange(v)}
-        style={{
-          padding: '3px 10px',
-          fontSize: 11,
-          fontWeight: 500,
-          border: 'none',
-          borderRadius: 4,
-          cursor: 'pointer',
-          backgroundColor: view === v ? '#30363d' : 'transparent',
-          color: view === v ? '#e6edf3' : '#8b949e',
-          fontFamily: 'system-ui, -apple-system, sans-serif',
-        }}
+        style={tabToggleStyles.button(view === v)}
       >
         {v === 'editor' ? 'Tracks' : 'Tree'}
       </button>
@@ -489,9 +488,9 @@ const containerStyle: React.CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
   height: '100%',
-  backgroundColor: '#0d1117',
-  color: '#e6edf3',
-  fontFamily: 'system-ui, -apple-system, sans-serif',
+  backgroundColor: colors.bg,
+  color: colors.textPrimary,
+  fontFamily: fonts.sans,
   fontSize: 13,
 };
 
@@ -501,8 +500,7 @@ const toolbarStyle: React.CSSProperties = {
   justifyContent: 'space-between',
   height: TOOLBAR_HEIGHT,
   padding: '0 12px',
-  backgroundColor: '#161b22',
-  borderBottom: '1px solid #30363d',
+  backgroundColor: colors.surface,
   flexShrink: 0,
 };
 
@@ -510,8 +508,7 @@ const labelsContainerStyle: React.CSSProperties = {
   width: LABEL_WIDTH,
   minWidth: LABEL_WIDTH,
   flexShrink: 0,
-  backgroundColor: '#161b22',
-  borderRight: '1px solid #30363d',
+  backgroundColor: colors.surface,
   overflow: 'hidden',
 };
 
@@ -519,10 +516,10 @@ const trackLabelStyle: React.CSSProperties = {
   height: TRACK_HEIGHT + TRACK_GAP,
   display: 'flex',
   alignItems: 'center',
-  padding: '0 8px',
+  padding: '0 12px',
   fontSize: 11,
-  color: '#8b949e',
-  borderBottom: '1px solid #21262d',
+  color: colors.textSecondary,
+  borderBottom: `1px solid ${colors.border}`,
 };
 
 const trackAreaContainerStyle: React.CSSProperties = {
@@ -535,8 +532,7 @@ const rulerStyle: React.CSSProperties = {
   position: 'sticky',
   top: 0,
   height: RULER_HEIGHT,
-  backgroundColor: '#161b22',
-  borderBottom: '1px solid #30363d',
+  backgroundColor: colors.surface,
   zIndex: 5,
 };
 
@@ -548,43 +544,12 @@ const edgeHandleStyle: React.CSSProperties = {
   zIndex: 1,
 };
 
-const resetBtnStyle: React.CSSProperties = {
-  padding: '2px 8px',
-  fontSize: 10,
-  fontWeight: 500,
-  color: '#f85149',
-  backgroundColor: 'transparent',
-  border: '1px solid #f8514933',
-  borderRadius: 4,
-  cursor: 'pointer',
-  fontFamily: 'system-ui, -apple-system, sans-serif',
-};
-
 const infoBarStyle: React.CSSProperties = {
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'space-between',
   height: 24,
   padding: '0 12px',
-  backgroundColor: '#161b22',
-  borderTop: '1px solid #30363d',
+  backgroundColor: colors.surface,
   flexShrink: 0,
-};
-
-const contextMenuStyle: React.CSSProperties = {
-  position: 'fixed',
-  zIndex: 100,
-  backgroundColor: '#1c2128',
-  border: '1px solid #30363d',
-  borderRadius: 6,
-  padding: '4px 0',
-  boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
-  minWidth: 140,
-};
-
-const contextMenuItemStyle: React.CSSProperties = {
-  padding: '6px 12px',
-  fontSize: 12,
-  color: '#e6edf3',
-  cursor: 'pointer',
 };

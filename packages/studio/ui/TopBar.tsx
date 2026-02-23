@@ -62,7 +62,7 @@ export const TopBar: React.FC<TopBarProps> = ({ composition, entryPoint, onRende
             }}
             onClick={onBackToWorkspace}
             title="Back to projects"
-            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = colors.border; }}
+            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = colors.surfaceHover; }}
             onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = colors.surfaceHover; }}
           >
             <BackIcon />
@@ -88,7 +88,7 @@ export const TopBar: React.FC<TopBarProps> = ({ composition, entryPoint, onRende
           disabled={!composition}
           onMouseEnter={(e) => {
             if (composition) {
-              e.currentTarget.style.backgroundColor = colors.border;
+              e.currentTarget.style.backgroundColor = colors.surfaceHover;
             }
           }}
           onMouseLeave={(e) => {
@@ -125,7 +125,7 @@ export const TopBar: React.FC<TopBarProps> = ({ composition, entryPoint, onRende
             gap: 6,
             position: 'relative' as const,
             color: panelOpen ? colors.accent : colors.textPrimary,
-            borderColor: panelOpen ? colors.accent : colors.border,
+            backgroundColor: panelOpen ? colors.accentBg : colors.surfaceHover,
           }}
           onClick={onTogglePanel}
           title="Toggle side panel"

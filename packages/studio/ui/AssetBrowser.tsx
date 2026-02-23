@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { colors, fonts } from './styles';
+import { colors, fonts, contextMenuStyles } from './styles';
 
 export interface AssetEntry {
   name: string;
@@ -89,15 +89,9 @@ const ContextMenu: React.FC<{
     <div
       ref={ref}
       style={{
-        position: 'fixed',
+        ...contextMenuStyles.container,
         left: menu.x,
         top: menu.y,
-        zIndex: 100,
-        backgroundColor: colors.surface,
-        border: `1px solid ${colors.border}`,
-        borderRadius: 6,
-        boxShadow: '0 4px 16px rgba(0,0,0,0.4)',
-        padding: '4px 0',
         minWidth: 160,
       }}
     >
@@ -157,9 +151,10 @@ const InlineInput: React.FC<{
           fontFamily: fonts.sans,
           backgroundColor: colors.bg,
           color: colors.textPrimary,
-          border: `1px solid ${colors.accent}`,
+          border: 'none',
           borderRadius: 4,
           outline: 'none',
+          boxShadow: `0 0 0 1px ${colors.accent}`,
           boxSizing: 'border-box',
         }}
         onKeyDown={(e) => {
@@ -255,7 +250,7 @@ const FileNode: React.FC<FileNodeProps> = ({
             color: colors.textSecondary,
             cursor: 'pointer',
             userSelect: 'none',
-            backgroundColor: isDragTarget ? 'rgba(88, 166, 255, 0.12)' : hovered ? colors.surfaceHover : 'transparent',
+            backgroundColor: isDragTarget ? 'rgba(0, 212, 255, 0.12)' : hovered ? colors.surfaceHover : 'transparent',
             borderLeft: isDragTarget ? `2px solid ${colors.accent}` : '2px solid transparent',
           }}
           onClick={() => onToggleDir(entry.path)}
@@ -323,7 +318,7 @@ const FileNode: React.FC<FileNodeProps> = ({
         fontSize: 13,
         color: isSelected ? colors.accent : isCopied ? colors.accent : colors.textPrimary,
         userSelect: 'none',
-        backgroundColor: isSelected ? 'rgba(88, 166, 255, 0.08)' : hovered ? colors.surfaceHover : 'transparent',
+        backgroundColor: isSelected ? 'rgba(0, 212, 255, 0.08)' : hovered ? colors.surfaceHover : 'transparent',
         borderLeft: isSelected ? `2px solid ${colors.accent}` : isCopied ? `2px solid ${colors.accent}` : '2px solid transparent',
       }}
       onClick={() => { onSelect?.(entry); onCopy(entry.path); }}
@@ -658,10 +653,10 @@ export const AssetBrowser: React.FC<AssetBrowserProps> = ({ selectedAssetPath, o
     width: 26,
     height: 26,
     padding: 0,
-    border: `1px solid ${colors.border}`,
+    border: 'none',
     borderRadius: 4,
     cursor: 'pointer',
-    backgroundColor: 'transparent',
+    backgroundColor: colors.surfaceHover,
     color: colors.textSecondary,
   };
 
@@ -689,7 +684,6 @@ export const AssetBrowser: React.FC<AssetBrowserProps> = ({ selectedAssetPath, o
       fontSize: 11,
       color: colors.error,
       backgroundColor: 'rgba(248, 81, 73, 0.1)',
-      borderBottom: `1px solid ${colors.border}`,
       display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'center',
@@ -715,7 +709,7 @@ export const AssetBrowser: React.FC<AssetBrowserProps> = ({ selectedAssetPath, o
     <div style={{
       position: 'absolute',
       inset: 0,
-      backgroundColor: 'rgba(88, 166, 255, 0.08)',
+      backgroundColor: 'rgba(0, 212, 255, 0.08)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -752,7 +746,6 @@ export const AssetBrowser: React.FC<AssetBrowserProps> = ({ selectedAssetPath, o
       padding: '6px 12px',
       fontSize: 11,
       color: colors.textSecondary,
-      borderBottom: `1px solid ${colors.border}`,
     }}>
       <span>
         Click a file to copy its <span style={{ fontFamily: fonts.mono }}>staticFile()</span> path
@@ -844,8 +837,7 @@ export const AssetBrowser: React.FC<AssetBrowserProps> = ({ selectedAssetPath, o
             padding: '6px 12px',
             fontSize: 11,
             color: dragOverDir === '__root__' ? colors.accent : colors.textSecondary,
-            backgroundColor: dragOverDir === '__root__' ? 'rgba(88, 166, 255, 0.08)' : 'transparent',
-            borderBottom: `1px solid ${colors.border}`,
+            backgroundColor: dragOverDir === '__root__' ? 'rgba(0, 212, 255, 0.08)' : 'transparent',
             borderLeft: dragOverDir === '__root__' ? `2px solid ${colors.accent}` : '2px solid transparent',
             textAlign: 'center',
           }}

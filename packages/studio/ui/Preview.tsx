@@ -22,8 +22,8 @@ const SPEED_STEPS = [0.25, 0.5, 1, 2, 4];
 
 // Block colors — same palette as TimelineEditor
 const BLOCK_COLORS = [
-  '#1f6feb', '#238636', '#8957e5', '#da3633',
-  '#d29922', '#1a7f37', '#6639ba', '#cf222e',
+  '#0088cc', '#28c840', '#8957e5', '#e05252',
+  '#d4a017', '#1a9f4a', '#7c3aed', '#c73838',
 ];
 
 function formatTime(frame: number, fps: number): string {
@@ -588,7 +588,7 @@ const speedBtnStyle: React.CSSProperties = {
 };
 
 const positionBtnStyle: React.CSSProperties = {
-  border: `1px solid ${colors.border}`,
+  border: 'none',
   cursor: 'pointer',
   fontSize: 11,
   fontWeight: 500,
@@ -604,7 +604,7 @@ const resetOverlayBtnStyle: React.CSSProperties = {
   fontWeight: 500,
   color: colors.error,
   backgroundColor: 'rgba(248,81,73,0.15)',
-  border: '1px solid rgba(248,81,73,0.3)',
+  border: 'none',
   borderRadius: 3,
   cursor: 'pointer',
   fontFamily: fonts.sans,

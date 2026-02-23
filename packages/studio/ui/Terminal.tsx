@@ -29,23 +29,23 @@ export const Terminal: React.FC<TerminalProps> = ({ open }) => {
         foreground: colors.textPrimary,
         cursor: colors.accent,
         cursorAccent: colors.bg,
-        selectionBackground: 'rgba(88, 166, 255, 0.3)',
-        black: '#484f58',
+        selectionBackground: 'rgba(0, 212, 255, 0.25)',
+        black: '#3a3d52',
         red: '#ff7b72',
-        green: '#3fb950',
-        yellow: '#d29922',
-        blue: '#58a6ff',
+        green: '#28c840',
+        yellow: '#d4a017',
+        blue: '#00d4ff',
         magenta: '#bc8cff',
         cyan: '#39c5cf',
         white: '#b1bac4',
-        brightBlack: '#6e7681',
+        brightBlack: '#585b70',
         brightRed: '#ffa198',
         brightGreen: '#56d364',
         brightYellow: '#e3b341',
-        brightBlue: '#79c0ff',
+        brightBlue: '#79e0ff',
         brightMagenta: '#d2a8ff',
         brightCyan: '#56d4dd',
-        brightWhite: '#f0f6fc',
+        brightWhite: '#f0f0f0',
       },
     });
 
@@ -213,7 +213,6 @@ const actionsBarStyle: React.CSSProperties = {
   display: 'flex',
   justifyContent: 'flex-end',
   padding: '4px 8px',
-  borderBottom: `1px solid ${colors.border}`,
   flexShrink: 0,
 };
 
@@ -255,12 +254,13 @@ const startBtnStyle: React.CSSProperties = {
 
 const actionBtnStyle: React.CSSProperties = {
   background: 'none',
-  border: `1px solid ${colors.border}`,
+  border: 'none',
   color: colors.textSecondary,
   cursor: 'pointer',
   fontSize: 10,
   padding: '2px 8px',
   borderRadius: 4,
   fontFamily: fonts.sans,
+  backgroundColor: colors.surfaceHover,
 };
 
