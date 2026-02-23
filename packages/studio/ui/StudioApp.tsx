@@ -2,6 +2,8 @@ import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react'
 import { createRoot } from 'react-dom/client';
 import {
   getRootComponent,
+  getRootComponentVersion,
+  onRootComponentChange,
   CompositionManagerContext,
   type CompositionEntry,
   type TimelineEntry,
@@ -506,6 +508,9 @@ const StudioApp: React.FC = () => {
     j.status === 'queued' || j.status === 'bundling' || j.status === 'rendering' || j.status === 'encoding'
   ).length;
 
+  // Re-read root component whenever setRootComponent is called (e.g. HMR re-execution)
+  const [rootVersion, setRootVersion] = useState(getRootComponentVersion);
+  useEffect(() => onRootComponentChange(() => setRootVersion(getRootComponentVersion())), []);
   const Root = getRootComponent();
 
   return (

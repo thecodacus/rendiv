@@ -28,7 +28,7 @@ export { Easing, type EasingFunction } from './animation/easing';
 export { blendColors } from './animation/interpolate-colors';
 
 // Registration
-export { setRootComponent, getRootComponent } from './register-root';
+export { setRootComponent, getRootComponent, getRootComponentVersion, onRootComponentChange } from './register-root';
 
 // Utilities
 export { staticFile } from './static-file';
