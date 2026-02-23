@@ -26,6 +26,9 @@ interface DragState {
   /** Dragged corner start position in composition pixels */
   dragStartX: number;
   dragStartY: number;
+  /** Per-axis: true if the anchor is at the transform origin, false if at the end */
+  xAnchorIsOrigin: boolean;
+  yAnchorIsOrigin: boolean;
   /** Starting override values to preserve */
   startX: number;
   startY: number;
@@ -90,13 +93,13 @@ export function usePreviewDrag({
         namePath: entry.namePath,
         name: entry.name,
         trackIndex: entry.trackIndex ?? 0,
-        x,
-        y,
-        w: compositionWidth * scaleX,
-        h: compositionHeight * scaleY,
+        x: x + Math.min(0, compositionWidth * scaleX),
+        y: y + Math.min(0, compositionHeight * scaleY),
+        w: Math.abs(compositionWidth * scaleX),
+        h: Math.abs(compositionHeight * scaleY),
       });
     }
-    // Sort by trackIndex ascending (lower = front, checked first in hit test)
+    // Sort ascending by trackIndex for rendering (later = visually on top in overlay)
     visibleEntries.sort((a, b) => a.trackIndex - b.trackIndex);
   }
 
@@ -104,6 +107,7 @@ export function usePreviewDrag({
   visibleEntriesRef.current = visibleEntries;
 
   // Hit test: find entry and handle at a point (in player-pixel coordinates relative to overlay)
+  // Iterates in reverse (highest trackIndex first) so the visually topmost entry wins.
   const hitTest = useCallback(
     (clientX: number, clientY: number, overlayRect: DOMRect): { namePath: string; handle: HandleType } | null => {
       const px = clientX - overlayRect.left;
@@ -111,7 +115,8 @@ export function usePreviewDrag({
       const scale = playerScaleRef.current;
       const entries = visibleEntriesRef.current;
 
-      for (const ve of entries) {
+      for (let i = entries.length - 1; i >= 0; i--) {
+        const ve = entries[i];
         const bx = ve.x * scale;
         const by = ve.y * scale;
         const bw = ve.w * scale;
@@ -166,19 +171,22 @@ export function usePreviewDrag({
       const endX = x + compositionWidth * scaleX;
       const endY = y + compositionHeight * scaleY;
 
-      // Determine anchor and drag corners based on handle type
+      // Per-axis: determine whether the anchor (fixed point) is at the transform origin or end.
+      // Visual left handles (tl, bl): anchor is on the visual right
+      // Visual right handles (tr, br): anchor is on the visual left
+      const isLeftHandle = hit.handle === 'scale-tl' || hit.handle === 'scale-bl';
+      const isTopHandle = hit.handle === 'scale-tl' || hit.handle === 'scale-tr';
+      const xAnchorIsOrigin = isLeftHandle ? (scaleX < 0) : (scaleX >= 0);
+      const yAnchorIsOrigin = isTopHandle ? (scaleY < 0) : (scaleY >= 0);
+
       let anchorX: number, anchorY: number, dragStartX: number, dragStartY: number;
-      switch (hit.handle) {
-        case 'scale-tl':
-          anchorX = endX; anchorY = endY; dragStartX = x; dragStartY = y; break;
-        case 'scale-tr':
-          anchorX = x; anchorY = endY; dragStartX = endX; dragStartY = y; break;
-        case 'scale-bl':
-          anchorX = endX; anchorY = y; dragStartX = x; dragStartY = endY; break;
-        case 'scale-br':
-          anchorX = x; anchorY = y; dragStartX = endX; dragStartY = endY; break;
-        default: // move
-          anchorX = 0; anchorY = 0; dragStartX = x; dragStartY = y; break;
+      if (hit.handle === 'move') {
+        anchorX = 0; anchorY = 0; dragStartX = x; dragStartY = y;
+      } else {
+        anchorX = xAnchorIsOrigin ? x : endX;
+        anchorY = yAnchorIsOrigin ? y : endY;
+        dragStartX = xAnchorIsOrigin ? endX : x;
+        dragStartY = yAnchorIsOrigin ? endY : y;
       }
 
       dragRef.current = {
@@ -190,6 +198,8 @@ export function usePreviewDrag({
         anchorY,
         dragStartX,
         dragStartY,
+        xAnchorIsOrigin,
+        yAnchorIsOrigin,
         startX: x,
         startY: y,
         startScaleX: scaleX,
@@ -232,37 +242,61 @@ export function usePreviewDrag({
         });
       } else {
         // Scale mode: move the dragged corner, anchor stays fixed
+        // Signed scale allows flipping when dragging past the anchor
         const newDragX = drag.dragStartX + deltaCompX;
         const newDragY = drag.dragStartY + deltaCompY;
 
-        let newW = Math.abs(newDragX - drag.anchorX);
-        let newH = Math.abs(newDragY - drag.anchorY);
+        // Compute signed scale per axis
+        let newScaleX: number, newScaleY: number;
+        if (drag.xAnchorIsOrigin) {
+          newScaleX = (newDragX - drag.anchorX) / compositionWidth;
+        } else {
+          newScaleX = (drag.anchorX - newDragX) / compositionWidth;
+        }
+        if (drag.yAnchorIsOrigin) {
+          newScaleY = (newDragY - drag.anchorY) / compositionHeight;
+        } else {
+          newScaleY = (drag.anchorY - newDragY) / compositionHeight;
+        }
 
-        // Shift for proportional scaling
+        // Shift for proportional scaling (preserve aspect ratio of absolute scales)
         if (e.shiftKey) {
-          const origRatio = (compositionWidth * drag.startScaleX) / (compositionHeight * drag.startScaleY);
-          const sFromW = newW / compositionWidth;
-          const sFromH = newH / compositionHeight;
-          if (sFromW / drag.startScaleX > sFromH / drag.startScaleY) {
-            newH = newW / origRatio;
+          const absStartSX = Math.abs(drag.startScaleX);
+          const absStartSY = Math.abs(drag.startScaleY);
+          const origRatio = absStartSX / absStartSY;
+          const absNewSX = Math.abs(newScaleX);
+          const absNewSY = Math.abs(newScaleY);
+          if (absNewSX / absStartSX > absNewSY / absStartSY) {
+            newScaleY = (newScaleY >= 0 ? 1 : -1) * (absNewSX / origRatio);
           } else {
-            newW = newH * origRatio;
+            newScaleX = (newScaleX >= 0 ? 1 : -1) * (absNewSY * origRatio);
           }
         }
 
-        const newScaleX = Math.max(0.05, newW / compositionWidth);
-        const newScaleY = Math.max(0.05, newH / compositionHeight);
+        // Enforce minimum absolute scale
+        const MIN_SCALE = 0.01;
+        if (Math.abs(newScaleX) < MIN_SCALE) newScaleX = (newScaleX >= 0 ? 1 : -1) * MIN_SCALE;
+        if (Math.abs(newScaleY) < MIN_SCALE) newScaleY = (newScaleY >= 0 ? 1 : -1) * MIN_SCALE;
 
-        // Top-left of the new box
-        const newX = Math.round(Math.min(drag.anchorX, drag.anchorX + (newDragX > drag.anchorX ? 0 : -newW)));
-        const newY = Math.round(Math.min(drag.anchorY, drag.anchorY + (newDragY > drag.anchorY ? 0 : -newH)));
+        // Derive transform origin (x) from anchor + scale
+        let newX: number, newY: number;
+        if (drag.xAnchorIsOrigin) {
+          newX = drag.anchorX;
+        } else {
+          newX = drag.anchorX - compositionWidth * newScaleX;
+        }
+        if (drag.yAnchorIsOrigin) {
+          newY = drag.anchorY;
+        } else {
+          newY = drag.anchorY - compositionHeight * newScaleY;
+        }
 
         onOverrideChangeRef.current(drag.namePath, {
           from: drag.startFrom,
           durationInFrames: drag.startDuration,
           trackIndex: drag.startTrackIndex,
-          x: newX,
-          y: newY,
+          x: Math.round(newX),
+          y: Math.round(newY),
           scaleX: Math.round(newScaleX * 100) / 100,
           scaleY: Math.round(newScaleY * 100) / 100,
         });
