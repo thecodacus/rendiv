@@ -51,15 +51,6 @@ export async function stitchFramesToVideo(options: StitchOptions): Promise<void>
     }
   }
 
-  if (audioSources.length > 0) {
-    console.log(`[rendiv] Audio sources collected: ${audioSources.length}, resolved: ${resolvedAudio.length}`);
-    for (const a of resolvedAudio) {
-      console.log(`[rendiv]   ${a.type} "${a.filePath}" startAt=${a.startAtFrame} dur=${a.durationInFrames} vol=${a.volume}`);
-    }
-  } else {
-    console.log('[rendiv] No audio sources collected from composition');
-  }
-
   const args: string[] = [
     '-y',
     '-framerate', String(fps),
@@ -82,7 +73,11 @@ export async function stitchFramesToVideo(options: StitchOptions): Promise<void>
       const inputIdx = i + 1; // input 0 is the video frames
       const delayMs = Math.round((audio.startAtFrame / fps) * 1000);
       const startFromSec = audio.startFrom / fps;
-      const durationSec = audio.durationInFrames / fps;
+      // Trim from the *source* file.  When playbackRate != 1 the source
+      // is consumed faster/slower than real-time, so we need more/less
+      // source material.  After atempo scales it, the output duration
+      // will equal durationInFrames / fps (the timeline duration).
+      const durationSec = (audio.durationInFrames / fps) * audio.playbackRate;
       const label = `a${i}`;
 
       // Build per-source filter chain: trim → atempo → adelay → volume
@@ -155,7 +150,6 @@ export async function stitchFramesToVideo(options: StitchOptions): Promise<void>
 
   args.push(outputPath);
 
-  console.log(`[rendiv] FFmpeg command: ${ffmpegPath} ${args.join(' ')}`);
 
   return new Promise((resolve, reject) => {
     const proc = spawn(ffmpegPath, args, { stdio: ['ignore', 'pipe', 'pipe'] });
