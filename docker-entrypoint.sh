@@ -7,7 +7,7 @@ set -e
 # and symlink from /root/ so they survive container rebuilds.
 
 PERSIST_DIR="/persist"
-PERSIST_ITEMS=".claude .claude.json .codex"
+PERSIST_ITEMS=".claude .codex"
 
 for item in $PERSIST_ITEMS; do
     persist_path="$PERSIST_DIR/$item"
