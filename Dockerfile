@@ -7,7 +7,7 @@
 #   - Startup script that auto-installs Claude Code + Codex CLI on first run
 #
 # Usage:
-#   docker run -v /path/to/projects:/workspace -p 3000:3000 ghcr.io/thecodacus/rendiv-studio
+#   docker run -v /path/to/projects:/workspace -v agent-persist:/persist -p 3000:3000 ghcr.io/thecodacus/rendiv-studio
 # =============================================================================
 
 # ---------------------------------------------------------------------------
@@ -80,8 +80,8 @@ COPY --from=builder /build/ ./
 # Install Playwright browsers + system dependencies (Chromium only, for rendering)
 RUN cd /app/packages/renderer && npx playwright install --with-deps chromium
 
-# Create the workspace mount point
-RUN mkdir -p /workspace
+# Create the workspace mount point and persist directory for agent configs
+RUN mkdir -p /workspace /persist
 
 # Make the CLI available globally via symlink
 RUN ln -s /app/packages/cli/dist/cli.js /usr/local/bin/rendiv && \
