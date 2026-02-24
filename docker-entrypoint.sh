@@ -32,7 +32,9 @@ for item in $PERSIST_ITEMS; do
         ln -sf "$persist_path" "$root_path"
     elif [ ! -e "$persist_path" ] && [ ! -e "$root_path" ]; then
         # Neither exists — seed an empty dir or file in persist, then symlink
-        case "$item" in
+        # Strip leading dot, then check for an extension dot
+        # .claude → "claude" (no dot → dir), .claude.json → "claude.json" (dot → file)
+        case "${item#.}" in
             *.*) touch "$persist_path" ;;
             *)   mkdir -p "$persist_path" ;;
         esac
