@@ -7,7 +7,7 @@ set -e
 # and symlink from /root/ so they survive container rebuilds.
 
 PERSIST_DIR="/persist"
-PERSIST_ITEMS=".claude .codex"
+PERSIST_ITEMS=".claude .claude.json .codex"
 
 for item in $PERSIST_ITEMS; do
     persist_path="$PERSIST_DIR/$item"
@@ -27,9 +27,14 @@ for item in $PERSIST_ITEMS; do
         fi
     fi
 
+    # Clean up stale/broken symlinks
+    if [ -L "$root_path" ] && [ ! -e "$root_path" ]; then
+        rm -f "$root_path"
+    fi
+
     if [ -e "$persist_path" ] && [ ! -e "$root_path" ]; then
         # Volume has it, root doesn't — create symlink
-        ln -sf "$persist_path" "$root_path"
+        ln -sfn "$persist_path" "$root_path"
     elif [ ! -e "$persist_path" ] && [ ! -e "$root_path" ]; then
         # Neither exists — seed an empty dir or file in persist, then symlink
         # Strip leading dot, then check for an extension dot
@@ -38,7 +43,7 @@ for item in $PERSIST_ITEMS; do
             *.*) touch "$persist_path" ;;
             *)   mkdir -p "$persist_path" ;;
         esac
-        ln -sf "$persist_path" "$root_path"
+        ln -sfn "$persist_path" "$root_path"
     fi
 done
 
