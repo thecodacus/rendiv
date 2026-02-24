@@ -53,6 +53,35 @@ export function OffthreadVideo({
   const videoFrame = localFrame + startFrom;
   const currentTime = videoFrame / fps;
 
+  const effectiveRate = playbackRate * sequence.accumulatedPlaybackRate;
+  const effectiveDuration = endAt !== undefined
+    ? Math.min(sequence.durationInFrames, endAt - startFrom)
+    : sequence.durationInFrames;
+
+  // Register audio track metadata for the renderer to collect.
+  // In rendering mode OffthreadVideo uses <img> (no <video> element),
+  // so it must register audio separately — same pattern as Video/Audio.
+  useEffect(() => {
+    if (!isRendering) return;
+    if (muted || volume === 0) return;
+    if (typeof window === 'undefined') return;
+    const w = window as unknown as Record<string, unknown>;
+    if (!w.__RENDIV_AUDIO_SOURCES__) {
+      w.__RENDIV_AUDIO_SOURCES__ = new Map<string, unknown>();
+    }
+    const sources = w.__RENDIV_AUDIO_SOURCES__ as Map<string, unknown>;
+    const key = `video|${src}|${sequence.accumulatedOffset}|${effectiveDuration}|${startFrom}|${volume}|${effectiveRate}`;
+    sources.set(key, {
+      type: 'video' as const,
+      src,
+      startAtFrame: sequence.accumulatedOffset,
+      durationInFrames: effectiveDuration,
+      startFrom,
+      volume,
+      playbackRate: effectiveRate,
+    });
+  }, [isRendering, src, sequence.accumulatedOffset, effectiveDuration, startFrom, volume, effectiveRate, muted]);
+
   if (!isRendering) {
     return (
       <Video

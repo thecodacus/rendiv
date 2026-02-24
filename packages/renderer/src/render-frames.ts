@@ -3,7 +3,7 @@ import path from 'node:path';
 import type { Page } from 'playwright';
 import { openBrowser, openPage } from './browser.js';
 import { startServer } from './serve.js';
-import type { CompositionInfo } from './types.js';
+import type { AudioSourceInfo, CompositionInfo } from './types.js';
 
 export interface RenderFramesOptions {
   serveUrl: string;
@@ -43,7 +43,11 @@ async function renderSingleFrame(
   });
 }
 
-export async function renderFrames(options: RenderFramesOptions): Promise<void> {
+export interface RenderFramesResult {
+  audioSources: AudioSourceInfo[];
+}
+
+export async function renderFrames(options: RenderFramesOptions): Promise<RenderFramesResult> {
   const {
     serveUrl,
     composition,
@@ -111,10 +115,22 @@ export async function renderFrames(options: RenderFramesOptions): Promise<void> 
 
     await Promise.all(pages.map((page) => renderNext(page)));
 
+    // Collect audio source metadata registered by Audio/Video components.
+    // The persistent Map accumulates entries across all frames, so reading
+    // from any page after rendering captures everything.
+    const audioSources = await pages[0].evaluate(() => {
+      const w = window as any;
+      const map = w.__RENDIV_AUDIO_SOURCES__ as Map<string, unknown> | undefined;
+      if (!map || map.size === 0) return [];
+      return Array.from(map.values());
+    }) as AudioSourceInfo[];
+
     // Cleanup pages
     for (const page of pages) {
       await page.close();
     }
+
+    return { audioSources };
   } finally {
     server.close();
   }

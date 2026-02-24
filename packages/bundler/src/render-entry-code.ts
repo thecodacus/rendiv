@@ -20,6 +20,7 @@ import '${importPath}';
 import { getRootComponent, CompositionManagerContext, TimelineContext, CompositionContext, RendivEnvironmentContext, getPendingHoldCount } from '@rendiv/core';
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
+import { flushSync } from 'react-dom';
 
 // Timeline overrides (embedded from timeline-overrides.json at bundle time)
 ${overridesSnippet}
@@ -168,7 +169,9 @@ const container = document.getElementById('root');
 rootInstance = createRoot(container);
 
 function rerender() {
-  rootInstance.render(React.createElement(App));
+  flushSync(() => {
+    rootInstance.render(React.createElement(App));
+  });
 }
 
 rerender();

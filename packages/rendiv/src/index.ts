@@ -19,6 +19,7 @@ export { Audio, type AudioProps } from './components/Audio';
 export { AnimatedImage, type AnimatedImageProps } from './components/AnimatedImage';
 export { IFrame, type IFrameProps } from './components/IFrame';
 export { OffthreadVideo, type OffthreadVideoProps } from './components/offthread-video';
+export { Prefetch, type PrefetchProps } from './components/Prefetch';
 
 // Animation
 export { interpolate, type InterpolateOptions, type ExtrapolationType } from './animation/interpolate';
@@ -32,6 +33,7 @@ export { setRootComponent, getRootComponent, getRootComponentVersion, onRootComp
 
 // Utilities
 export { staticFile } from './static-file';
+export { prefetch } from './prefetch';
 export { getInputProps } from './get-input-props';
 export { getRendivEnvironment, useRendivEnvironment } from './get-rendiv-environment';
 export {

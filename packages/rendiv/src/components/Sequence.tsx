@@ -1,4 +1,4 @@
-import React, { useContext, useId, useEffect, useMemo, type CSSProperties, type ReactNode } from 'react';
+import React, { useContext, useId, useEffect, useMemo, useRef, type CSSProperties, type ReactNode } from 'react';
 import { TimelineContext, type TimelineContextValue } from '../context/TimelineContext';
 import { SequenceContext, type SequenceContextValue } from '../context/SequenceContext';
 import { CompositionContext } from '../context/CompositionContext';
@@ -15,6 +15,10 @@ export interface SequenceProps {
   trackIndex?: number;
   /** Playback speed multiplier. 2 = double speed, 0.5 = half speed. Default: 1 */
   playbackRate?: number;
+  /** Mount children N frames before the sequence becomes visible.
+   *  During premount, children render invisibly with a frozen frame,
+   *  allowing media elements to preload in the background. Default: 0 */
+  premountFor?: number;
   children: ReactNode;
 }
 
@@ -26,6 +30,7 @@ export const Sequence: React.FC<SequenceProps> = ({
   style,
   trackIndex = 0,
   playbackRate = 1,
+  premountFor = 0,
   children,
 }) => {
   const parentSequence = useContext(SequenceContext);
@@ -131,12 +136,42 @@ export const Sequence: React.FC<SequenceProps> = ({
     };
   }, [needsSpeedOverride, currentFrame, absoluteFrom, effectivePlaybackRate, timeline.playing, timeline.playingRef]);
 
-  // Not visible yet or already past
-  if (currentFrame < absoluteFrom) return null;
-  if (currentFrame >= absoluteFrom + effectiveDuration) return null;
+  // During premount, freeze timeline at the sequence start so children see
+  // frame 0 and media elements don't try to play (playing = false).
+  const premountPlayingRef = useRef(false);
+  const premountTimeline = useMemo<TimelineContextValue>(() => ({
+    frame: absoluteFrom,
+    playing: false,
+    playingRef: premountPlayingRef,
+  }), [absoluteFrom]);
 
-  const innerChildren = needsSpeedOverride
-    ? <TimelineContext.Provider value={scaledTimeline!}>{children}</TimelineContext.Provider>
+  // Premount: mount children early so media elements can preload
+  const premountStart = absoluteFrom - premountFor;
+  const isPremounting = premountFor > 0
+    && currentFrame >= premountStart
+    && currentFrame < absoluteFrom;
+  const isVisible = currentFrame >= absoluteFrom
+    && currentFrame < absoluteFrom + effectiveDuration;
+
+  if (!isPremounting && !isVisible) return null;
+
+  // Choose which timeline children see: premount (frozen) > speed-scaled > parent.
+  // When premountFor > 0, always wrap in a Provider (even when passing through
+  // the parent timeline unchanged) to keep the React tree structure stable across
+  // the premount → visible transition, preventing child remounts.
+  let childTimeline: TimelineContextValue | null;
+  if (isPremounting) {
+    childTimeline = premountTimeline;
+  } else if (needsSpeedOverride) {
+    childTimeline = scaledTimeline!;
+  } else if (premountFor > 0) {
+    childTimeline = timeline;
+  } else {
+    childTimeline = null;
+  }
+
+  const innerChildren = childTimeline
+    ? <TimelineContext.Provider value={childTimeline}>{children}</TimelineContext.Provider>
     : children;
 
   const content = (
@@ -151,11 +186,16 @@ export const Sequence: React.FC<SequenceProps> = ({
   if (offsetX !== 0 || offsetY !== 0) transformParts.push(`translate(${offsetX}px, ${offsetY}px)`);
   if (scaleX !== 1 || scaleY !== 1) transformParts.push(`scale(${scaleX}, ${scaleY})`);
 
+  // Premount styles: hide the content but keep it in the DOM so media can preload
+  const premountModifiers: CSSProperties | undefined = isPremounting
+    ? { opacity: 0, pointerEvents: 'none' }
+    : undefined;
+
   if (layout === 'none') {
     // When layout='none' but there are position/scale overrides, wrap in a
     // positioned container so the transform applies to the entire subtree
     // (e.g. TransitionSeries scenes that manage their own Fill wrappers).
-    if (hasTransform) {
+    if (hasTransform || isPremounting) {
       const wrapStyle: CSSProperties = {
         position: 'absolute',
         top: 0,
@@ -164,9 +204,9 @@ export const Sequence: React.FC<SequenceProps> = ({
         bottom: 0,
         width: '100%',
         height: '100%',
-        transform: transformParts.join(' '),
-        transformOrigin: '0 0',
+        ...(hasTransform && { transform: transformParts.join(' '), transformOrigin: '0 0' }),
         ...(trackZIndex !== undefined && { zIndex: trackZIndex }),
+        ...premountModifiers,
       };
       return <div style={wrapStyle} data-rendiv-namepath={namePath}>{content}</div>;
     }
@@ -177,6 +217,7 @@ export const Sequence: React.FC<SequenceProps> = ({
     ...style,
     ...(trackZIndex !== undefined && { zIndex: trackZIndex }),
     ...(hasTransform && { transform: transformParts.join(' '), transformOrigin: '0 0' }),
+    ...premountModifiers,
   };
   return <Fill style={fillStyle} data-rendiv-namepath={namePath}>{content}</Fill>;
 };

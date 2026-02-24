@@ -27,6 +27,7 @@ export function Audio({
 }: AudioProps): React.ReactElement | null {
   const audioRef = useRef<HTMLAudioElement>(null);
   const lastSeekRef = useRef(0);
+  const playPendingRef = useRef(false);
   const timeline = useContext(TimelineContext);
   const sequence = useContext(SequenceContext);
   const composition = useContext(CompositionContext);
@@ -70,23 +71,40 @@ export function Audio({
       return;
     }
 
-    // Correct drift — use a relaxed threshold (0.3s) and a 500ms cooldown
-    // after each seek to avoid rapid repeated seeks that cause audio pops.
-    const drift = Math.abs(audio.currentTime - currentTime);
-    if (drift > 0.3) {
-      const now = performance.now();
-      if (now - lastSeekRef.current > 500) {
-        audio.currentTime = currentTime;
-        lastSeekRef.current = now;
+    if (timeline.playing) {
+      if (audio.paused) {
+        // Audio not yet running — seek once, then call play().
+        // While play() is pending, do NOT re-seek — each seek aborts
+        // the pending play request in Chrome.
+        if (!playPendingRef.current) {
+          audio.currentTime = currentTime;
+          playPendingRef.current = true;
+          audio.play().then(() => {
+            playPendingRef.current = false;
+          }).catch(() => {
+            playPendingRef.current = false;
+          });
+        }
+      } else {
+        // Playing normally — only correct large drift.
+        // Relaxed threshold + cooldown avoids rapid seeks that cause pops.
+        playPendingRef.current = false;
+        const drift = Math.abs(audio.currentTime - currentTime);
+        if (drift > 0.3) {
+          const now = performance.now();
+          if (now - lastSeekRef.current > 500) {
+            audio.currentTime = currentTime;
+            lastSeekRef.current = now;
+          }
+        }
       }
-    }
-
-    if (timeline.playing && audio.paused) {
-      audio.play().catch(() => {
-        // Autoplay may be blocked — ignore
-      });
-    } else if (!timeline.playing && !audio.paused) {
-      audio.pause();
+    } else {
+      // Paused — stop playback and seek to correct position for scrubbing
+      playPendingRef.current = false;
+      if (!audio.paused) audio.pause();
+      if (Math.abs(audio.currentTime - currentTime) > 0.01) {
+        audio.currentTime = currentTime;
+      }
     }
   }, [localFrame, isRendering, currentTime, timeline.playing, endAt, audioFrame]);
 
@@ -108,6 +126,34 @@ export function Audio({
       document.dispatchEvent(new CustomEvent('rendiv:media-sync'));
     };
   }, [src, sequence.id, isRendering]);
+
+  // Register audio source metadata for the renderer to collect.
+  // Uses a content-based key and no cleanup so entries persist across
+  // the entire rendering session (Audio may unmount between frames).
+  const effectiveDuration = endAt !== undefined
+    ? Math.min(sequence.durationInFrames, endAt - startFrom)
+    : sequence.durationInFrames;
+
+  useEffect(() => {
+    if (muted || volume === 0) return;
+    if (typeof window === 'undefined') return;
+    const w = window as unknown as Record<string, unknown>;
+    if (!w.__RENDIV_AUDIO_SOURCES__) {
+      w.__RENDIV_AUDIO_SOURCES__ = new Map<string, unknown>();
+    }
+    const sources = w.__RENDIV_AUDIO_SOURCES__ as Map<string, unknown>;
+    const key = `audio|${src}|${sequence.accumulatedOffset}|${effectiveDuration}|${startFrom}|${volume}|${effectiveRate}`;
+    sources.set(key, {
+      type: 'audio' as const,
+      src,
+      startAtFrame: sequence.accumulatedOffset,
+      durationInFrames: effectiveDuration,
+      startFrom,
+      volume,
+      playbackRate: effectiveRate,
+    });
+    // No cleanup — entries persist so the renderer can collect after all frames
+  }, [src, sequence.accumulatedOffset, effectiveDuration, startFrom, volume, effectiveRate, muted]);
 
   // In rendering mode, audio is not captured via screenshots
   if (isRendering) return null;

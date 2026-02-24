@@ -11,6 +11,8 @@ export interface SeriesSequenceProps {
   style?: CSSProperties;
   /** Track index for z-ordering. Lower values render in front (track 0 = frontmost). */
   trackIndex?: number;
+  /** Mount children N frames before the sequence becomes visible. See Sequence. */
+  premountFor?: number;
   children: ReactNode;
 }
 
@@ -48,6 +50,7 @@ function SeriesRoot({ children }: SeriesProps): React.ReactElement {
       layout,
       style,
       trackIndex,
+      premountFor,
       children: sequenceChildren,
     } = child.props as SeriesSequenceProps;
 
@@ -75,6 +78,7 @@ function SeriesRoot({ children }: SeriesProps): React.ReactElement {
         layout={layout}
         style={style}
         trackIndex={trackIndex}
+        premountFor={premountFor}
       >
         {sequenceChildren}
       </Sequence>,

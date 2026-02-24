@@ -42,8 +42,8 @@ export async function renderMedia(options: RenderMediaOptions): Promise<void> {
   fs.mkdirSync(outputDir, { recursive: true });
 
   try {
-    // Step 1: Render frames
-    await renderFrames({
+    // Step 1: Render frames and collect audio metadata
+    const { audioSources } = await renderFrames({
       serveUrl,
       composition,
       outputDir: tmpDir,
@@ -62,7 +62,7 @@ export async function renderMedia(options: RenderMediaOptions): Promise<void> {
 
     if (cancelSignal?.aborted) return;
 
-    // Step 2: Stitch frames to video
+    // Step 2: Stitch frames to video (with audio if available)
     onProgress?.({
       progress: 0.9,
       renderedFrames: totalFrames,
@@ -74,6 +74,8 @@ export async function renderMedia(options: RenderMediaOptions): Promise<void> {
       outputPath: outputLocation,
       fps: composition.fps,
       codec,
+      audioSources,
+      assetsDir: serveUrl,
     });
 
     onProgress?.({
