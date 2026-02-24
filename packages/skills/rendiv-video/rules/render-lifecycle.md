@@ -134,6 +134,9 @@ The end-to-end rendering process:
    calls `__RENDIV_SET_FRAME__(n)` for each frame, then takes a PNG screenshot.
 
 4. **Stitch**: FFmpeg combines all PNG frames into an MP4 or WebM video file.
+   If `<Audio>`, `<Video>`, or `<OffthreadVideo>` components registered audio
+   metadata, FFmpeg builds a filter graph to trim, delay, adjust tempo, and
+   mix all audio tracks into the output.
 
 The renderer waits for `getPendingHoldCount() === 0` before capturing each frame,
 which is why the `holdRender` pattern is critical for async resources.

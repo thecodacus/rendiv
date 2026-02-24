@@ -67,6 +67,7 @@ position, and scale. The file lives at the **project root**
     "from": 10,
     "durationInFrames": 60,
     "trackIndex": 1,
+    "playbackRate": 2,
     "x": 100,
     "y": 50,
     "scaleX": 0.5,
@@ -94,8 +95,8 @@ When both a prop and an override exist, the **override wins**:
    `trackIndex` field, it replaces the prop value
 3. The final `trackIndex` is converted to `zIndex = 10000 - trackIndex`
 
-The same precedence applies to `from`, `durationInFrames`, `x`, `y`, `scaleX`,
-and `scaleY`.
+The same precedence applies to `from`, `durationInFrames`, `playbackRate`, `x`,
+`y`, `scaleX`, and `scaleY`.
 
 ### How overrides are created
 
@@ -128,6 +129,36 @@ rendiv render src/index.tsx MyComposition out/video.mp4
 - **Studio position mode**: Hover a sequence and click "Reset" to clear its
   position and scale while keeping timing overrides.
 - **Manual**: Delete `timeline-overrides.json` or remove specific entries.
+
+## Playback rate overrides
+
+The `playbackRate` field controls how fast a sequence's children advance through
+frames. A rate of `2` means children see frames at double speed; `0.5` means
+half speed. Nested playback rates compound — a 2x sequence inside a 1.5x parent
+runs at 3x effective rate.
+
+```json
+{
+  "MyComp/VideoScene[60]": {
+    "from": 60,
+    "durationInFrames": 90,
+    "playbackRate": 1.5
+  }
+}
+```
+
+Playback rate affects both visual rendering and audio. During rendering, audio
+tracks from `<Video>`, `<OffthreadVideo>`, and `<Audio>` components are
+automatically tempo-adjusted by FFmpeg to match the effective playback rate.
+
+You can also set playback rate in code via the `playbackRate` prop on
+`<Sequence>`:
+
+```tsx
+<Sequence from={60} durationInFrames={90} playbackRate={1.5}>
+  <VideoScene />
+</Sequence>
+```
 
 ## Position and scale overrides
 

@@ -78,15 +78,16 @@ Also accepts all standard `<video>` HTML attributes (except `autoPlay`).
 - **Player/Studio mode**: Plays naturally with drift correction (re-syncs if > 0.1s off).
   Auto-plays/pauses with the timeline.
 
-## `<OffthreadVideo>`
+## `<OffthreadVideo>` (Recommended)
 
-Alternative to `<Video>` that extracts frames via HTTP during rendering for better
-performance with heavy video files.
+**Best practice: Use `<OffthreadVideo>` instead of `<Video>` for all video embeds.**
+It provides better rendering performance by extracting frames via FFmpeg rather than
+relying on browser seeking, and handles audio extraction automatically.
 
 ```tsx
 import { OffthreadVideo } from '@rendiv/core';
 
-<OffthreadVideo src={staticFile('heavy.mp4')} startFrom={0} style={{ width: '100%' }} />
+<OffthreadVideo src={staticFile('clip.mp4')} startFrom={0} style={{ width: '100%' }} />
 ```
 
 ### Props
@@ -96,12 +97,31 @@ Same as `<Video>`: `src`, `startFrom`, `endAt`, `volume`, `playbackRate`, `muted
 
 ### Behavior
 
-- **Player/Studio mode**: Delegates entirely to `<Video>`.
+- **Player/Studio mode**: Delegates entirely to `<Video>` (full playback with sync).
 - **Rendering mode**: Fetches each frame as an image from an HTTP endpoint
   (`/__offthread_video__?src=...&time=...`) and displays it as an `<img>`.
+  Audio track metadata is registered separately so FFmpeg can mux it into the output.
   Uses `holdRender` for each frame fetch and image load.
 
-Use `<OffthreadVideo>` when rendering performance matters and the video is large.
+### Preloading with `premountFor`
+
+Combine `<OffthreadVideo>` with `premountFor` on the parent Sequence to eliminate
+buffering when a video scene appears:
+
+```tsx
+<Series>
+  <Series.Sequence durationInFrames={60}>
+    <TitleCard />
+  </Series.Sequence>
+  {/* Start loading the video 60 frames before it appears */}
+  <Series.Sequence durationInFrames={90} premountFor={60}>
+    <OffthreadVideo src={staticFile('intro.mp4')} style={{ width: '100%' }} />
+  </Series.Sequence>
+</Series>
+```
+
+During premount the video component mounts invisibly (opacity 0) and starts
+buffering, so when the sequence becomes visible playback begins immediately.
 
 ## `<Audio>`
 
@@ -126,8 +146,9 @@ import { Audio } from '@rendiv/core';
 
 ### Behavior
 
-- **Rendering mode**: Returns `null`. Audio is not captured in screenshot-based rendering.
-  Audio tracks are mixed separately by FFmpeg during the stitching phase.
+- **Rendering mode**: Returns `null` (not visible in screenshots). Audio metadata is
+  registered to a global Map, which the renderer collects after frame capture. FFmpeg
+  then trims, delays, adjusts tempo, and mixes all audio tracks into the final output.
 - **Player/Studio mode**: Plays and syncs with drift correction, auto-play/pause.
 
 ## `<AnimatedImage>`

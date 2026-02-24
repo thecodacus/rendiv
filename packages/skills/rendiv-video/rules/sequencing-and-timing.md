@@ -54,6 +54,8 @@ import { Sequence } from '@rendiv/core';
 | `layout` | `'absolute-fill' \| 'none'` | `'absolute-fill'` | Wrapper layout |
 | `style` | `CSSProperties` | — | Additional styles |
 | `trackIndex` | `number` | `0` | Track for z-ordering. Lower = in front. See [timeline-overrides](timeline-overrides.md) |
+| `playbackRate` | `number` | `1` | Playback speed multiplier (2 = double speed, 0.5 = half speed) |
+| `premountFor` | `number` | `0` | Mount children N frames early so media can preload in the background |
 
 ### Layout modes
 
@@ -64,6 +66,26 @@ import { Sequence } from '@rendiv/core';
 
 A Sequence renders `null` (hides its children) when the current frame is before
 `from` or after `from + durationInFrames`.
+
+### Premounting
+
+When `premountFor` is set, the Sequence mounts its children N frames before the
+sequence becomes visible. During premount, children render invisibly (opacity 0,
+pointer-events none) with a frozen timeline at the sequence start frame. This
+allows media elements like `<Video>` and `<OffthreadVideo>` to preload in the
+background, eliminating buffering when the sequence becomes visible.
+
+```tsx
+<Series>
+  <Series.Sequence durationInFrames={60}>
+    <IntroScene />
+  </Series.Sequence>
+  {/* Video starts loading 60 frames before it appears */}
+  <Series.Sequence durationInFrames={90} premountFor={60}>
+    <VideoScene />
+  </Series.Sequence>
+</Series>
+```
 
 ## `<Series>`
 
@@ -95,6 +117,7 @@ import { Series } from '@rendiv/core';
 | `layout` | `'absolute-fill' \| 'none'` | `'absolute-fill'` | Wrapper layout |
 | `style` | `CSSProperties` | — | Additional styles |
 | `trackIndex` | `number` | `0` | Track for z-ordering. Lower = in front. See [timeline-overrides](timeline-overrides.md) |
+| `premountFor` | `number` | `0` | Mount children N frames early for media preloading |
 
 ### Constraints
 

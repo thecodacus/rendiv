@@ -48,6 +48,12 @@ Render a composition to a video file.
 1. **Bundle** — Vite builds your compositions into a static site
 2. **Serve** — Static files are served locally
 3. **Capture** — Playwright opens headless Chromium tabs in parallel, navigates to each frame, waits for `holdRender` to clear, and takes a screenshot
-4. **Stitch** — FFmpeg combines the PNG frames + audio tracks into the final video
+4. **Stitch** — FFmpeg combines the PNG frames into the final video. Audio tracks from `<Audio>`, `<Video>`, and `<OffthreadVideo>` components are automatically collected and muxed in, with correct timing (`adelay`), trimming (`atrim`), volume adjustment, and playback rate tempo scaling (`atempo`).
 
 The `concurrency` option controls how many Chromium tabs run simultaneously. Higher values render faster but use more RAM.
+
+## Audio in Rendered Output
+
+Audio is handled separately from visual frame capture. During rendering, media components register their audio metadata (source file, start frame, duration, volume, playback rate) to a global Map. After all frames are captured, the renderer collects this metadata and passes it to FFmpeg, which builds a filter graph to process and mix all audio tracks into the output.
+
+Timeline overrides (including `playbackRate`) are embedded into the render bundle at build time, so the final output matches what you see in Studio.

@@ -56,10 +56,15 @@ Like `<Composition>` but for single-frame images (duration is always 1 frame).
 Shows children only during a specific frame window. Children see local frame starting at 0.
 
 ```tsx
-<Sequence from={30} durationInFrames={60}>
+<Sequence from={30} durationInFrames={60} playbackRate={1.5} premountFor={30}>
   <MyScene />
 </Sequence>
 ```
+
+Props: `from`, `durationInFrames`, `name`, `layout`, `style`, `trackIndex`, `playbackRate`, `premountFor`.
+
+- `playbackRate` — speed multiplier (2 = double speed, 0.5 = half). Nested rates compound.
+- `premountFor` — mount children N frames before visible for media preloading.
 
 ### `<Series>`
 
@@ -68,9 +73,11 @@ Chains sequences back-to-back automatically.
 ```tsx
 <Series>
   <Series.Sequence durationInFrames={60}><Intro /></Series.Sequence>
-  <Series.Sequence durationInFrames={90}><Main /></Series.Sequence>
+  <Series.Sequence durationInFrames={90} premountFor={60}><Main /></Series.Sequence>
 </Series>
 ```
+
+`<Series.Sequence>` accepts `premountFor` and `playbackRate` in addition to `durationInFrames`, `offset`, `name`, `layout`, `style`, and `trackIndex`.
 
 ### `<Loop>`
 
@@ -124,18 +131,18 @@ Video synced to frame clock. Seeks precisely during rendering.
 
 ### `<Audio>`
 
-Audio with per-frame volume. Renders null during frame capture.
+Audio with per-frame volume. Renders null during frame capture; audio metadata is collected and muxed into the final output by FFmpeg.
 
 ```tsx
 <Audio src="/music.mp3" volume={0.8} />
 ```
 
-### `<OffthreadVideo>`
+### `<OffthreadVideo>` (Recommended)
 
-Pixel-perfect video via FFmpeg extraction during rendering.
+Pixel-perfect video via FFmpeg extraction during rendering. **Preferred over `<Video>`** for better rendering performance. Audio tracks are automatically muxed into the output.
 
 ```tsx
-<OffthreadVideo src="/precise.mp4" />
+<OffthreadVideo src="/intro.mp4" />
 ```
 
 ### `<AnimatedImage>`

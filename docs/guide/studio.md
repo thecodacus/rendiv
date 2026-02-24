@@ -70,12 +70,13 @@ The `timeline-overrides.json` file stores visual edits as a JSON object:
   "MyVideo/MainContent[60]": {
     "from": 45,
     "durationInFrames": 120,
-    "trackIndex": 1
+    "trackIndex": 1,
+    "playbackRate": 1.5
   }
 }
 ```
 
-Keys use the format `CompositionId/SequenceName[originalFrom]`. Values override the sequence's `from`, `durationInFrames`, and optionally `trackIndex`.
+Keys use the format `CompositionId/SequenceName[originalFrom]`. Values override the sequence's `from`, `durationInFrames`, `trackIndex`, and `playbackRate`.
 
 - **Code props take precedence** by default — if you change a sequence's props in code, those values are used
 - **Overrides apply on top** when the original props match the override's key

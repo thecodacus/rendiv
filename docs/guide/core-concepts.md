@@ -79,6 +79,24 @@ export const MyVideo = () => (
 );
 ```
 
+### Premounting
+
+Use `premountFor` to mount children early so media elements can preload before the sequence becomes visible. This is especially useful with `<OffthreadVideo>`:
+
+```tsx
+<Series>
+  <Series.Sequence durationInFrames={60}>
+    <TitleCard />
+  </Series.Sequence>
+  {/* Video starts loading 60 frames before it appears */}
+  <Series.Sequence durationInFrames={90} premountFor={60}>
+    <OffthreadVideo src={staticFile('intro.mp4')} style={{ width: '100%' }} />
+  </Series.Sequence>
+</Series>
+```
+
+During premount, children render invisibly with a frozen timeline at the sequence's start frame.
+
 ## Loop
 
 `<Loop>` repeats its children using modulo arithmetic.

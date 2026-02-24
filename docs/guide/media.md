@@ -36,19 +36,37 @@ import { Audio } from '@rendiv/core';
 <Audio src="/music/background.mp3" volume={0.8} />
 ```
 
-In rendering mode, `<Audio>` renders nothing (audio is handled separately by FFmpeg). In player mode, it syncs with playback.
+In rendering mode, `<Audio>` renders nothing visually. Audio metadata is collected by the renderer and FFmpeg mixes all audio tracks (with correct timing, volume, and playback rate) into the final output. In player/studio mode, it syncs playback naturally.
 
-## OffthreadVideo
+## OffthreadVideo (Recommended)
 
-Pixel-perfect frame extraction via FFmpeg. Use this when you need exact frame accuracy during rendering (standard `<Video>` relies on browser seeking which can be slightly off).
+**Best practice: Use `<OffthreadVideo>` instead of `<Video>` for all video embeds.** It provides pixel-perfect frame extraction via FFmpeg during rendering (standard `<Video>` relies on browser seeking which can be slightly off), and handles audio extraction automatically.
 
 ```tsx
 import { OffthreadVideo } from '@rendiv/core';
 
-<OffthreadVideo src="/clips/precise.mp4" />
+<OffthreadVideo src="/clips/intro.mp4" />
 ```
 
-Falls back to `<Video>` behavior in player/studio mode.
+Falls back to `<Video>` behavior in player/studio mode. Audio tracks from both `<Video>` and `<OffthreadVideo>` are automatically muxed into the rendered output by FFmpeg.
+
+### Preloading with premountFor
+
+Combine with `premountFor` on the parent Sequence to eliminate buffering:
+
+```tsx
+<Series>
+  <Series.Sequence durationInFrames={60}>
+    <TitleCard />
+  </Series.Sequence>
+  {/* Start loading 60 frames before the sequence appears */}
+  <Series.Sequence durationInFrames={90} premountFor={60}>
+    <OffthreadVideo src={staticFile('intro.mp4')} style={{ width: '100%' }} />
+  </Series.Sequence>
+</Series>
+```
+
+During premount, the component mounts invisibly and starts buffering so playback begins immediately when visible.
 
 ## AnimatedImage
 
