@@ -353,8 +353,10 @@ export const TimelineEditor: React.FC<TimelineEditorProps> = ({
                       background: `linear-gradient(135deg, ${colorStart} 0%, ${colorEnd} 100%)`,
                       opacity: isSelected ? 1 : 0.85,
                       borderRadius: 4,
-                      border: isSelected ? `1px solid ${colors.accent}` : '1px solid transparent',
-                      boxShadow: isSelected ? '0 0 8px rgba(0,212,255,0.4)' : undefined,
+                      border: 'none',
+                      boxShadow: isSelected
+                        ? `0 0 12px ${colorStart}99, inset 0 0 0 1.5px rgba(255,255,255,0.55)`
+                        : `0 0 10px ${colorStart}77`,
                       cursor: 'grab',
                       display: 'flex',
                       alignItems: 'center',
