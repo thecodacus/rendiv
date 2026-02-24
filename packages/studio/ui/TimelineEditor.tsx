@@ -377,17 +377,18 @@ export const TimelineEditor: React.FC<TimelineEditorProps> = ({
                     {/* Label */}
                     <span style={{
                       flex: 1,
-                      fontSize: 10,
+                      fontSize: 12,
                       color: '#fff',
                       padding: '0 8px',
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',
                       whiteSpace: 'nowrap',
                       pointerEvents: 'none',
-                      fontWeight: 500,
+                      fontWeight: 600,
+                      fontFamily: fonts.sans,
+                      letterSpacing: '0.01em',
                       position: hasMedia ? 'relative' as const : undefined,
                       zIndex: hasMedia ? 1 : undefined,
-                      textShadow: hasMedia ? '0 1px 3px rgba(0,0,0,0.8)' : undefined,
                     }}>
                       {te.entry.name}
                       {te.hasOverride && (

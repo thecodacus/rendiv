@@ -35,7 +35,7 @@ const BackIcon: React.FC = () => (
   </svg>
 );
 
-export const TopBar: React.FC<TopBarProps> = ({ composition, entryPoint, onRender, queueCount, panelOpen, onTogglePanel, workspaceDir, onBackToWorkspace }) => {
+export const TopBar: React.FC<TopBarProps> = React.memo(({ composition, entryPoint, onRender, queueCount, panelOpen, onTogglePanel, workspaceDir, onBackToWorkspace }) => {
   const [copied, setCopied] = useState(false);
 
   const handleCopyCommand = useCallback(() => {
@@ -138,7 +138,7 @@ export const TopBar: React.FC<TopBarProps> = ({ composition, entryPoint, onRende
       </div>
     </div>
   );
-};
+});
 
 const badgeStyle: React.CSSProperties = {
   position: 'absolute',

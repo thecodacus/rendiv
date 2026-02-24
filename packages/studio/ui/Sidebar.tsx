@@ -28,7 +28,7 @@ interface FolderGroup {
 
 const SIDEBAR_TAB_KEY = 'rendiv-studio:sidebar-tab';
 
-export const Sidebar: React.FC<SidebarProps> = ({ compositions, selectedId, onSelect, selectedAssetPath, onAssetSelect }) => {
+export const Sidebar: React.FC<SidebarProps> = React.memo(({ compositions, selectedId, onSelect, selectedAssetPath, onAssetSelect }) => {
   const [activeTab, setActiveTab] = useState<SidebarTab>(() => {
     const saved = localStorage.getItem(SIDEBAR_TAB_KEY);
     return saved === 'assets' ? 'assets' : 'compositions';
@@ -169,4 +169,4 @@ export const Sidebar: React.FC<SidebarProps> = ({ compositions, selectedId, onSe
       </div>
     </div>
   );
-};
+});

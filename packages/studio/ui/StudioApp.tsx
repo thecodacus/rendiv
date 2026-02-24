@@ -144,6 +144,8 @@ const StudioApp: React.FC = () => {
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const selectedIdRef = useRef(selectedId);
   selectedIdRef.current = selectedId;
+  const currentFrameRef = useRef(currentFrame);
+  currentFrameRef.current = currentFrame;
   const pruneTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Media info state (audio/video source registration from compositions)
@@ -280,9 +282,9 @@ const StudioApp: React.FC = () => {
     const merged = existing ? { ...existing, ...override } : override;
     map.set(namePath, merged);
     setOverrides(new Map(map));
-    seekRef.current?.(currentFrame);
+    seekRef.current?.(currentFrameRef.current);
     saveOverridesToServer(map);
-  }, [currentFrame, saveOverridesToServer]);
+  }, [saveOverridesToServer]);
 
   const handlePositionReset = useCallback((namePath: string) => {
     const w = window as unknown as Record<string, unknown>;
@@ -300,9 +302,9 @@ const StudioApp: React.FC = () => {
       map.set(namePath, timing as TimelineOverride);
     }
     setOverrides(new Map(map));
-    seekRef.current?.(currentFrame);
+    seekRef.current?.(currentFrameRef.current);
     saveOverridesToServer(map);
-  }, [currentFrame, saveOverridesToServer]);
+  }, [saveOverridesToServer]);
 
   const handleOverrideRemove = useCallback((namePath: string) => {
     const w = window as unknown as Record<string, unknown>;
@@ -310,19 +312,19 @@ const StudioApp: React.FC = () => {
     if (map) {
       map.delete(namePath);
       setOverrides(new Map(map));
-      seekRef.current?.(currentFrame);
+      seekRef.current?.(currentFrameRef.current);
       saveOverridesToServer(map);
     }
-  }, [currentFrame, saveOverridesToServer]);
+  }, [saveOverridesToServer]);
 
   const handleOverridesClear = useCallback(() => {
     const w = window as unknown as Record<string, unknown>;
     const map = w.__RENDIV_TIMELINE_OVERRIDES__ as Map<string, TimelineOverride> | undefined;
     if (map) map.clear();
     setOverrides(new Map());
-    seekRef.current?.(currentFrame);
+    seekRef.current?.(currentFrameRef.current);
     fetch('/__rendiv_api__/timeline/overrides', { method: 'DELETE' }).catch(() => {});
-  }, [currentFrame]);
+  }, []);
 
   const handleTimelineViewChange = useCallback((view: 'editor' | 'tree') => {
     setTimelineView(view);
@@ -451,6 +453,12 @@ const StudioApp: React.FC = () => {
 
   const selectedComposition = compositions.find((c) => c.id === selectedId) ?? null;
 
+  // Stable callback for sidebar selection (avoids re-creating on every render)
+  const handleSidebarSelect = useCallback((id: string) => {
+    setViewingAsset(null);
+    setSelectedId(id);
+  }, []);
+
   // --- Render queue (server-driven) ---
 
   // Poll server for job state
@@ -567,7 +575,7 @@ const StudioApp: React.FC = () => {
         <Sidebar
           compositions={compositions}
           selectedId={selectedId}
-          onSelect={(id: string) => { setViewingAsset(null); setSelectedId(id); }}
+          onSelect={handleSidebarSelect}
           selectedAssetPath={viewingAsset?.path ?? null}
           onAssetSelect={setViewingAsset}
         />

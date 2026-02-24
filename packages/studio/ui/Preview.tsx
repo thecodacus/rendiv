@@ -43,7 +43,7 @@ function getCursorForHandle(handle: HandleType): string {
   }
 }
 
-export const Preview: React.FC<PreviewProps> = ({
+export const Preview: React.FC<PreviewProps> = React.memo(({
   composition,
   inputProps,
   playbackRate,
@@ -500,7 +500,7 @@ export const Preview: React.FC<PreviewProps> = ({
       )}
     </div>
   );
-};
+});
 
 // Small square handle rendered at corners of the bounding box
 const CornerHandle: React.FC<{ x: number; y: number; color: string }> = ({ x, y, color }) => (
