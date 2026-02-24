@@ -53,7 +53,7 @@ export async function bundle(options: BundleOptions): Promise<string> {
   <meta charset="UTF-8" />
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    html, body, #root { width: 100%; height: 100%; overflow: hidden; }
+    html, body, #root { width: 100%; height: 100%; overflow: hidden; background: #000; }
   </style>
 </head>
 <body>

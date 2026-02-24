@@ -1,5 +1,5 @@
 import React, { useContext, useId, useEffect, useMemo, type CSSProperties, type ReactNode } from 'react';
-import { TimelineContext } from '../context/TimelineContext';
+import { TimelineContext, type TimelineContextValue } from '../context/TimelineContext';
 import { SequenceContext, type SequenceContextValue } from '../context/SequenceContext';
 import { CompositionContext } from '../context/CompositionContext';
 import { Fill } from './Fill';
@@ -13,6 +13,8 @@ export interface SequenceProps {
   style?: CSSProperties;
   /** Track index for z-ordering. Lower values render in front (track 0 = frontmost). */
   trackIndex?: number;
+  /** Playback speed multiplier. 2 = double speed, 0.5 = half speed. Default: 1 */
+  playbackRate?: number;
   children: ReactNode;
 }
 
@@ -23,6 +25,7 @@ export const Sequence: React.FC<SequenceProps> = ({
   layout = 'absolute-fill',
   style,
   trackIndex = 0,
+  playbackRate = 1,
   children,
 }) => {
   const parentSequence = useContext(SequenceContext);
@@ -55,6 +58,7 @@ export const Sequence: React.FC<SequenceProps> = ({
   let offsetY = 0;
   let scaleX = 1;
   let scaleY = 1;
+  let effectivePlaybackRate = playbackRate;
   if (typeof window !== 'undefined') {
     const w = window as unknown as Record<string, unknown>;
     const overrides = w.__RENDIV_TIMELINE_OVERRIDES__ as Map<string, TimelineOverride> | undefined;
@@ -69,6 +73,7 @@ export const Sequence: React.FC<SequenceProps> = ({
       if (override.y !== undefined) offsetY = override.y;
       if (override.scaleX !== undefined) scaleX = override.scaleX;
       if (override.scaleY !== undefined) scaleY = override.scaleY;
+      if (override.playbackRate !== undefined) effectivePlaybackRate = override.playbackRate;
     }
   }
   const trackZIndex = effectiveTrackIndex !== undefined ? 10000 - effectiveTrackIndex : undefined;
@@ -85,14 +90,14 @@ export const Sequence: React.FC<SequenceProps> = ({
     }
     const entries = w.__RENDIV_TIMELINE_ENTRIES__ as Map<string, unknown>;
     const parentId = parentSequence.id;
-    const entry = { id, name: displayName, namePath, from: absoluteFrom, durationInFrames: effectiveDuration, parentId, trackIndex: effectiveTrackIndex };
+    const entry = { id, name: displayName, namePath, from: absoluteFrom, durationInFrames: effectiveDuration, parentId, trackIndex: effectiveTrackIndex, playbackRate: effectivePlaybackRate };
     entries.set(id, entry);
     document.dispatchEvent(new CustomEvent('rendiv:timeline-sync'));
     return () => {
       entries.delete(id);
       document.dispatchEvent(new CustomEvent('rendiv:timeline-sync'));
     };
-  }, [id, displayName, namePath, absoluteFrom, effectiveDuration]);
+  }, [id, displayName, namePath, absoluteFrom, effectiveDuration, effectivePlaybackRate]);
 
   const contextValue = useMemo<SequenceContextValue>(
     () => ({
@@ -107,13 +112,32 @@ export const Sequence: React.FC<SequenceProps> = ({
     [id, namePath, absoluteFrom, effectiveDuration, parentSequence.accumulatedOffset, from]
   );
 
+  // When playbackRate !== 1, override TimelineContext so children see
+  // frames advancing at a different rate (like Loop/Freeze pattern).
+  // At 2x: children see frames 0,2,4,6... At 0.5x: frames 0,0,1,1,2,2...
+  const needsSpeedOverride = effectivePlaybackRate !== 1;
+  const scaledTimeline = useMemo<TimelineContextValue | null>(() => {
+    if (!needsSpeedOverride) return null;
+    const localFrame = currentFrame - absoluteFrom;
+    const scaledLocal = Math.floor(localFrame * effectivePlaybackRate);
+    return {
+      frame: absoluteFrom + scaledLocal,
+      playing: timeline.playing,
+      playingRef: timeline.playingRef,
+    };
+  }, [needsSpeedOverride, currentFrame, absoluteFrom, effectivePlaybackRate, timeline.playing, timeline.playingRef]);
+
   // Not visible yet or already past
   if (currentFrame < absoluteFrom) return null;
   if (currentFrame >= absoluteFrom + effectiveDuration) return null;
 
+  const innerChildren = needsSpeedOverride
+    ? <TimelineContext.Provider value={scaledTimeline!}>{children}</TimelineContext.Provider>
+    : children;
+
   const content = (
     <SequenceContext.Provider value={contextValue}>
-      {children}
+      {innerChildren}
     </SequenceContext.Provider>
   );
 

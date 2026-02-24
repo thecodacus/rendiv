@@ -10,4 +10,6 @@ export interface TimelineOverride {
   scaleX?: number;
   /** Vertical scale factor (1 = 100%). */
   scaleY?: number;
+  /** Playback speed multiplier (1 = normal, 2 = double speed, 0.5 = half speed). */
+  playbackRate?: number;
 }

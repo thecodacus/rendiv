@@ -5,9 +5,13 @@ interface UseTimelineDragOptions {
   pixelsPerFrame: number;
   trackHeight: number;
   trackGap: number;
-  onOverrideChange: (namePath: string, override: { from: number; durationInFrames: number; trackIndex?: number }) => void;
+  onOverrideChange: (namePath: string, override: { from: number; durationInFrames: number; trackIndex?: number; playbackRate?: number }) => void;
   /** Check whether the dragged block can be placed on the target track without overlapping. */
   canPlaceOnTrack: (namePath: string, from: number, duration: number, trackIndex: number) => boolean;
+  /** When set, right-edge drags on this namePath adjust playbackRate instead of duration. */
+  speedEditPath: string | null;
+  /** Current playbackRate for the speed-edit target (needed to compute content frames). */
+  speedEditRate: number;
 }
 
 interface UseTimelineDragReturn {
@@ -16,17 +20,26 @@ interface UseTimelineDragReturn {
   startDrag: (namePath: string, edge: DragEdge, clientX: number, clientY: number, originalFrom: number, originalDuration: number, originalTrackIndex: number) => void;
 }
 
-export function useTimelineDrag({ pixelsPerFrame, trackHeight, trackGap, onOverrideChange, canPlaceOnTrack }: UseTimelineDragOptions): UseTimelineDragReturn {
+export function useTimelineDrag({ pixelsPerFrame, trackHeight, trackGap, onOverrideChange, canPlaceOnTrack, speedEditPath, speedEditRate }: UseTimelineDragOptions): UseTimelineDragReturn {
   const dragRef = useRef<DragOperation | null>(null);
   const isDraggingRef = useRef(false);
   const dragNamePathRef = useRef<string | null>(null);
   // Force re-renders when drag state changes
   const forceUpdateRef = useRef(0);
 
+  // Keep speed edit info in refs so the mousemove handler reads current values
+  const speedEditPathRef = useRef(speedEditPath);
+  speedEditPathRef.current = speedEditPath;
+  const speedEditRateRef = useRef(speedEditRate);
+  speedEditRateRef.current = speedEditRate;
+  // Snapshot the speed at drag start so the calculation stays stable during drag
+  const dragStartSpeedRef = useRef(1);
+
   const startDrag = useCallback((namePath: string, edge: DragEdge, clientX: number, clientY: number, originalFrom: number, originalDuration: number, originalTrackIndex: number) => {
     dragRef.current = { namePath, edge, startClientX: clientX, startClientY: clientY, originalFrom, originalDuration, originalTrackIndex };
     isDraggingRef.current = true;
     dragNamePathRef.current = namePath;
+    dragStartSpeedRef.current = speedEditRateRef.current;
     forceUpdateRef.current++;
   }, []);
 
@@ -41,6 +54,12 @@ export function useTimelineDrag({ pixelsPerFrame, trackHeight, trackGap, onOverr
       let newFrom = drag.originalFrom;
       let newDuration = drag.originalDuration;
       let newTrackIndex: number | undefined;
+      let newPlaybackRate: number | undefined;
+
+      // Speed edit: right-edge drag adjusts playbackRate + duration,
+      // keeping content frames (duration * playbackRate) constant.
+      const isSpeedEdit = drag.edge === 'right'
+        && speedEditPathRef.current === drag.namePath;
 
       switch (drag.edge) {
         case 'body': {
@@ -68,10 +87,24 @@ export function useTimelineDrag({ pixelsPerFrame, trackHeight, trackGap, onOverr
         case 'right':
           newDuration = Math.max(1, drag.originalDuration + deltaFrames);
           newTrackIndex = drag.originalTrackIndex;
+
+          if (isSpeedEdit) {
+            // Content frames = original duration * speed at drag start (stays constant)
+            const contentFrames = drag.originalDuration * dragStartSpeedRef.current;
+            // New speed = content frames / new visual duration
+            const rawRate = contentFrames / newDuration;
+            // Round to 2 decimal places for clean values, clamp to reasonable bounds
+            newPlaybackRate = Math.max(0.1, Math.min(16, Math.round(rawRate * 100) / 100));
+          }
           break;
       }
 
-      onOverrideChange(drag.namePath, { from: newFrom, durationInFrames: newDuration, trackIndex: newTrackIndex });
+      onOverrideChange(drag.namePath, {
+        from: newFrom,
+        durationInFrames: newDuration,
+        trackIndex: newTrackIndex,
+        ...(newPlaybackRate !== undefined && { playbackRate: newPlaybackRate }),
+      });
     };
 
     const handleMouseUp = () => {

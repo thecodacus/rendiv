@@ -13,6 +13,7 @@ const RULER_HEIGHT = 28;
 const LABEL_WIDTH = 280;
 const TOOLBAR_HEIGHT = 32;
 const EDGE_HIT_ZONE = 6;
+const SPEED_PRESETS = [0.25, 0.5, 1, 1.5, 2, 4];
 
 // Block colors — each entry is [from, to] for a smooth same-hue gradient (like the Render button)
 const BLOCK_COLORS: [string, string][] = [
@@ -55,7 +56,8 @@ export const TimelineEditor: React.FC<TimelineEditorProps> = ({
 }) => {
   const trackAreaRef = useRef<HTMLDivElement>(null);
   const [selectedPath, setSelectedPath] = useState<string | null>(null);
-  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; namePath: string } | null>(null);
+  const [speedEditPath, setSpeedEditPath] = useState<string | null>(null);
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; namePath: string; entry: { from: number; durationInFrames: number; playbackRate?: number } } | null>(null);
 
   const { pixelsPerFrame, scrollLeft, setScrollLeft, setPixelsPerFrame, handleWheel } = useTimelineZoom({
     totalFrames,
@@ -83,12 +85,19 @@ export const TimelineEditor: React.FC<TimelineEditorProps> = ({
     });
   }, []);
 
+  // Compute current playbackRate for the speed-edit target
+  const speedEditRate = speedEditPath
+    ? (overrides.get(speedEditPath)?.playbackRate ?? entries.find((e) => e.namePath === speedEditPath)?.playbackRate ?? 1)
+    : 1;
+
   const { startDrag } = useTimelineDrag({
     pixelsPerFrame,
     trackHeight: TRACK_HEIGHT,
     trackGap: TRACK_GAP,
     onOverrideChange,
     canPlaceOnTrack,
+    speedEditPath,
+    speedEditRate,
   });
 
   // Attach wheel handler
@@ -187,7 +196,7 @@ export const TimelineEditor: React.FC<TimelineEditorProps> = ({
   const handleBlockContextMenu = useCallback((e: React.MouseEvent, te: TrackEntry) => {
     e.preventDefault();
     e.stopPropagation();
-    setContextMenu({ x: e.clientX, y: e.clientY, namePath: te.entry.namePath });
+    setContextMenu({ x: e.clientX, y: e.clientY, namePath: te.entry.namePath, entry: { from: te.entry.from, durationInFrames: te.entry.durationInFrames, playbackRate: te.entry.playbackRate } });
   }, []);
 
   // Track area click for seeking (when clicking empty space)
@@ -333,6 +342,7 @@ export const TimelineEditor: React.FC<TimelineEditorProps> = ({
                 const width = Math.max(2, te.entry.durationInFrames * pixelsPerFrame);
                 const top = te.trackIndex * (TRACK_HEIGHT + TRACK_GAP);
                 const isSelected = te.entry.namePath === selectedPath;
+                const isSpeedEdit = te.entry.namePath === speedEditPath;
                 const [colorStart, colorEnd] = getBlockColor(te.trackIndex);
                 const media = mediaInfo.get(te.entry.id);
                 const blockHeight = TRACK_HEIGHT - 4;
@@ -353,7 +363,7 @@ export const TimelineEditor: React.FC<TimelineEditorProps> = ({
                       background: `linear-gradient(135deg, ${colorStart} 0%, ${colorEnd} 100%)`,
                       opacity: isSelected ? 1 : 0.85,
                       borderRadius: 4,
-                      border: 'none',
+                      border: isSpeedEdit ? `1px dashed ${colors.accent}` : 'none',
                       boxShadow: isSelected
                         ? `0 0 12px ${colorStart}99, inset 0 0 0 1.5px rgba(255,255,255,0.55)`
                         : `0 0 10px ${colorStart}77`,
@@ -397,6 +407,26 @@ export const TimelineEditor: React.FC<TimelineEditorProps> = ({
                         <span style={{ marginLeft: 4, fontSize: 8, opacity: 0.7 }}>*</span>
                       )}
                     </span>
+
+                    {/* Speed badge */}
+                    {te.entry.playbackRate != null && te.entry.playbackRate !== 1 && (
+                      <span style={{
+                        fontSize: 9,
+                        fontWeight: 600,
+                        fontFamily: fonts.mono,
+                        color: colors.accent,
+                        backgroundColor: 'rgba(0,0,0,0.5)',
+                        padding: '1px 4px',
+                        borderRadius: 3,
+                        marginRight: 6,
+                        pointerEvents: 'none',
+                        flexShrink: 0,
+                        position: hasMedia ? 'relative' as const : undefined,
+                        zIndex: hasMedia ? 1 : undefined,
+                      }}>
+                        {te.entry.playbackRate}x
+                      </span>
+                    )}
 
                     {/* Right resize handle */}
                     <div style={{ ...edgeHandleStyle, right: 0, cursor: 'ew-resize' }} />
@@ -448,24 +478,76 @@ export const TimelineEditor: React.FC<TimelineEditorProps> = ({
       )}
 
       {/* Context menu */}
-      {contextMenu && (
-        <div style={{ ...contextMenuStyles.container, left: contextMenu.x, top: contextMenu.y }}>
-          {overrides.has(contextMenu.namePath) && (
+      {contextMenu && (() => {
+        const currentOverride = overrides.get(contextMenu.namePath);
+        const currentSpeed = currentOverride?.playbackRate ?? 1;
+
+        return (
+          <div style={{ ...contextMenuStyles.container, left: contextMenu.x, top: contextMenu.y }}>
+            {overrides.has(contextMenu.namePath) && (
+              <div
+                style={contextMenuStyles.item}
+                onClick={() => { onOverrideRemove(contextMenu.namePath); setContextMenu(null); }}
+              >
+                Reset Position
+              </div>
+            )}
             <div
               style={contextMenuStyles.item}
-              onClick={() => { onOverrideRemove(contextMenu.namePath); setContextMenu(null); }}
+              onClick={() => { setSelectedPath(contextMenu.namePath); setContextMenu(null); }}
             >
-              Reset Position
+              Select
             </div>
-          )}
-          <div
-            style={contextMenuStyles.item}
-            onClick={() => { setSelectedPath(contextMenu.namePath); setContextMenu(null); }}
-          >
-            Select
+
+            {/* Speed section */}
+            <div style={{ borderTop: `1px solid ${colors.border}`, margin: '4px 0' }} />
+            <div
+              style={{
+                ...contextMenuStyles.item,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                backgroundColor: speedEditPath === contextMenu.namePath ? colors.accentBg : undefined,
+              }}
+              onClick={() => {
+                setSpeedEditPath(speedEditPath === contextMenu.namePath ? null : contextMenu.namePath);
+                setContextMenu(null);
+              }}
+            >
+              <span>Edit Speed</span>
+              {speedEditPath === contextMenu.namePath && <span style={{ color: colors.accent, fontSize: 10 }}>&#10003;</span>}
+            </div>
+            <div style={{ padding: '4px 12px', fontSize: 10, color: colors.textMuted, fontFamily: fonts.mono, letterSpacing: '0.1em', textTransform: 'uppercase' as const }}>
+              Speed
+            </div>
+            {SPEED_PRESETS.map((speed) => (
+              <div
+                key={speed}
+                style={{
+                  ...contextMenuStyles.item,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  backgroundColor: speed === currentSpeed ? colors.accentBg : undefined,
+                }}
+                onClick={() => {
+                  const base = currentOverride ?? { from: contextMenu.entry.from, durationInFrames: contextMenu.entry.durationInFrames };
+                  if (speed === 1) {
+                    // Remove playbackRate from override (set to undefined so merge clears it)
+                    onOverrideChange(contextMenu.namePath, { ...base, playbackRate: undefined });
+                  } else {
+                    onOverrideChange(contextMenu.namePath, { ...base, playbackRate: speed });
+                  }
+                  setContextMenu(null);
+                }}
+              >
+                <span>{speed}x</span>
+                {speed === currentSpeed && <span style={{ color: colors.accent, fontSize: 10 }}>&#10003;</span>}
+              </div>
+            ))}
           </div>
-        </div>
-      )}
+        );
+      })()}
     </div>
   );
 };

@@ -2,6 +2,7 @@ import React, {
   useCallback,
   useContext,
   useEffect,
+  useLayoutEffect,
   useRef,
   type CSSProperties,
   type VideoHTMLAttributes,
@@ -57,8 +58,11 @@ export function Video({
   const videoFrame = localFrame + startFrom;
   const currentTime = videoFrame / fps;
 
-  // Hold render while video metadata loads
-  useEffect(() => {
+  // Hold render while video metadata loads.
+  // useLayoutEffect ensures the hold is created synchronously after DOM commit,
+  // before the browser can fire loadedMetadata (which would miss the hold if
+  // created in a regular useEffect).
+  useLayoutEffect(() => {
     const handle = holdRender(
       `Loading <Video> metadata for src="${src}"`,
       { timeoutInMilliseconds: holdRenderTimeout },
@@ -120,17 +124,23 @@ export function Video({
       if (lastSeekTimeRef.current !== currentTime) {
         lastSeekTimeRef.current = currentTime;
 
-        const seekHandle = holdRender(
-          `Seeking <Video> to ${currentTime.toFixed(3)}s`,
-          { timeoutInMilliseconds: holdRenderTimeout },
-        );
+        // Skip seeking if metadata hasn't loaded yet (the metadata hold
+        // already blocks rendering) or if the video is already at the
+        // target time (e.g. freshly mounted at time 0).
+        const alreadyAtTarget = Math.abs(video.currentTime - currentTime) < 0.001;
+        if (video.readyState >= 1 && !alreadyAtTarget) {
+          const seekHandle = holdRender(
+            `Seeking <Video> to ${currentTime.toFixed(3)}s`,
+            { timeoutInMilliseconds: holdRenderTimeout },
+          );
 
-        const onSeeked = () => {
-          releaseRender(seekHandle);
-          video.removeEventListener('seeked', onSeeked);
-        };
-        video.addEventListener('seeked', onSeeked);
-        video.currentTime = currentTime;
+          const onSeeked = () => {
+            releaseRender(seekHandle);
+            video.removeEventListener('seeked', onSeeked);
+          };
+          video.addEventListener('seeked', onSeeked);
+          video.currentTime = currentTime;
+        }
       }
     } else {
       // Player/Studio mode: let video play naturally, correct drift

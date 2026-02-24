@@ -8,6 +8,7 @@ export interface TimelineEntry {
   durationInFrames: number;
   parentId: string | null;
   trackIndex?: number;
+  playbackRate?: number;
 }
 
 export interface TimelineRegistryContextValue {

@@ -122,4 +122,35 @@ describe('Sequence', () => {
     const fill = container.querySelector('[data-testid="frame"]')!.parentElement!;
     expect(fill.style.zIndex).toBe('10000');
   });
+
+  it('playbackRate=2 doubles the frame rate children see', () => {
+    // Sequence starts at frame 10, we're at frame 15 (local frame = 5)
+    // At 2x speed, children should see local frame 10 → useFrame() = 10
+    const { getByTestId } = renderAtFrame(15, (
+      <Sequence from={10} playbackRate={2}>
+        <FrameDisplay />
+      </Sequence>
+    ));
+    expect(getByTestId('frame').textContent).toBe('10');
+  });
+
+  it('playbackRate=0.5 halves the frame rate children see', () => {
+    // Sequence starts at frame 10, we're at frame 20 (local frame = 10)
+    // At 0.5x speed, children should see local frame 5 → useFrame() = 5
+    const { getByTestId } = renderAtFrame(20, (
+      <Sequence from={10} playbackRate={0.5}>
+        <FrameDisplay />
+      </Sequence>
+    ));
+    expect(getByTestId('frame').textContent).toBe('5');
+  });
+
+  it('playbackRate=1 behaves identically to default', () => {
+    const { getByTestId } = renderAtFrame(45, (
+      <Sequence from={30} playbackRate={1}>
+        <FrameDisplay />
+      </Sequence>
+    ));
+    expect(getByTestId('frame').textContent).toBe('15');
+  });
 });
