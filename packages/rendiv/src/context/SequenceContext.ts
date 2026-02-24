@@ -8,6 +8,10 @@ export interface SequenceContextValue {
   parentOffset: number;
   accumulatedOffset: number;
   localOffset: number;
+  /** Accumulated playback rate from nested Sequences. Media components
+   *  multiply their own playbackRate by this so native playback keeps
+   *  up with time-stretched frames. Default: 1 */
+  accumulatedPlaybackRate: number;
 }
 
 export const SequenceContext = createContext<SequenceContextValue>({
@@ -18,4 +22,5 @@ export const SequenceContext = createContext<SequenceContextValue>({
   parentOffset: 0,
   accumulatedOffset: 0,
   localOffset: 0,
+  accumulatedPlaybackRate: 1,
 });

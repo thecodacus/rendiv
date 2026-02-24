@@ -49,8 +49,9 @@ export function Loop({
       parentOffset: parentSequence.accumulatedOffset,
       accumulatedOffset: parentSequence.accumulatedOffset,
       localOffset: 0,
+      accumulatedPlaybackRate: parentSequence.accumulatedPlaybackRate,
     }),
-    [parentSequence.namePath, parentSequence.accumulatedOffset, durationInFrames],
+    [parentSequence.namePath, parentSequence.accumulatedOffset, durationInFrames, parentSequence.accumulatedPlaybackRate],
   );
 
   const content = (

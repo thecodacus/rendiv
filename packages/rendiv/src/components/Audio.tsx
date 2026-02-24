@@ -47,12 +47,15 @@ export function Audio({
     audio.muted = muted;
   }, [volume, muted]);
 
-  // Sync playback rate
+  // Sync playback rate — multiply the component's own rate by the
+  // accumulated Sequence playbackRate so native playback keeps pace
+  // with time-stretched frames in player/studio mode.
+  const effectiveRate = playbackRate * sequence.accumulatedPlaybackRate;
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
-    audio.playbackRate = playbackRate;
-  }, [playbackRate]);
+    audio.playbackRate = effectiveRate;
+  }, [effectiveRate]);
 
   // Sync currentTime and play/pause state
   useEffect(() => {

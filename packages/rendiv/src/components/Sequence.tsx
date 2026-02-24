@@ -99,6 +99,9 @@ export const Sequence: React.FC<SequenceProps> = ({
     };
   }, [id, displayName, namePath, absoluteFrom, effectiveDuration, effectivePlaybackRate]);
 
+  // Multiply with parent's accumulated rate so nested speed Sequences compound
+  const accumulatedPlaybackRate = parentSequence.accumulatedPlaybackRate * effectivePlaybackRate;
+
   const contextValue = useMemo<SequenceContextValue>(
     () => ({
       id,
@@ -108,8 +111,9 @@ export const Sequence: React.FC<SequenceProps> = ({
       parentOffset: parentSequence.accumulatedOffset,
       accumulatedOffset: absoluteFrom,
       localOffset: from,
+      accumulatedPlaybackRate,
     }),
-    [id, namePath, absoluteFrom, effectiveDuration, parentSequence.accumulatedOffset, from]
+    [id, namePath, absoluteFrom, effectiveDuration, parentSequence.accumulatedOffset, from, accumulatedPlaybackRate]
   );
 
   // When playbackRate !== 1, override TimelineContext so children see

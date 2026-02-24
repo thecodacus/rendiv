@@ -99,12 +99,15 @@ export function Video({
     video.muted = muted;
   }, [volume, muted]);
 
-  // Sync playback rate
+  // Sync playback rate — multiply the component's own rate by the
+  // accumulated Sequence playbackRate so native playback keeps pace
+  // with time-stretched frames in player/studio mode.
+  const effectiveRate = playbackRate * sequence.accumulatedPlaybackRate;
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
-    video.playbackRate = playbackRate;
-  }, [playbackRate]);
+    video.playbackRate = effectiveRate;
+  }, [effectiveRate]);
 
   // Sync currentTime to frame
   useEffect(() => {
