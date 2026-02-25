@@ -1,9 +1,8 @@
 import { spawn } from 'node:child_process';
 
-// @ts-ignore - @ffmpeg-installer/ffmpeg has no types
-import ffmpegInstaller from '@ffmpeg-installer/ffmpeg';
+import ffmpegStatic from 'ffmpeg-static';
 
-const ffmpegPath: string = ffmpegInstaller.path;
+const ffmpegPath: string = ffmpegStatic as unknown as string;
 
 export interface ExtractFrameOptions {
   videoPath: string;

@@ -2,12 +2,11 @@ import { spawn } from 'node:child_process';
 import path from 'node:path';
 import fs from 'node:fs';
 
-// @ts-ignore - @ffmpeg-installer/ffmpeg has no types
-import ffmpegInstaller from '@ffmpeg-installer/ffmpeg';
+import ffmpegStatic from 'ffmpeg-static';
 
 import type { AudioSourceInfo } from './types.js';
 
-const ffmpegPath: string = ffmpegInstaller.path;
+const ffmpegPath: string = ffmpegStatic as unknown as string;
 
 export interface StitchOptions {
   framesDir: string;
