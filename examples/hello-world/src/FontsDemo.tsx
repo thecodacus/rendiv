@@ -1,5 +1,5 @@
 import React from 'react';
-import { useFrame, interpolate, Fill, spring, useCompositionConfig } from '@rendiv/core';
+import { useFrame, interpolate, Fill, CanvasElement, spring, useCompositionConfig } from '@rendiv/core';
 import { useFont } from '@rendiv/google-fonts';
 
 const FONTS = [
@@ -103,6 +103,7 @@ export const FontsDemo: React.FC = () => {
   const gradientAngle = interpolate(frame, [0, durationInFrames], [135, 235], { extrapolateRight: 'clamp' });
 
   return (
+    <CanvasElement id="FontsDemo">
     <Fill>
       <div
         style={{
@@ -144,5 +145,6 @@ export const FontsDemo: React.FC = () => {
         </div>
       </div>
     </Fill>
+    </CanvasElement>
   );
 };

@@ -1,5 +1,5 @@
 import React from 'react';
-import { useFrame, useCompositionConfig, Fill, interpolate } from '@rendiv/core';
+import { useFrame, useCompositionConfig, Fill, CanvasElement, interpolate } from '@rendiv/core';
 import { MotionTrail, ShutterBlur } from '@rendiv/motion-blur';
 
 function MovingCircle({ color }: { color: string }): React.ReactElement {
@@ -58,6 +58,7 @@ export function MotionBlurDemo(): React.ReactElement {
 	});
 
 	return (
+		<CanvasElement id="MotionBlurDemo">
 		<Fill style={{ background: '#0d1117', opacity: fadeIn * fadeOut }}>
 			{/* Left half: MotionTrail */}
 			<div style={{ position: 'absolute', left: 0, top: 0, width: '50%', height: '100%', overflow: 'hidden' }}>
@@ -93,5 +94,6 @@ export function MotionBlurDemo(): React.ReactElement {
 				</span>
 			</div>
 		</Fill>
+		</CanvasElement>
 	);
 }

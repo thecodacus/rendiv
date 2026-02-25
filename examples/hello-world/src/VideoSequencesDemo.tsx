@@ -1,16 +1,5 @@
 import React from "react";
-import {
-	useFrame,
-	useCompositionConfig,
-	Fill,
-	Series,
-	Sequence,
-	interpolate,
-	spring,
-	Video,
-	Audio,
-	staticFile,
-} from "@rendiv/core";
+import { useFrame, useCompositionConfig, Fill, Series, Sequence, CanvasElement, interpolate, spring, Video, Audio, staticFile, OffthreadVideo } from "@rendiv/core";
 
 /** Scene 1: Intro — title fades and scales in */
 function IntroScene(): React.ReactElement {
@@ -67,10 +56,7 @@ function VideoScene(): React.ReactElement {
 
 	return (
 		<Fill style={{ background: "#000000" }}>
-			<Video
-				src={staticFile("sample.mp4")}
-				style={{ width: "100%", height: "100%", objectFit: "cover" }}
-			/>
+			<OffthreadVideo src={staticFile("Intro Segment 1_1080p.mp4")} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
 			{/* Dark gradient at bottom */}
 			<div
 				style={{
@@ -140,22 +126,17 @@ function PipScene(): React.ReactElement {
 			</p>
 
 			<div style={{ display: "flex", gap: 40, alignItems: "flex-start" }}>
-				{/* Main placeholder */}
+				{/* Main video */}
 				<div
 					style={{
 						width: 640,
 						height: 360,
-						background: "#161b22",
 						borderRadius: 12,
+						overflow: "hidden",
 						border: "1px solid #30363d",
-						display: "flex",
-						justifyContent: "center",
-						alignItems: "center",
 					}}
 				>
-					<span style={{ color: "#484f58", fontSize: 18, fontFamily: "system-ui, sans-serif" }}>
-						Main content area
-					</span>
+					<Video src={staticFile("Intro 2_1080p.mp4")} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
 				</div>
 
 				{/* PiP video — starts 15 frames in */}
@@ -172,10 +153,7 @@ function PipScene(): React.ReactElement {
 							boxShadow: "0 8px 32px rgba(88,166,255,0.3)",
 						}}
 					>
-						<Video
-							src={staticFile("sample.mp4")}
-							style={{ width: "100%", height: "100%", objectFit: "cover" }}
-						/>
+						<OffthreadVideo src={staticFile("Intro Segment 1_1080p.mp4")} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
 					</div>
 				</Sequence>
 			</div>
@@ -253,29 +231,29 @@ function OutroScene(): React.ReactElement {
  */
 export function VideoSequencesDemo(): React.ReactElement {
 	return (
-		<>
+		<CanvasElement id="VideoSequencesDemo">
 			{/* Audio track — parallel sequence spanning the full composition */}
-			<Sequence durationInFrames={300} layout="none">
-				<Audio src={staticFile("1771243722424-7641.wav")} />
-			</Sequence>
+			{/* <Sequence from={60} durationInFrames={240} layout="none">
+				<Audio src={staticFile("01_hook_intro.wav")} />
+			</Sequence> */}
 
 			<Series>
 				<Series.Sequence durationInFrames={60}>
 					<IntroScene />
 				</Series.Sequence>
 
-				<Series.Sequence durationInFrames={90}>
+				<Series.Sequence durationInFrames={90} premountFor={90}>
 					<VideoScene />
 				</Series.Sequence>
 
-				<Series.Sequence durationInFrames={90}>
+				{/* <Series.Sequence durationInFrames={90} premountFor={30}>
 					<PipScene />
 				</Series.Sequence>
 
 				<Series.Sequence durationInFrames={60}>
 					<OutroScene />
-				</Series.Sequence>
+				</Series.Sequence> */}
 			</Series>
-		</>
+		</CanvasElement>
 	);
 }

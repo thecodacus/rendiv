@@ -1,5 +1,5 @@
 import React from 'react';
-import { useFrame, useCompositionConfig, Fill, interpolate, spring } from '@rendiv/core';
+import { useFrame, useCompositionConfig, Fill, CanvasElement, interpolate, spring } from '@rendiv/core';
 import {
 	CaptionRenderer,
 	parseSrt,
@@ -68,6 +68,7 @@ export function CaptionsDemo(): React.ReactElement {
 	const labelOpacity = interpolate(labelSpring, [0, 1], [0, 1]);
 
 	return (
+		<CanvasElement id="CaptionsDemo">
 		<Fill style={{ background: '#0d1117', opacity: fadeIn * fadeOut }}>
 			{/* Title */}
 			<div
@@ -271,5 +272,6 @@ export function CaptionsDemo(): React.ReactElement {
 				</span>
 			</div>
 		</Fill>
+		</CanvasElement>
 	);
 }

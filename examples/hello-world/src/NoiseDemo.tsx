@@ -1,5 +1,5 @@
 import React from 'react';
-import { useFrame, useCompositionConfig, Fill, interpolate } from '@rendiv/core';
+import { useFrame, useCompositionConfig, Fill, CanvasElement, interpolate } from '@rendiv/core';
 import { noise2D, noise3D, seed } from '@rendiv/noise';
 
 const COLS = 32;
@@ -60,6 +60,7 @@ export function NoiseDemo(): React.ReactElement {
 	}
 
 	return (
+		<CanvasElement id="NoiseDemo">
 		<Fill style={{ background: '#0d1117', opacity: fadeIn * fadeOut }}>
 			{cells}
 			<div
@@ -84,5 +85,6 @@ export function NoiseDemo(): React.ReactElement {
 				</span>
 			</div>
 		</Fill>
+		</CanvasElement>
 	);
 }

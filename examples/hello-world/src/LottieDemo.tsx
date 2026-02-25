@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { useFrame, useCompositionConfig, Fill, interpolate } from "@rendiv/core";
+import { useFrame, useCompositionConfig, Fill, CanvasElement, interpolate } from "@rendiv/core";
 import { Lottie } from "@rendiv/lottie";
 
 // Inline a simple Lottie animation (a pulsing circle)
@@ -77,6 +77,7 @@ export function LottieDemo(): React.ReactElement {
 	});
 
 	return (
+		<CanvasElement id="LottieDemo">
 		<Fill
 			style={{
 				backgroundColor: "#0d1117",
@@ -104,5 +105,6 @@ export function LottieDemo(): React.ReactElement {
 				@rendiv/lottie
 			</div>
 		</Fill>
+		</CanvasElement>
 	);
 }

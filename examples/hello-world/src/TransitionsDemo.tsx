@@ -1,5 +1,5 @@
 import React from 'react';
-import { useFrame, useCompositionConfig, Fill, interpolate, spring } from '@rendiv/core';
+import { useFrame, useCompositionConfig, Fill, CanvasElement, interpolate, spring } from '@rendiv/core';
 import {
   TransitionSeries,
   linearTiming,
@@ -72,6 +72,7 @@ function SceneCard({
  */
 export function TransitionsDemo(): React.ReactElement {
   return (
+    <CanvasElement id="TransitionsDemo">
     <TransitionSeries>
       <TransitionSeries.Sequence durationInFrames={60}>
         <SceneCard title="Fade" subtitle="linearTiming + fade()" bg="#1a1a2e" color="#ffffff" />
@@ -122,5 +123,6 @@ export function TransitionsDemo(): React.ReactElement {
         <SceneCard title="Fin" subtitle="That's all the transitions!" bg="#0d1117" color="#58a6ff" />
       </TransitionSeries.Sequence>
     </TransitionSeries>
+    </CanvasElement>
   );
 }

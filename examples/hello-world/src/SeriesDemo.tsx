@@ -1,5 +1,5 @@
 import React from "react";
-import { useFrame, useCompositionConfig, Fill, Series, Loop, Freeze, Sequence, interpolate, spring, blendColors } from "@rendiv/core";
+import { useFrame, useCompositionConfig, Fill, Series, Loop, Freeze, Sequence, CanvasElement, interpolate, spring, blendColors } from "@rendiv/core";
 
 /** Scene 1: Title card with spring animation */
 function TitleScene(): React.ReactElement {
@@ -222,19 +222,21 @@ function OutroScene(): React.ReactElement {
  */
 export function SeriesDemo(): React.ReactElement {
 	return (
-		<Series>
-			<Series.Sequence durationInFrames={60}>
-				<TitleScene />
-			</Series.Sequence>
-			<Series.Sequence durationInFrames={90}>
-				<LoopScene />
-			</Series.Sequence>
-			<Series.Sequence durationInFrames={75}>
-				<FreezeScene />
-			</Series.Sequence>
-			<Series.Sequence durationInFrames={45}>
-				<OutroScene />
-			</Series.Sequence>
-		</Series>
+		<CanvasElement id="SeriesDemo">
+			<Series>
+				<Series.Sequence durationInFrames={60}>
+					<TitleScene />
+				</Series.Sequence>
+				<Series.Sequence durationInFrames={90}>
+					<LoopScene />
+				</Series.Sequence>
+				<Series.Sequence durationInFrames={75}>
+					<FreezeScene />
+				</Series.Sequence>
+				<Series.Sequence durationInFrames={45}>
+					<OutroScene />
+				</Series.Sequence>
+			</Series>
+		</CanvasElement>
 	);
 }

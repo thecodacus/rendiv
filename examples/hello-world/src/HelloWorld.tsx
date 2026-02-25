@@ -1,5 +1,5 @@
 import React from 'react';
-import { useFrame, useCompositionConfig, Fill, interpolate, spring } from '@rendiv/core';
+import { useFrame, useCompositionConfig, Fill, CanvasElement, interpolate, spring } from '@rendiv/core';
 
 export const HelloWorld: React.FC = () => {
   const frame = useFrame();
@@ -25,6 +25,7 @@ export const HelloWorld: React.FC = () => {
   });
 
   return (
+    <CanvasElement id="HelloWorld">
     <Fill
       style={{
         background: `linear-gradient(${bgProgress}deg, #0b1215, #1a2940, #0b1215)`,
@@ -60,5 +61,6 @@ export const HelloWorld: React.FC = () => {
         </p>
       </div>
     </Fill>
+    </CanvasElement>
   );
 };

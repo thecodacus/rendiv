@@ -1,5 +1,5 @@
 import React from 'react';
-import { useFrame, useCompositionConfig, Fill, interpolate, OffthreadVideo, staticFile } from '@rendiv/core';
+import { useFrame, useCompositionConfig, Fill, CanvasElement, interpolate, OffthreadVideo, staticFile } from '@rendiv/core';
 
 /**
  * Demonstrates OffthreadVideo — pixel-perfect video frame extraction.
@@ -13,6 +13,7 @@ export function OffthreadVideoDemo(): React.ReactElement {
   const labelOpacity = interpolate(frame, [0, 15], [0, 1], { extrapolateRight: 'clamp' });
 
   return (
+    <CanvasElement id="OffthreadVideoDemo">
     <Fill style={{ background: '#0d1117' }}>
       <OffthreadVideo
         src={staticFile('sample.mp4')}
@@ -46,5 +47,6 @@ export function OffthreadVideoDemo(): React.ReactElement {
         </span>
       </div>
     </Fill>
+    </CanvasElement>
   );
 }

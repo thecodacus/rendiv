@@ -1,5 +1,5 @@
 import React from 'react';
-import { useFrame, useCompositionConfig, Fill, interpolate, spring } from '@rendiv/core';
+import { useFrame, useCompositionConfig, Fill, CanvasElement, interpolate, spring } from '@rendiv/core';
 import { Gif } from '@rendiv/gif';
 
 const GIF_URL = 'https://media.giphy.com/media/xT9IgzoKnwFNmISR8I/giphy.gif';
@@ -22,6 +22,7 @@ export function GifDemo(): React.ReactElement {
 	const labelOpacity = interpolate(labelSpring, [0, 1], [0, 1]);
 
 	return (
+		<CanvasElement id="GifDemo">
 		<Fill style={{ background: '#0d1117', opacity: fadeIn * fadeOut }}>
 			{/* Title */}
 			<div
@@ -141,5 +142,6 @@ export function GifDemo(): React.ReactElement {
 				</span>
 			</div>
 		</Fill>
+		</CanvasElement>
 	);
 }

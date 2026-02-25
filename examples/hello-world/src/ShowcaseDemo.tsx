@@ -4,6 +4,7 @@ import {
 	useCompositionConfig,
 	Fill,
 	Series,
+	CanvasElement,
 	interpolate,
 	spring,
 	Easing,
@@ -769,6 +770,7 @@ function OutroScene(): React.ReactElement {
  */
 export function ShowcaseDemo(): React.ReactElement {
 	return (
+		<CanvasElement id="ShowcaseDemo">
 		<Series>
 			<Series.Sequence durationInFrames={120}>
 				<TitleScene />
@@ -789,5 +791,6 @@ export function ShowcaseDemo(): React.ReactElement {
 				<OutroScene />
 			</Series.Sequence>
 		</Series>
+		</CanvasElement>
 	);
 }

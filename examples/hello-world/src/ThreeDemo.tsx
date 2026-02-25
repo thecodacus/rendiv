@@ -1,5 +1,5 @@
 import React, { useRef } from "react";
-import { useFrame, useCompositionConfig, Fill, interpolate, spring } from "@rendiv/core";
+import { useFrame, useCompositionConfig, Fill, CanvasElement, interpolate, spring } from "@rendiv/core";
 import { ThreeCanvas } from "@rendiv/three";
 import * as THREE from "three";
 
@@ -60,6 +60,7 @@ export function ThreeDemo(): React.ReactElement {
 	});
 
 	return (
+		<CanvasElement id="ThreeDemo">
 		<Fill
 			style={{
 				backgroundColor: "#0a0a1a",
@@ -94,5 +95,6 @@ export function ThreeDemo(): React.ReactElement {
 				@rendiv/three
 			</div>
 		</Fill>
+		</CanvasElement>
 	);
 }

@@ -1,5 +1,5 @@
 import React from 'react';
-import { useFrame, useCompositionConfig, Fill, interpolate, spring } from '@rendiv/core';
+import { useFrame, useCompositionConfig, Fill, CanvasElement, interpolate, spring } from '@rendiv/core';
 import { shapeStar, shapeCircle, shapePie, shapePolygon } from '@rendiv/shapes';
 import { strokeReveal, morphPath } from '@rendiv/paths';
 
@@ -53,6 +53,7 @@ export function ShapesDemo(): React.ReactElement {
 	const rotation = spring({ frame: Math.max(0, frame - 30), fps, config: { damping: 20, stiffness: 60, mass: 0.8 } });
 
 	return (
+		<CanvasElement id="ShapesDemo">
 		<Fill style={{ background: '#0d1117', opacity: fadeIn * fadeOut }}>
 			{/* Row of three demos */}
 			<div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center', height: '100%', padding: '0 80px' }}>
@@ -131,5 +132,6 @@ export function ShapesDemo(): React.ReactElement {
 				</span>
 			</div>
 		</Fill>
+		</CanvasElement>
 	);
 }
