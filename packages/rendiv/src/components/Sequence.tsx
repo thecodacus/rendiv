@@ -37,7 +37,9 @@ export const Sequence: React.FC<SequenceProps> = ({
   const parentSequence = useContext(SequenceContext);
   const timeline = useContext(TimelineContext);
   const composition = useContext(CompositionContext);
-  const canvasElementScope = useContext(CanvasElementContext);
+  const canvasElementCtx = useContext(CanvasElementContext);
+  const canvasElementScope = canvasElementCtx?.id ?? null;
+  const isNestedScope = canvasElementCtx?.nested ?? false;
   const id = useId();
 
   // Build stable name path for override identification.
@@ -61,6 +63,7 @@ export const Sequence: React.FC<SequenceProps> = ({
   const baseAbsoluteFrom = parentSequence.accumulatedOffset + from;
 
   // Read overrides from global Map (Studio mode only, zero-cost when Map doesn't exist)
+  const scopeOffset = canvasElementCtx?.scopeOffset ?? 0;
   let absoluteFrom = baseAbsoluteFrom;
   let effectiveDuration = durationInFrames;
   let effectiveTrackIndex = trackIndex;
@@ -74,7 +77,7 @@ export const Sequence: React.FC<SequenceProps> = ({
     const overrides = w.__RENDIV_TIMELINE_OVERRIDES__ as Map<string, TimelineOverride> | undefined;
     const override = overrides?.get(namePath);
     if (override) {
-      absoluteFrom = override.from;
+      absoluteFrom = scopeOffset + override.from;
       effectiveDuration = override.durationInFrames;
       if (override.trackIndex !== undefined) {
         effectiveTrackIndex = override.trackIndex;
@@ -100,7 +103,7 @@ export const Sequence: React.FC<SequenceProps> = ({
     }
     const entries = w.__RENDIV_TIMELINE_ENTRIES__ as Map<string, unknown>;
     const parentId = parentSequence.id;
-    const entry = { id, name: displayName, namePath, from: absoluteFrom, durationInFrames: effectiveDuration, parentId, trackIndex: effectiveTrackIndex, playbackRate: effectivePlaybackRate };
+    const entry = { id, name: displayName, namePath, from: absoluteFrom, durationInFrames: effectiveDuration, parentId, trackIndex: effectiveTrackIndex, playbackRate: effectivePlaybackRate, nestedScope: isNestedScope };
     entries.set(id, entry);
     document.dispatchEvent(new CustomEvent('rendiv:timeline-sync'));
     return () => {

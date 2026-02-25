@@ -10,6 +10,8 @@ export interface CanvasElementProps {
 
 export function CanvasElement({ id, children }: CanvasElementProps): React.ReactElement {
   const parentSequence = useContext(SequenceContext);
+  const parentCtx = useContext(CanvasElementContext);
+  const isNested = parentCtx !== null;
 
   // Reset namePath so inner Sequences build fresh paths with the scoped
   // composition ID as prefix. Preserve all timing fields unchanged.
@@ -18,8 +20,10 @@ export function CanvasElement({ id, children }: CanvasElementProps): React.React
     [parentSequence],
   );
 
+  const ctxValue = useMemo(() => ({ id, nested: isNested, scopeOffset: parentSequence.accumulatedOffset }), [id, isNested, parentSequence.accumulatedOffset]);
+
   return (
-    <CanvasElementContext.Provider value={id}>
+    <CanvasElementContext.Provider value={ctxValue}>
       <SequenceContext.Provider value={scopedSequence}>
         {children}
       </SequenceContext.Provider>

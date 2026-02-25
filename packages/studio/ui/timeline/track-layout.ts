@@ -15,9 +15,12 @@ export function assignTracks(
   entries: TimelineEntry[],
   overrides: Map<string, TimelineOverride>,
 ): Track[] {
-  // Find parent IDs to identify leaves
-  const parentIds = new Set(entries.map((e) => e.parentId).filter(Boolean));
-  const leaves = entries.filter((e) => !parentIds.has(e.id));
+  // Exclude entries from nested CanvasElement scopes (child composition internals)
+  const visible = entries.filter((e) => !e.nestedScope);
+
+  // Find parent IDs to identify leaves among visible entries
+  const parentIds = new Set(visible.map((e) => e.parentId).filter(Boolean));
+  const leaves = visible.filter((e) => !parentIds.has(e.id));
 
   // Sort by from position (start time)
   const sorted = [...leaves].sort((a, b) => a.from - b.from);

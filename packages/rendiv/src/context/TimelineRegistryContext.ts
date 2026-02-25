@@ -9,6 +9,8 @@ export interface TimelineEntry {
   parentId: string | null;
   trackIndex?: number;
   playbackRate?: number;
+  /** True when this entry is inside a nested CanvasElement (child composition). */
+  nestedScope?: boolean;
 }
 
 export interface TimelineRegistryContextValue {
