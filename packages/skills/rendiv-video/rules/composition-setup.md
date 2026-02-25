@@ -49,6 +49,50 @@ setRootComponent(Root);
 - The root component renders `<Composition>`, `<Still>`, and `<Folder>` elements.
   These are metadata-only — they render `null` and register into the composition manager.
 
+## `<CanvasElement>`
+
+**IMPORTANT: Always wrap your composition's content with `<CanvasElement id="...">`.** This
+makes the composition self-contained — its timeline overrides (position, scale, timing
+edits from Studio) work correctly whether the composition is rendered standalone or nested
+inside another "master" composition.
+
+```tsx
+import { CanvasElement, Series, useFrame } from '@rendiv/core';
+
+export function MyScene(): React.ReactElement {
+  return (
+    <CanvasElement id="MyScene">
+      <Series>
+        <Series.Sequence durationInFrames={60}>
+          <IntroScene />
+        </Series.Sequence>
+        <Series.Sequence durationInFrames={90}>
+          <MainScene />
+        </Series.Sequence>
+      </Series>
+    </CanvasElement>
+  );
+}
+```
+
+Without `<CanvasElement>`, overrides saved under `MyScene/...` keys will not apply when
+the component is used inside a different composition. With it, inner Sequences always
+build namePaths starting with the given `id`, regardless of nesting context.
+
+### Props
+
+| Prop | Type | Required | Description |
+|---|---|---|---|
+| `id` | `string` | Yes | The composition ID — must match the `<Composition>` id |
+| `children` | `ReactNode` | Yes | The composition content |
+
+### How it works
+
+`<CanvasElement>` provides a `CanvasElementContext` that `<Sequence>` reads when building
+its namePath. It also resets the parent `SequenceContext.namePath` to `''` so inner
+Sequences start fresh. All timing fields (accumulatedOffset, playbackRate, etc.) pass
+through unchanged — `useFrame()` and frame arithmetic are unaffected.
+
 ## `<Composition>`
 
 Registers a video composition with the framework.

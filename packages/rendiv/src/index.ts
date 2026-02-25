@@ -11,6 +11,7 @@ export { Folder, type FolderProps } from './components/Folder';
 export { Series, type SeriesProps, type SeriesSequenceProps } from './components/Series';
 export { Loop, type LoopProps } from './components/Loop';
 export { Freeze, type FreezeProps } from './components/Freeze';
+export { CanvasElement, type CanvasElementProps } from './components/canvas-element';
 
 // Media Components
 export { Img, type ImgProps } from './components/Img';
@@ -61,6 +62,7 @@ export {
   type ResolveConfigFunction,
 } from './context/CompositionManagerContext';
 export { FolderContext } from './context/FolderContext';
+export { CanvasElementContext } from './context/canvas-element-context';
 export {
   TimelineRegistryContext,
   type TimelineRegistryContextValue,

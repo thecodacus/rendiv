@@ -36,6 +36,29 @@ setRootComponent(() => (
 
 You can register multiple compositions in a single entry point. The Studio, Player, and Renderer each read this registry.
 
+## CanvasElement
+
+**Always wrap your composition's content with `<CanvasElement id="...">`**. This makes the composition self-contained — timeline overrides (position, scale, timing edits from Studio) work correctly whether the composition is rendered standalone or nested inside another "master" composition.
+
+```tsx
+import { CanvasElement, Series } from '@rendiv/core';
+
+export const MyVideo = () => (
+  <CanvasElement id="MyVideo">
+    <Series>
+      <Series.Sequence durationInFrames={60}>
+        <TitleCard />
+      </Series.Sequence>
+      <Series.Sequence durationInFrames={90}>
+        <MainContent />
+      </Series.Sequence>
+    </Series>
+  </CanvasElement>
+);
+```
+
+Without `<CanvasElement>`, overrides saved under `MyVideo/...` keys won't apply when the component is used inside a different composition, because the namePath prefix changes to the parent's ID.
+
 ## Sequences
 
 `<Sequence>` controls **when** a component appears in the timeline.

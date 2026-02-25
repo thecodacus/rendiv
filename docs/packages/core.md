@@ -111,6 +111,27 @@ Groups compositions in the Studio sidebar.
 <Folder name="Demos">...</Folder>
 ```
 
+### `<CanvasElement>`
+
+Scopes timeline override identity so a composition's overrides work when nested inside other compositions. **Always wrap your composition content with this.**
+
+```tsx
+import { CanvasElement, Series } from '@rendiv/core';
+
+export const MyScene = () => (
+  <CanvasElement id="MyScene">
+    <Series>
+      <Series.Sequence durationInFrames={60}><Intro /></Series.Sequence>
+      <Series.Sequence durationInFrames={90}><Main /></Series.Sequence>
+    </Series>
+  </CanvasElement>
+);
+```
+
+Props: `id` (required — must match the `<Composition>` id), `children`.
+
+Without `<CanvasElement>`, overrides saved under `MyScene/...` keys won't apply when the component is rendered inside another composition.
+
 ## Media Components
 
 ### `<Img>`

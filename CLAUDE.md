@@ -61,8 +61,9 @@ pnpm clean        # Remove dist/ from all packages
 ### Contexts
 - Live in `packages/rendiv/src/context/` as `.ts` files
 - Pattern: `createContext<TypeValue>(default)` + exported interface
-- Five contexts: `TimelineContext`, `CompositionContext`, `SequenceContext`, `RendivEnvironmentContext`, `CompositionManagerContext`
+- Six contexts: `TimelineContext`, `CompositionContext`, `SequenceContext`, `RendivEnvironmentContext`, `CompositionManagerContext`, `CanvasElementContext`
 - Components like `Freeze` and `Loop` override `TimelineContext` (and optionally `SequenceContext`) to alter the frame seen by children
+- `<CanvasElement id="...">` provides `CanvasElementContext` to scope override namePaths — always wrap composition content with it so overrides work when nested inside other compositions
 
 ### Hooks
 - Live in `packages/rendiv/src/hooks/`, prefixed `use-`
@@ -80,7 +81,7 @@ Key exports from `@rendiv/core`:
 | Category | Names |
 |---|---|
 | Hooks | `useFrame`, `useCompositionConfig` |
-| Components | `Composition`, `Sequence`, `Fill`, `Still`, `Folder` |
+| Components | `Composition`, `Sequence`, `Fill`, `Still`, `Folder`, `CanvasElement` |
 | Core Components | `Series`, `Series.Sequence`, `Loop`, `Freeze` |
 | Media Components | `Img`, `Video`, `Audio`, `AnimatedImage`, `IFrame` |
 | Animation | `interpolate`, `spring`, `getSpringDuration`, `Easing`, `blendColors` |

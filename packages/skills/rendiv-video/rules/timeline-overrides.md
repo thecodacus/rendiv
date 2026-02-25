@@ -79,11 +79,50 @@ position, and scale. The file lives at the **project root**
 All fields are optional. Only include the fields you want to override.
 
 Each key is a **namePath** — a hierarchical identifier built from the composition
-ID, sequence names, and their `from` values. For nested sequences the path segments
-are joined with `/`:
+ID (or `<CanvasElement>` scope), sequence names, and their `from` values. For
+nested sequences the path segments are joined with `/`:
 
 ```
 CompositionId/OuterSequence[0]/InnerSequence[30]
+```
+
+### `<CanvasElement>` and override scoping
+
+The namePath prefix comes from `<CanvasElement id="...">` when present, otherwise
+from the rendering `<Composition>` id. **Always wrap your composition content with
+`<CanvasElement>`** so that overrides are self-contained and work correctly when the
+composition is nested inside another "master" composition.
+
+Without `<CanvasElement>`, nesting a child composition inside a master changes the
+namePath prefix from the child's ID to the master's ID, causing all overrides to
+silently miss.
+
+```tsx
+// Self-contained — overrides work when nested
+export function MyScene() {
+  return (
+    <CanvasElement id="MyScene">
+      <Series>
+        <Series.Sequence durationInFrames={60} name="Intro">
+          <IntroScene />
+        </Series.Sequence>
+      </Series>
+    </CanvasElement>
+  );
+}
+
+// Can be used standalone or nested — overrides always apply
+function MasterComp() {
+  return (
+    <CanvasElement id="MasterComp">
+      <Series>
+        <Series.Sequence durationInFrames={300}>
+          <MyScene />  {/* MyScene's overrides still use "MyScene/..." prefix */}
+        </Series.Sequence>
+      </Series>
+    </CanvasElement>
+  );
+}
 ```
 
 ### Override precedence

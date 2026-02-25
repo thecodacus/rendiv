@@ -2,6 +2,7 @@ import React, { useContext, useId, useEffect, useMemo, useRef, type CSSPropertie
 import { TimelineContext, type TimelineContextValue } from '../context/TimelineContext';
 import { SequenceContext, type SequenceContextValue } from '../context/SequenceContext';
 import { CompositionContext } from '../context/CompositionContext';
+import { CanvasElementContext } from '../context/canvas-element-context';
 import { Fill } from './Fill';
 import type { TimelineOverride } from '../types/timeline-override';
 
@@ -36,10 +37,13 @@ export const Sequence: React.FC<SequenceProps> = ({
   const parentSequence = useContext(SequenceContext);
   const timeline = useContext(TimelineContext);
   const composition = useContext(CompositionContext);
+  const canvasElementScope = useContext(CanvasElementContext);
   const id = useId();
 
   // Build stable name path for override identification.
-  // Prefixed with composition id so overrides are scoped per composition.
+  // Prefixed with composition id (or CanvasElement scope) so overrides are
+  // scoped per composition. CanvasElement takes precedence so compositions
+  // keep their override identity when nested inside a master composition.
   // Always append `[from]` so siblings with the same name (e.g. Series
   // auto-deriving "SceneCard" for every child) get unique paths.
   // Using `from` rather than an index means structural edits cause stale
@@ -47,7 +51,8 @@ export const Sequence: React.FC<SequenceProps> = ({
   // wrong sequence.
   const displayName = name ?? 'Sequence';
   const pathSegment = `${displayName}[${from}]`;
-  const compositionPrefix = composition ? `${composition.id}/` : '';
+  const compositionId = canvasElementScope ?? composition?.id ?? '';
+  const compositionPrefix = compositionId ? `${compositionId}/` : '';
   const namePath = parentSequence.namePath
     ? `${parentSequence.namePath}/${pathSegment}`
     : `${compositionPrefix}${pathSegment}`;

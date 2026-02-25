@@ -52,9 +52,11 @@ setRootComponent(() => (
 
 ### Create Your First Composition
 
+Always wrap your composition content with `<CanvasElement id="...">` so that timeline overrides (position, scale, timing edits from Studio) work correctly, even when the composition is nested inside another one.
+
 ```tsx
 // src/MyVideo.tsx
-import { useFrame, useCompositionConfig, Fill, interpolate, spring } from '@rendiv/core';
+import { useFrame, useCompositionConfig, Fill, CanvasElement, interpolate, spring } from '@rendiv/core';
 
 export const MyVideo = () => {
   const frame = useFrame();
@@ -64,11 +66,13 @@ export const MyVideo = () => {
   const scale = spring({ frame, fps, config: { damping: 12 } });
 
   return (
-    <Fill style={{ background: '#0f0f0f', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <h1 style={{ color: 'white', fontSize: 80, opacity, transform: `scale(${scale})` }}>
-        Hello, Rendiv!
-      </h1>
-    </Fill>
+    <CanvasElement id="MyVideo">
+      <Fill style={{ background: '#0f0f0f', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <h1 style={{ color: 'white', fontSize: 80, opacity, transform: `scale(${scale})` }}>
+          Hello, Rendiv!
+        </h1>
+      </Fill>
+    </CanvasElement>
   );
 };
 ```

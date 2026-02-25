@@ -49,6 +49,22 @@ export const FadeIn: React.FC = () => {
 A minimal rendiv project entry point:
 
 ```tsx
+// FadeIn.tsx — composition component
+import { useFrame, interpolate, CanvasElement } from '@rendiv/core';
+
+export const FadeIn: React.FC = () => {
+  const frame = useFrame();
+  const opacity = interpolate(frame, [0, 30], [0, 1], { extrapolateRight: 'clamp' });
+  return (
+    <CanvasElement id="FadeIn">
+      <div style={{ opacity }}>Hello rendiv</div>
+    </CanvasElement>
+  );
+};
+```
+
+```tsx
+// index.tsx — entry point
 import { setRootComponent, Composition } from '@rendiv/core';
 import { FadeIn } from './FadeIn';
 
@@ -97,15 +113,18 @@ Load the relevant rule file based on the task at hand:
 1. **No CSS animations or transitions.** Everything MUST be frame-driven via `useFrame()`.
 2. **Use rendiv media components** (`<Img>`, `<Video>`, `<Audio>`, `<AnimatedImage>`)
    instead of native HTML elements. They manage `holdRender` automatically.
-3. **`<Composition>` renders null.** It only registers metadata. The actual component
+3. **Always wrap composition content with `<CanvasElement id="...">`.** This makes
+   the composition self-contained so its timeline overrides work correctly when nested
+   inside other compositions. The `id` must match the `<Composition>` id.
+4. **`<Composition>` renders null.** It only registers metadata. The actual component
    is rendered by the Player, Studio, or Renderer — not by `<Composition>` itself.
-4. **`setRootComponent` can only be called once.** It registers the root that defines
+5. **`setRootComponent` can only be called once.** It registers the root that defines
    all compositions.
-5. **`inputRange` must be monotonically non-decreasing** in `interpolate()` and
+6. **`inputRange` must be monotonically non-decreasing** in `interpolate()` and
    `blendColors()`. Both ranges must have equal length with at least 2 elements.
-6. **`<Series.Sequence>` must be a direct child of `<Series>`.** It throws if rendered
+7. **`<Series.Sequence>` must be a direct child of `<Series>`.** It throws if rendered
    outside a `<Series>` parent.
-7. **`morphPath` requires matching segments.** Both paths must have the same number of
+8. **`morphPath` requires matching segments.** Both paths must have the same number of
    segments with matching command types.
 
 ## Packages

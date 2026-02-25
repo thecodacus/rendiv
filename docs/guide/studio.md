@@ -82,6 +82,26 @@ Keys use the format `CompositionId/SequenceName[originalFrom]`. Values override 
 - **Overrides apply on top** when the original props match the override's key
 - **External edits sync live** — if you edit `timeline-overrides.json` in your editor, Studio picks up the changes immediately via file watching
 
+### CanvasElement and Override Scoping
+
+**Always wrap your composition content with `<CanvasElement id="...">`** so that overrides work correctly when a composition is nested inside another "master" composition.
+
+Without `<CanvasElement>`, the namePath prefix comes from the rendering `<Composition>` id. If you nest a child composition inside a master, the prefix changes and all overrides silently miss. With `<CanvasElement>`, inner Sequences always build namePaths starting with the given `id`, regardless of nesting context.
+
+```tsx
+import { CanvasElement, Series } from '@rendiv/core';
+
+export const MyScene = () => (
+  <CanvasElement id="MyScene">
+    <Series>
+      <Series.Sequence durationInFrames={60} name="Intro">
+        <IntroScene />
+      </Series.Sequence>
+    </Series>
+  </CanvasElement>
+);
+```
+
 ### Editor vs Tree View
 
 The timeline supports two view modes, toggled via buttons above the timeline:
