@@ -1,4 +1,4 @@
-import { spawn } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import path from 'node:path';
 import fs from 'node:fs';
 
@@ -7,6 +7,16 @@ import ffmpegStatic from 'ffmpeg-static';
 import type { AudioSourceInfo } from './types.js';
 
 const ffmpegPath: string = ffmpegStatic as unknown as string;
+
+/** Check if a file contains an audio stream using ffmpeg probe. */
+function hasAudioStream(filePath: string): boolean {
+  const result = spawnSync(ffmpegPath, ['-i', filePath, '-hide_banner'], {
+    encoding: 'utf-8',
+    timeout: 5000,
+  });
+  const output = result.stderr || '';
+  return /Stream #\d+:\d+.*Audio:/.test(output);
+}
 
 export interface StitchOptions {
   framesDir: string;
@@ -53,6 +63,11 @@ export async function stitchFramesToVideo(options: StitchOptions): Promise<void>
       const cleaned = source.src.startsWith('/') ? source.src.slice(1) : source.src;
       const filePath = path.resolve(assetsDir, cleaned);
       if (fs.existsSync(filePath)) {
+        // Video-type sources may not have an audio track (e.g. screen recordings).
+        // Probe the file and skip it if no audio stream is present.
+        if (source.type === 'video' && !hasAudioStream(filePath)) {
+          continue;
+        }
         resolvedAudio.push({ ...source, filePath });
       } else {
         console.warn(`[rendiv] Audio source not found: ${filePath} (src: ${source.src})`);
