@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import { renderFrames, type RenderFramesOptions } from './render-frames.js';
 import { stitchFramesToVideo } from './stitch-frames-to-video.js';
 import type { CompositionInfo } from './types.js';
+import type { GlRenderer } from './browser.js';
 
 export interface RenderMediaOptions {
   composition: CompositionInfo;
@@ -15,6 +16,16 @@ export interface RenderMediaOptions {
   onProgress?: (info: { progress: number; renderedFrames: number; totalFrames: number }) => void;
   frameRange?: [number, number];
   cancelSignal?: AbortSignal;
+  /** Intermediate frame image format. Default: png */
+  imageFormat?: 'png' | 'jpeg';
+  /** FFmpeg encoding preset (ultrafast, fast, medium, slow, veryslow). */
+  encodingPreset?: string;
+  /** Quality factor (0–51, lower = better). Default: 18 */
+  crf?: number;
+  /** Video encoder override (e.g. libx264, h264_videotoolbox, h264_nvenc). */
+  videoEncoder?: string;
+  /** GL renderer for headless Chromium. Default: swiftshader */
+  gl?: GlRenderer;
 }
 
 export async function renderMedia(options: RenderMediaOptions): Promise<void> {
@@ -28,6 +39,11 @@ export async function renderMedia(options: RenderMediaOptions): Promise<void> {
     onProgress,
     frameRange,
     cancelSignal,
+    imageFormat,
+    encodingPreset,
+    crf,
+    videoEncoder,
+    gl,
   } = options;
 
   const totalFrames = frameRange
@@ -50,6 +66,8 @@ export async function renderMedia(options: RenderMediaOptions): Promise<void> {
       inputProps,
       concurrency,
       frameRange,
+      imageFormat,
+      gl,
       onFrameRendered: ({ frame, total }) => {
         onProgress?.({
           progress: (frame / total) * 0.9, // 90% for frame rendering
@@ -74,6 +92,10 @@ export async function renderMedia(options: RenderMediaOptions): Promise<void> {
       outputPath: outputLocation,
       fps: composition.fps,
       codec,
+      crf,
+      encodingPreset,
+      videoEncoder,
+      imageFormat,
       audioSources,
       assetsDir: serveUrl,
     });

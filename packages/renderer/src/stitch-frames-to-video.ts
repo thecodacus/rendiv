@@ -15,6 +15,12 @@ export interface StitchOptions {
   codec?: 'mp4' | 'webm';
   crf?: number;
   pixelFormat?: string;
+  /** FFmpeg encoding preset (e.g. ultrafast, fast, medium, slow, veryslow). Only applies to H.264 encoders. */
+  encodingPreset?: string;
+  /** Video encoder override (e.g. libx264, h264_videotoolbox, h264_nvenc, libvpx-vp9). */
+  videoEncoder?: string;
+  /** Image format used for intermediate frames. Default: png */
+  imageFormat?: 'png' | 'jpeg';
   onProgress?: (progress: number) => void;
   /** Audio sources collected from Audio/Video components */
   audioSources?: AudioSourceInfo[];
@@ -30,11 +36,15 @@ export async function stitchFramesToVideo(options: StitchOptions): Promise<void>
     codec = 'mp4',
     crf = 18,
     pixelFormat = 'yuv420p',
+    encodingPreset,
+    videoEncoder,
+    imageFormat = 'png',
     audioSources = [],
     assetsDir,
   } = options;
 
-  const inputPattern = path.join(framesDir, 'frame-%06d.png');
+  const ext = imageFormat === 'jpeg' ? 'jpeg' : 'png';
+  const inputPattern = path.join(framesDir, `frame-%06d.${ext}`);
 
   // Resolve audio sources to absolute file paths, filtering out missing files
   const resolvedAudio: Array<AudioSourceInfo & { filePath: string }> = [];
@@ -124,21 +134,18 @@ export async function stitchFramesToVideo(options: StitchOptions): Promise<void>
   }
 
   if (codec === 'mp4') {
-    args.push(
-      '-c:v', 'libx264',
-      '-crf', String(crf),
-      '-pix_fmt', pixelFormat,
-      '-movflags', '+faststart',
-    );
+    const encoder = videoEncoder ?? 'libx264';
+    args.push('-c:v', encoder, '-crf', String(crf));
+    if (encodingPreset) {
+      args.push('-preset', encodingPreset);
+    }
+    args.push('-pix_fmt', pixelFormat, '-movflags', '+faststart');
     if (resolvedAudio.length > 0) {
       args.push('-c:a', 'aac', '-b:a', '192k');
     }
   } else {
-    args.push(
-      '-c:v', 'libvpx-vp9',
-      '-crf', String(crf),
-      '-b:v', '0',
-    );
+    const encoder = videoEncoder ?? 'libvpx-vp9';
+    args.push('-c:v', encoder, '-crf', String(crf), '-b:v', '0');
     if (resolvedAudio.length > 0) {
       args.push('-c:a', 'libopus', '-b:a', '128k');
     }

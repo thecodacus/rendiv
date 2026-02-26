@@ -1,6 +1,7 @@
 import { Command } from 'commander';
 import { bundle } from '@rendiv/bundler';
 import { renderMedia, selectComposition, closeBrowser } from '@rendiv/renderer';
+import type { GlRenderer } from '@rendiv/renderer';
 import ora from 'ora';
 import chalk from 'chalk';
 
@@ -13,11 +14,21 @@ export const renderCommand = new Command('render')
   .option('--codec <codec>', 'Output codec (mp4, webm)', 'mp4')
   .option('--concurrency <n>', 'Parallel browser tabs', '1')
   .option('--frames <range>', 'Frame range (e.g. 0-59)')
+  .option('--image-format <format>', 'Intermediate frame format (png, jpeg)', 'png')
+  .option('--preset <preset>', 'FFmpeg encoding preset (ultrafast, fast, medium, slow, veryslow)')
+  .option('--crf <number>', 'Quality factor 0-51, lower is better', '18')
+  .option('--video-encoder <encoder>', 'Video encoder (libx264, h264_videotoolbox, h264_nvenc)')
+  .option('--gl <renderer>', 'GL renderer (swiftshader, egl, angle)', 'swiftshader')
   .action(async (entry: string, compositionId: string, output: string, options: {
     props: string;
     codec: string;
     concurrency: string;
     frames?: string;
+    imageFormat: string;
+    preset?: string;
+    crf: string;
+    videoEncoder?: string;
+    gl: string;
   }) => {
     const spinner = ora('Bundling project...').start();
 
@@ -55,6 +66,11 @@ export const renderCommand = new Command('render')
         inputProps,
         concurrency: parseInt(options.concurrency, 10),
         frameRange,
+        imageFormat: options.imageFormat as 'png' | 'jpeg',
+        encodingPreset: options.preset,
+        crf: parseInt(options.crf, 10),
+        videoEncoder: options.videoEncoder,
+        gl: options.gl as GlRenderer,
         onProgress: ({ progress, renderedFrames, totalFrames }) => {
           if (progress < 0.9) {
             spinner.text = `Rendering frames... ${renderedFrames}/${totalFrames} (${Math.round(progress * 100)}%)`;

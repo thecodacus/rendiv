@@ -29,6 +29,12 @@ interface ServerRenderJob {
   renderedFrames: number;
   totalFrames: number;
   error?: string;
+  imageFormat?: 'png' | 'jpeg';
+  encodingPreset?: string;
+  crf?: number;
+  videoEncoder?: string;
+  gl?: 'swiftshader' | 'egl' | 'angle';
+  concurrency?: number;
 }
 
 let renderJobs: ServerRenderJob[] = [];
@@ -158,6 +164,12 @@ function processQueue(entryPoint: string): void {
         codec: nextJob.codec,
         outputLocation: nextJob.outputPath,
         inputProps: nextJob.inputProps,
+        concurrency: nextJob.concurrency,
+        imageFormat: nextJob.imageFormat,
+        encodingPreset: nextJob.encodingPreset,
+        crf: nextJob.crf,
+        videoEncoder: nextJob.videoEncoder,
+        gl: nextJob.gl,
         onProgress: ({ progress, renderedFrames, totalFrames }: { progress: number; renderedFrames: number; totalFrames: number }) => {
           if (progress < 0.9) {
             updateJob({ status: 'rendering', renderedFrames, totalFrames, progress });
@@ -398,6 +410,12 @@ export function rendivStudioPlugin(options: StudioPluginOptions): Plugin {
               progress: 0,
               renderedFrames: 0,
               totalFrames: body.totalFrames ?? 0,
+              imageFormat: body.imageFormat,
+              encodingPreset: body.encodingPreset,
+              crf: body.crf != null ? Number(body.crf) : undefined,
+              videoEncoder: body.videoEncoder,
+              gl: body.gl,
+              concurrency: body.concurrency != null ? Number(body.concurrency) : undefined,
             };
             renderJobs.push(job);
             processQueue(entryPoint);

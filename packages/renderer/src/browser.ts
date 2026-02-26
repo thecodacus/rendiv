@@ -1,11 +1,39 @@
 import { chromium, type Browser, type Page } from 'playwright';
 
-let browserInstance: Browser | null = null;
+export type GlRenderer = 'swiftshader' | 'egl' | 'angle';
 
-export async function openBrowser(): Promise<Browser> {
+export interface OpenBrowserOptions {
+  gl?: GlRenderer;
+}
+
+let browserInstance: Browser | null = null;
+let currentGl: GlRenderer = 'swiftshader';
+
+function glArgs(gl: GlRenderer): string[] {
+  switch (gl) {
+    case 'egl':
+      return ['--use-gl=egl'];
+    case 'angle':
+      return ['--use-gl=angle'];
+    case 'swiftshader':
+    default:
+      return ['--use-gl=angle', '--use-angle=swiftshader'];
+  }
+}
+
+export async function openBrowser(options?: OpenBrowserOptions): Promise<Browser> {
+  const gl = options?.gl ?? 'swiftshader';
+
+  if (browserInstance && browserInstance.isConnected() && gl !== currentGl) {
+    await browserInstance.close();
+    browserInstance = null;
+  }
+
   if (browserInstance && browserInstance.isConnected()) {
     return browserInstance;
   }
+
+  currentGl = gl;
   browserInstance = await chromium.launch({
     headless: true,
     args: [
@@ -13,8 +41,7 @@ export async function openBrowser(): Promise<Browser> {
       '--disable-features=IsolateOrigins',
       '--disable-site-isolation-trials',
       '--no-sandbox',
-      '--use-gl=angle',
-      '--use-angle=swiftshader',
+      ...glArgs(gl),
     ],
   });
   return browserInstance;

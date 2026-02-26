@@ -17,6 +17,7 @@ import { TopBar } from './TopBar';
 import { Timeline } from './Timeline';
 import { TimelineEditor } from './TimelineEditor';
 import { RenderQueue, type RenderJob } from './RenderQueue';
+import { RenderSettingsModal, type RenderSettings } from './RenderSettingsModal';
 import { Terminal } from './Terminal';
 import { layoutStyles, scrollbarCSS, colors, fonts, tabToggleStyles } from './styles';
 
@@ -498,18 +499,32 @@ const StudioApp: React.FC = () => {
     return () => { cancelled = true; clearTimeout(timeoutId); };
   }, []);
 
-  const handleAddRender = useCallback(() => {
+  const [showRenderModal, setShowRenderModal] = useState(false);
+
+  const handleOpenRenderModal = useCallback(() => {
     if (!selectedComposition) return;
+    setShowRenderModal(true);
+  }, [selectedComposition]);
+
+  const handleAddRender = useCallback((settings: RenderSettings) => {
+    if (!selectedComposition) return;
+    setShowRenderModal(false);
     fetch('/__rendiv_api__/render/queue', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         compositionId: selectedComposition.id,
         compositionName: selectedComposition.id,
-        codec: 'mp4',
-        outputPath: `out/${selectedComposition.id}.mp4`,
+        codec: settings.codec,
+        outputPath: settings.outputPath,
         inputProps: { ...selectedComposition.defaultProps, ...inputProps },
         totalFrames: selectedComposition.durationInFrames,
+        crf: settings.crf,
+        concurrency: settings.concurrency,
+        imageFormat: settings.imageFormat,
+        encodingPreset: settings.encodingPreset,
+        videoEncoder: settings.videoEncoder,
+        gl: settings.gl,
       }),
     });
     setRightPanel('queue');
@@ -563,7 +578,7 @@ const StudioApp: React.FC = () => {
       <TopBar
         composition={selectedComposition}
         entryPoint={ENTRY_POINT}
-        onRender={handleAddRender}
+        onRender={handleOpenRenderModal}
         queueCount={queueCount}
         panelOpen={rightPanel !== null}
         onTogglePanel={handleTogglePanel}
@@ -723,6 +738,15 @@ const StudioApp: React.FC = () => {
           </div>
         </ErrorBoundary>
       </CompositionManagerContext.Provider>
+
+      {showRenderModal && selectedComposition && (
+        <RenderSettingsModal
+          composition={selectedComposition}
+          inputProps={inputProps}
+          onSubmit={handleAddRender}
+          onClose={() => setShowRenderModal(false)}
+        />
+      )}
     </div>
   );
 };

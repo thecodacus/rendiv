@@ -1,9 +1,11 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import type { Page } from 'playwright';
-import { openBrowser, openPage } from './browser.js';
+import { openBrowser, openPage, type OpenBrowserOptions } from './browser.js';
 import { startServer } from './serve.js';
 import type { AudioSourceInfo, CompositionInfo } from './types.js';
+
+export type ImageFormat = 'png' | 'jpeg';
 
 export interface RenderFramesOptions {
   serveUrl: string;
@@ -15,13 +17,16 @@ export interface RenderFramesOptions {
   onFrameRendered?: (info: { frame: number; total: number }) => void;
   cancelSignal?: AbortSignal;
   timeoutPerFrame?: number;
+  imageFormat?: ImageFormat;
+  gl?: OpenBrowserOptions['gl'];
 }
 
 async function renderSingleFrame(
   page: Page,
   frame: number,
   outputDir: string,
-  timeoutPerFrame: number
+  timeoutPerFrame: number,
+  imageFormat: ImageFormat,
 ): Promise<void> {
   // Set the frame and wait for it to be ready
   await page.evaluate((f: number) => {
@@ -36,10 +41,12 @@ async function renderSingleFrame(
 
   // Screenshot
   const paddedFrame = String(frame).padStart(6, '0');
+  const ext = imageFormat === 'jpeg' ? 'jpeg' : 'png';
   await page.screenshot({
-    path: path.join(outputDir, `frame-${paddedFrame}.png`),
-    type: 'png',
+    path: path.join(outputDir, `frame-${paddedFrame}.${ext}`),
+    type: imageFormat,
     animations: 'disabled',
+    ...(imageFormat === 'jpeg' ? { quality: 80 } : {}),
   });
 }
 
@@ -58,6 +65,8 @@ export async function renderFrames(options: RenderFramesOptions): Promise<Render
     onFrameRendered,
     cancelSignal,
     timeoutPerFrame = 30000,
+    imageFormat = 'png',
+    gl,
   } = options;
 
   const [startFrame, endFrame] = frameRange ?? [0, composition.durationInFrames - 1];
@@ -66,7 +75,7 @@ export async function renderFrames(options: RenderFramesOptions): Promise<Render
   fs.mkdirSync(outputDir, { recursive: true });
 
   const server = await startServer(serveUrl);
-  const browser = await openBrowser();
+  const browser = await openBrowser({ gl });
 
   try {
     // Create page pool
@@ -106,7 +115,7 @@ export async function renderFrames(options: RenderFramesOptions): Promise<Render
         if (cancelSignal?.aborted) return;
 
         const frame = frameQueue.shift()!;
-        await renderSingleFrame(page, frame, outputDir, timeoutPerFrame);
+        await renderSingleFrame(page, frame, outputDir, timeoutPerFrame, imageFormat);
 
         completedFrames++;
         onFrameRendered?.({ frame: completedFrames, total: totalFrames });
