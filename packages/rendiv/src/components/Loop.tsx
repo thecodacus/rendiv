@@ -40,6 +40,21 @@ export function Loop({
     [loopedFrame, parentSequence.accumulatedOffset, timeline.playing, timeline.playingRef],
   );
 
+  // Compute effective iteration count for audio registration
+  let effectiveIterations: number;
+  if (times !== Infinity) {
+    effectiveIterations = times;
+  } else if (parentSequence.durationInFrames !== Infinity) {
+    effectiveIterations = Math.ceil(parentSequence.durationInFrames / durationInFrames);
+  } else {
+    effectiveIterations = Infinity;
+  }
+
+  const loopStack = useMemo(
+    () => [...(parentSequence.loopStack ?? []), { durationInFrames, iterations: effectiveIterations }],
+    [parentSequence.loopStack, durationInFrames, effectiveIterations],
+  );
+
   const loopedSequence = useMemo<SequenceContextValue>(
     () => ({
       id: null,
@@ -50,8 +65,9 @@ export function Loop({
       accumulatedOffset: parentSequence.accumulatedOffset,
       localOffset: 0,
       accumulatedPlaybackRate: parentSequence.accumulatedPlaybackRate,
+      loopStack,
     }),
-    [parentSequence.namePath, parentSequence.accumulatedOffset, durationInFrames, parentSequence.accumulatedPlaybackRate],
+    [parentSequence.namePath, parentSequence.accumulatedOffset, durationInFrames, parentSequence.accumulatedPlaybackRate, loopStack],
   );
 
   const content = (

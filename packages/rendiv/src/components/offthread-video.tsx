@@ -11,6 +11,7 @@ import { SequenceContext } from '../context/SequenceContext';
 import { CompositionContext } from '../context/CompositionContext';
 import { RendivEnvironmentContext } from '../context/RendivEnvironmentContext';
 import { holdRender, releaseRender } from '../delay-render';
+import { computeLoopStartFrames } from '../compute-loop-offsets';
 import { Video } from './Video';
 
 export interface OffthreadVideoProps {
@@ -61,6 +62,7 @@ export function OffthreadVideo({
   // Register audio track metadata for the renderer to collect.
   // In rendering mode OffthreadVideo uses <img> (no <video> element),
   // so it must register audio separately — same pattern as Video/Audio.
+  const compositionDuration = composition?.durationInFrames ?? Infinity;
   useEffect(() => {
     if (!isRendering) return;
     if (muted || volume === 0) return;
@@ -70,17 +72,20 @@ export function OffthreadVideo({
       w.__RENDIV_AUDIO_SOURCES__ = new Map<string, unknown>();
     }
     const sources = w.__RENDIV_AUDIO_SOURCES__ as Map<string, unknown>;
-    const key = `video|${src}|${sequence.accumulatedOffset}|${effectiveDuration}|${startFrom}|${volume}|${effectiveRate}`;
-    sources.set(key, {
-      type: 'video' as const,
-      src,
-      startAtFrame: sequence.accumulatedOffset,
-      durationInFrames: effectiveDuration,
-      startFrom,
-      volume,
-      playbackRate: effectiveRate,
-    });
-  }, [isRendering, src, sequence.accumulatedOffset, effectiveDuration, startFrom, volume, effectiveRate, muted]);
+    const startFrames = computeLoopStartFrames(sequence.accumulatedOffset, sequence.loopStack, compositionDuration);
+    for (const startFrame of startFrames) {
+      const key = `video|${src}|${startFrame}|${effectiveDuration}|${startFrom}|${volume}|${effectiveRate}`;
+      sources.set(key, {
+        type: 'video' as const,
+        src,
+        startAtFrame: startFrame,
+        durationInFrames: effectiveDuration,
+        startFrom,
+        volume,
+        playbackRate: effectiveRate,
+      });
+    }
+  }, [isRendering, src, sequence.accumulatedOffset, sequence.loopStack, compositionDuration, effectiveDuration, startFrom, volume, effectiveRate, muted]);
 
   if (!isRendering) {
     return (

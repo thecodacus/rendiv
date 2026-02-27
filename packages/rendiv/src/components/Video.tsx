@@ -12,6 +12,7 @@ import { SequenceContext } from '../context/SequenceContext';
 import { CompositionContext } from '../context/CompositionContext';
 import { RendivEnvironmentContext } from '../context/RendivEnvironmentContext';
 import { holdRender, releaseRender } from '../delay-render';
+import { computeLoopStartFrames } from '../compute-loop-offsets';
 
 export interface VideoProps
   extends Omit<VideoHTMLAttributes<HTMLVideoElement>, 'autoPlay'> {
@@ -271,6 +272,7 @@ export function Video({
     ? Math.min(sequence.durationInFrames, endAt - startFrom)
     : sequence.durationInFrames;
 
+  const compositionDuration = composition?.durationInFrames ?? Infinity;
   useEffect(() => {
     if (muted || volume === 0) return;
     if (typeof window === 'undefined') return;
@@ -279,18 +281,21 @@ export function Video({
       w.__RENDIV_AUDIO_SOURCES__ = new Map<string, unknown>();
     }
     const sources = w.__RENDIV_AUDIO_SOURCES__ as Map<string, unknown>;
-    const key = `video|${src}|${sequence.accumulatedOffset}|${effectiveDuration}|${startFrom}|${volume}|${effectiveRate}`;
-    sources.set(key, {
-      type: 'video' as const,
-      src,
-      startAtFrame: sequence.accumulatedOffset,
-      durationInFrames: effectiveDuration,
-      startFrom,
-      volume,
-      playbackRate: effectiveRate,
-    });
+    const startFrames = computeLoopStartFrames(sequence.accumulatedOffset, sequence.loopStack, compositionDuration);
+    for (const startFrame of startFrames) {
+      const key = `video|${src}|${startFrame}|${effectiveDuration}|${startFrom}|${volume}|${effectiveRate}`;
+      sources.set(key, {
+        type: 'video' as const,
+        src,
+        startAtFrame: startFrame,
+        durationInFrames: effectiveDuration,
+        startFrom,
+        volume,
+        playbackRate: effectiveRate,
+      });
+    }
     // No cleanup — entries persist so the renderer can collect after all frames
-  }, [src, sequence.accumulatedOffset, effectiveDuration, startFrom, volume, effectiveRate, muted]);
+  }, [src, sequence.accumulatedOffset, sequence.loopStack, compositionDuration, effectiveDuration, startFrom, volume, effectiveRate, muted]);
 
   return (
     <video

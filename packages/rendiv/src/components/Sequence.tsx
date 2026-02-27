@@ -125,8 +125,9 @@ export const Sequence: React.FC<SequenceProps> = ({
       accumulatedOffset: absoluteFrom,
       localOffset: from,
       accumulatedPlaybackRate,
+      loopStack: parentSequence.loopStack,
     }),
-    [id, namePath, absoluteFrom, effectiveDuration, parentSequence.accumulatedOffset, from, accumulatedPlaybackRate]
+    [id, namePath, absoluteFrom, effectiveDuration, parentSequence.accumulatedOffset, from, accumulatedPlaybackRate, parentSequence.loopStack]
   );
 
   // When playbackRate !== 1, override TimelineContext so children see

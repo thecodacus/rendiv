@@ -12,6 +12,9 @@ export interface SequenceContextValue {
    *  multiply their own playbackRate by this so native playback keeps
    *  up with time-stretched frames. Default: 1 */
   accumulatedPlaybackRate: number;
+  /** Stack of enclosing Loop layers. Media components use this to register
+   *  one audio entry per iteration during rendering. */
+  loopStack?: Array<{ durationInFrames: number; iterations: number }>;
 }
 
 export const SequenceContext = createContext<SequenceContextValue>({
