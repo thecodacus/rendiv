@@ -18,6 +18,9 @@ export function buildGoogleFontsUrl(options: GoogleFontOptions): string {
     text,
   } = options;
 
+  // Google Fonts CSS v2 expects spaces as '+' and literal ':' / '@' in the
+  // family spec.  URLSearchParams double-encodes '+' to '%2B' and encodes
+  // ':' / '@', so we build the query string manually.
   const encodedFamily = family.replace(/ /g, '+');
   const ital = style === 'italic' ? 1 : 0;
   const wght = String(weight);
@@ -31,17 +34,15 @@ export function buildGoogleFontsUrl(options: GoogleFontOptions): string {
     familySpec = `${encodedFamily}:ital,wght@${ital},${wght}`;
   }
 
-  const params = new URLSearchParams();
-  params.set('family', familySpec);
-  params.set('display', display);
+  let url = `https://fonts.googleapis.com/css2?family=${familySpec}&display=${display}`;
 
   for (const subset of subsets) {
-    params.append('subset', subset);
+    url += `&subset=${encodeURIComponent(subset)}`;
   }
 
   if (text) {
-    params.set('text', text);
+    url += `&text=${encodeURIComponent(text)}`;
   }
 
-  return `https://fonts.googleapis.com/css2?${params.toString()}`;
+  return url;
 }

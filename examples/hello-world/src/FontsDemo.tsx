@@ -9,6 +9,7 @@ const FONTS = [
   { family: 'Pacifico', weight: '400', label: 'Script', color: '#ffb86c' },
   { family: 'Bebas Neue', weight: '400', label: 'Display', color: '#bd93f9' },
   { family: 'Merriweather', weight: '700', label: 'Literary', color: '#f1fa8c' },
+  { family: 'Permanent Marker', weight: '400', label: 'Marker', color: '#ff5555' },
 ] as const;
 
 const SAMPLE = 'The quick brown fox jumps over the lazy dog';
@@ -93,8 +94,9 @@ export const FontsDemo: React.FC = () => {
   const pacifico = useFont({ family: 'Pacifico', weight: '400' });
   const bebas = useFont({ family: 'Bebas Neue', weight: '400' });
   const merriweather = useFont({ family: 'Merriweather', weight: '700' });
+  const permanentMarker = useFont({ family: 'Permanent Marker', weight: '400' });
 
-  const fontFamilies = [playfair, inter, firaCode, pacifico, bebas, merriweather];
+  const fontFamilies = [playfair, inter, firaCode, pacifico, bebas, merriweather, permanentMarker];
 
   const titleSpring = spring({ frame, fps, config: { damping: 12, stiffness: 100 } });
   const titleY = interpolate(titleSpring, [0, 1], [50, 0]);

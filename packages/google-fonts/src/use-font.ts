@@ -31,32 +31,38 @@ export function useFont(options: GoogleFontOptions): string {
     );
     holdHandleRef.current = handle;
 
-    const link = document.createElement('link');
-    link.rel = 'stylesheet';
-    link.href = url;
-    document.head.appendChild(link);
-
-    const fontSpec = `${style} ${weight} 16px "${family}"`;
-    document.fonts.load(fontSpec)
-      .then(() => {
-        if (holdHandleRef.current !== null) {
-          releaseRender(holdHandleRef.current);
-          holdHandleRef.current = null;
-        }
-      })
-      .catch((err) => {
-        console.error(`useFont: Failed to load "${family}":`, err);
-        if (holdHandleRef.current !== null) {
-          releaseRender(holdHandleRef.current);
-          holdHandleRef.current = null;
-        }
-      });
-
-    return () => {
+    const release = () => {
       if (holdHandleRef.current !== null) {
         releaseRender(holdHandleRef.current);
         holdHandleRef.current = null;
       }
+    };
+
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = url;
+
+    const fontSpec = `${style} ${weight} 16px "${family}"`;
+
+    // Wait for the stylesheet to load before checking font availability.
+    // document.fonts.load() resolves immediately if no matching @font-face
+    // rule exists yet, so we must ensure the CSS is parsed first.
+    link.onload = () => {
+      document.fonts.load(fontSpec).then(release).catch((err) => {
+        console.error(`useFont: Failed to load "${family}":`, err);
+        release();
+      });
+    };
+
+    link.onerror = () => {
+      console.error(`useFont: Failed to load stylesheet for "${family}"`);
+      release();
+    };
+
+    document.head.appendChild(link);
+
+    return () => {
+      release();
       if (link.parentNode) {
         link.parentNode.removeChild(link);
       }

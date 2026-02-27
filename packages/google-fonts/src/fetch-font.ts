@@ -23,7 +23,15 @@ export async function fetchFont(options: GoogleFontOptions): Promise<GoogleFontR
   const link = document.createElement('link');
   link.rel = 'stylesheet';
   link.href = url;
-  document.head.appendChild(link);
+
+  // Wait for the stylesheet to load before checking font availability.
+  // document.fonts.load() resolves immediately if no matching @font-face
+  // rule exists yet, so we must ensure the CSS is parsed first.
+  await new Promise<void>((resolve, reject) => {
+    link.onload = () => resolve();
+    link.onerror = () => reject(new Error(`Failed to load stylesheet for "${family}"`));
+    document.head.appendChild(link);
+  });
 
   const fontSpec = `${style} ${weight} 16px "${family}"`;
   await document.fonts.load(fontSpec);
