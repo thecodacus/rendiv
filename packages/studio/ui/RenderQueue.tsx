@@ -21,6 +21,7 @@ interface RenderQueueProps {
   jobs: RenderJob[];
   onCancel: (jobId: string) => void;
   onRemove: (jobId: string) => void;
+  onDownload: (jobId: string) => void;
   onClear: () => void;
 }
 
@@ -77,6 +78,7 @@ export const RenderQueue: React.FC<RenderQueueProps> = ({
   jobs,
   onCancel,
   onRemove,
+  onDownload,
   onClear,
 }) => {
   const hasFinished = jobs.some((j) => j.status === 'done' || j.status === 'error' || j.status === 'cancelled');
@@ -90,6 +92,11 @@ export const RenderQueue: React.FC<RenderQueueProps> = ({
     e.stopPropagation();
     onRemove(jobId);
   }, [onRemove]);
+
+  const handleDownload = useCallback((e: React.MouseEvent, jobId: string) => {
+    e.stopPropagation();
+    onDownload(jobId);
+  }, [onDownload]);
 
   return (
     <div style={contentStyle}>
@@ -138,14 +145,26 @@ export const RenderQueue: React.FC<RenderQueueProps> = ({
                     </button>
                   )}
                   {isDone && (
-                    <button
-                      type="button"
-                      style={cancelBtnStyle}
-                      onClick={(e) => handleRemove(e, job.id)}
-                      title="Remove"
-                    >
-                      {'\u2715'}
-                    </button>
+                    <span style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+                      {job.status === 'done' && (
+                        <button
+                          type="button"
+                          style={downloadBtnStyle}
+                          onClick={(e) => handleDownload(e, job.id)}
+                          title="Download"
+                        >
+                          {'\u2913'}
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        style={cancelBtnStyle}
+                        onClick={(e) => handleRemove(e, job.id)}
+                        title="Remove"
+                      >
+                        {'\u2715'}
+                      </button>
+                    </span>
                   )}
                 </div>
 
@@ -255,6 +274,16 @@ const clearBtnStyle: React.CSSProperties = {
   borderRadius: 4,
   fontFamily: fonts.sans,
   backgroundColor: colors.surfaceHover,
+};
+
+const downloadBtnStyle: React.CSSProperties = {
+  background: 'none',
+  border: 'none',
+  color: colors.badge,
+  cursor: 'pointer',
+  fontSize: 13,
+  padding: '2px 4px',
+  lineHeight: 1,
 };
 
 const cancelBtnStyle: React.CSSProperties = {

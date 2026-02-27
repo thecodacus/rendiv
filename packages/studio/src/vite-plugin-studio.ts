@@ -1,6 +1,7 @@
 import type { Plugin } from 'vite';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { readFile, writeFile, unlink, readdir, stat as fsStat, mkdir, rename, rmdir } from 'node:fs/promises';
+import { createReadStream } from 'node:fs';
 import { basename } from 'node:path';
 import { join, resolve, relative, normalize } from 'node:path';
 
@@ -437,6 +438,30 @@ export function rendivStudioPlugin(options: StudioPluginOptions): Plugin {
             }
           }
           jsonResponse(res, { ok: true });
+          return;
+        }
+
+        // GET /queue/:id/download — download the rendered file
+        const downloadMatch = req.url?.match(/^\/__rendiv_api__\/render\/queue\/([^/]+)\/download$/);
+        if (req.method === 'GET' && downloadMatch) {
+          const jobId = downloadMatch[1];
+          const job = renderJobs.find((j) => j.id === jobId);
+          if (!job || job.status !== 'done') {
+            jsonResponse(res, { error: 'Job not found or not finished' }, 404);
+            return;
+          }
+          const absolutePath = resolve(process.cwd(), job.outputPath);
+          fsStat(absolutePath).then((fileStat) => {
+            const contentType = job.codec === 'webm' ? 'video/webm' : 'video/mp4';
+            res.writeHead(200, {
+              'Content-Type': contentType,
+              'Content-Disposition': `attachment; filename="${basename(absolutePath)}"`,
+              'Content-Length': fileStat.size,
+            });
+            createReadStream(absolutePath).pipe(res);
+          }).catch(() => {
+            jsonResponse(res, { error: 'Rendered file not found on disk' }, 404);
+          });
           return;
         }
 

@@ -539,6 +539,10 @@ const StudioApp: React.FC = () => {
     fetch(`/__rendiv_api__/render/queue/${jobId}`, { method: 'DELETE' });
   }, []);
 
+  const handleDownloadJob = useCallback((jobId: string) => {
+    window.open(`/__rendiv_api__/render/queue/${jobId}/download`, '_blank');
+  }, []);
+
   const handleClearFinished = useCallback(() => {
     fetch('/__rendiv_api__/render/queue/clear', { method: 'POST' });
   }, []);
@@ -675,6 +679,7 @@ const StudioApp: React.FC = () => {
                 jobs={renderJobs}
                 onCancel={handleCancelJob}
                 onRemove={handleRemoveJob}
+                onDownload={handleDownloadJob}
                 onClear={handleClearFinished}
               />
             </div>
