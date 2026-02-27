@@ -47,7 +47,12 @@ export function extractFrame(options: ExtractFrameOptions): Promise<Buffer> {
 
     proc.on('close', (code) => {
       if (code === 0) {
-        resolve(Buffer.concat(chunks));
+        const result = Buffer.concat(chunks);
+        if (result.length === 0) {
+          reject(new Error(`FFmpeg extracted 0 bytes at ${timeInSeconds}s — likely past end of video`));
+          return;
+        }
+        resolve(result);
       } else {
         reject(new Error(`FFmpeg frame extraction failed (code ${code}): ${stderr}`));
       }

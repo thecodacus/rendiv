@@ -29,6 +29,9 @@ export interface OffthreadVideoProps {
   className?: string;
   /** Timeout for holdRender in milliseconds. Default: 30000 */
   holdRenderTimeout?: number;
+  /** When true, render nothing when the video frame extraction fails (e.g. past end of video).
+   *  When false (default), the last successfully extracted frame is kept visible. */
+  showEmptyOnEnd?: boolean;
 }
 
 export function OffthreadVideo({
@@ -41,6 +44,7 @@ export function OffthreadVideo({
   style,
   className,
   holdRenderTimeout = 30000,
+  showEmptyOnEnd = false,
 }: OffthreadVideoProps): React.ReactElement | null {
   const timeline = useContext(TimelineContext);
   const sequence = useContext(SequenceContext);
@@ -112,6 +116,7 @@ export function OffthreadVideo({
       style={style}
       className={className}
       holdRenderTimeout={holdRenderTimeout}
+      showEmptyOnEnd={showEmptyOnEnd}
     />
   );
 }
@@ -128,6 +133,7 @@ function OffthreadVideoRendering({
   style,
   className,
   holdRenderTimeout,
+  showEmptyOnEnd,
 }: {
   src: string;
   currentTime: number;
@@ -136,6 +142,7 @@ function OffthreadVideoRendering({
   style?: CSSProperties;
   className?: string;
   holdRenderTimeout: number;
+  showEmptyOnEnd: boolean;
 }): React.ReactElement | null {
   const [frameSrc, setFrameSrc] = useState<string | null>(null);
   const holdHandleRef = useRef<number | null>(null);
@@ -172,6 +179,23 @@ function OffthreadVideoRendering({
       .then((blob) => {
         if (cancelled) return;
 
+        // Empty or corrupt response (valid PNG is at least ~67 bytes).
+        // Keep the previous frame visible unless showEmptyOnEnd is set.
+        if (blob.size < 100) {
+          if (showEmptyOnEnd) {
+            if (prevObjectUrlRef.current) {
+              URL.revokeObjectURL(prevObjectUrlRef.current);
+              prevObjectUrlRef.current = null;
+            }
+            setFrameSrc(null);
+          }
+          if (holdHandleRef.current !== null) {
+            releaseRender(holdHandleRef.current);
+            holdHandleRef.current = null;
+          }
+          return;
+        }
+
         // Revoke previous object URL to prevent memory leaks
         if (prevObjectUrlRef.current) {
           URL.revokeObjectURL(prevObjectUrlRef.current);
@@ -182,9 +206,16 @@ function OffthreadVideoRendering({
         setFrameSrc(objectUrl);
         // holdRender is released in onLoad/onError below
       })
-      .catch((err) => {
-        console.error('OffthreadVideo frame extraction error:', err);
-        // Release hold on error so rendering isn't blocked forever
+      .catch(() => {
+        // Frame extraction failed (e.g. past end of video).
+        // Keep showing the last valid frame unless showEmptyOnEnd is set.
+        if (showEmptyOnEnd) {
+          if (prevObjectUrlRef.current) {
+            URL.revokeObjectURL(prevObjectUrlRef.current);
+            prevObjectUrlRef.current = null;
+          }
+          setFrameSrc(null);
+        }
         if (holdHandleRef.current !== null) {
           releaseRender(holdHandleRef.current);
           holdHandleRef.current = null;
@@ -198,7 +229,7 @@ function OffthreadVideoRendering({
         holdHandleRef.current = null;
       }
     };
-  }, [currentTime, src, holdRenderTimeout]);
+  }, [currentTime, src, holdRenderTimeout, showEmptyOnEnd]);
 
   // Clean up object URL on unmount
   useEffect(() => {
