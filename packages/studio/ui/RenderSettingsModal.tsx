@@ -62,12 +62,12 @@ export const RenderSettingsModal: React.FC<RenderSettingsModalProps> = React.mem
   const [codec, setCodec] = useState<'mp4' | 'webm'>('mp4');
   const [outputPath, setOutputPath] = useState(`out/${composition.id}.mp4`);
   const [crf, setCrf] = useState(18);
-  const [concurrency, setConcurrency] = useState(1);
-  const [imageFormat, setImageFormat] = useState<'png' | 'jpeg'>('png');
+  const [concurrency, setConcurrency] = useState(4);
+  const [imageFormat, setImageFormat] = useState<'png' | 'jpeg'>('jpeg');
   const [encodingPreset, setEncodingPreset] = useState('');
   const [videoEncoder, setVideoEncoder] = useState('');
-  const [gl, setGl] = useState<'swiftshader' | 'egl' | 'angle'>('swiftshader');
-  const [profiling, setProfiling] = useState(false);
+  const [gl, setGl] = useState<'swiftshader' | 'egl' | 'angle'>('angle');
+  const [profiling, setProfiling] = useState(true);
   const modalRef = useRef<HTMLDivElement>(null);
 
   // Update output path extension when codec changes
