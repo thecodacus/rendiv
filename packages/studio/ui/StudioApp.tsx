@@ -515,10 +515,11 @@ const StudioApp: React.FC = () => {
       body: JSON.stringify({
         compositionId: selectedComposition.id,
         compositionName: selectedComposition.id,
+        renderType: settings.renderType,
         codec: settings.codec,
         outputPath: settings.outputPath,
         inputProps: { ...selectedComposition.defaultProps, ...inputProps },
-        totalFrames: selectedComposition.durationInFrames,
+        totalFrames: settings.renderType === 'still' ? 1 : selectedComposition.durationInFrames,
         crf: settings.crf,
         concurrency: settings.concurrency,
         imageFormat: settings.imageFormat,
@@ -526,6 +527,7 @@ const StudioApp: React.FC = () => {
         videoEncoder: settings.videoEncoder,
         gl: settings.gl,
         profiling: settings.profiling,
+        frame: settings.frame,
       }),
     });
     setRightPanel('queue');
@@ -749,6 +751,7 @@ const StudioApp: React.FC = () => {
         <RenderSettingsModal
           composition={selectedComposition}
           inputProps={inputProps}
+          currentFrame={currentFrame}
           onSubmit={handleAddRender}
           onClose={() => setShowRenderModal(false)}
         />

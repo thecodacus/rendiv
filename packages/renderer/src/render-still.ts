@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { openBrowser, openPage } from './browser.js';
+import { openBrowser, openPage, type OpenBrowserOptions } from './browser.js';
 import { startServer } from './serve.js';
 import type { CompositionInfo } from './types.js';
 
@@ -13,6 +13,7 @@ export interface RenderStillOptions {
   imageFormat?: 'png' | 'jpeg';
   quality?: number;
   timeoutPerFrame?: number;
+  gl?: OpenBrowserOptions['gl'];
 }
 
 export async function renderStill(options: RenderStillOptions): Promise<void> {
@@ -25,6 +26,7 @@ export async function renderStill(options: RenderStillOptions): Promise<void> {
     imageFormat = 'png',
     quality,
     timeoutPerFrame = 30000,
+    gl,
   } = options;
 
   // Ensure output directory exists
@@ -32,7 +34,7 @@ export async function renderStill(options: RenderStillOptions): Promise<void> {
   fs.mkdirSync(outputDir, { recursive: true });
 
   const server = await startServer(serveUrl);
-  const browser = await openBrowser();
+  const browser = await openBrowser({ gl });
 
   try {
     const page = await openPage(browser, server.url, {

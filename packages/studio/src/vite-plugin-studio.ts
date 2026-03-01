@@ -35,6 +35,7 @@ interface ServerRenderJob {
   id: string;
   compositionId: string;
   compositionName: string;
+  renderType: 'video' | 'still';
   codec: 'mp4' | 'webm';
   outputPath: string;
   inputProps: Record<string, unknown>;
@@ -50,6 +51,7 @@ interface ServerRenderJob {
   gl?: 'swiftshader' | 'egl' | 'angle';
   concurrency?: number;
   profiling?: boolean;
+  frame?: number;
   avgFrameTimeMs?: number;
   estimatedRemainingMs?: number;
   profile?: RenderProfileData;
@@ -151,7 +153,7 @@ function processQueue(entryPoint: string): void {
 
     try {
       const { bundle } = await import('@rendiv/bundler');
-      const { selectComposition, renderMedia, closeBrowser } = await import('@rendiv/renderer');
+      const { selectComposition, renderMedia, renderStill, closeBrowser } = await import('@rendiv/renderer');
 
       // Step 1: Bundle
       const bundlePath = await bundle({
@@ -174,46 +176,66 @@ function processQueue(entryPoint: string): void {
         return;
       }
 
-      // Step 3: Render
-      updateJob({ status: 'rendering', renderedFrames: 0, totalFrames: composition.durationInFrames, progress: 0 });
-      const renderResult = await renderMedia({
-        composition,
-        serveUrl: bundlePath,
-        codec: nextJob.codec,
-        outputLocation: nextJob.outputPath,
-        inputProps: nextJob.inputProps,
-        concurrency: nextJob.concurrency,
-        imageFormat: nextJob.imageFormat,
-        encodingPreset: nextJob.encodingPreset,
-        crf: nextJob.crf,
-        videoEncoder: nextJob.videoEncoder,
-        gl: nextJob.gl,
-        profiling: nextJob.profiling,
-        onProgress: ({ progress, renderedFrames, totalFrames, avgFrameTimeMs, estimatedRemainingMs }) => {
-          if (progress < 0.9) {
-            updateJob({
-              status: 'rendering',
-              renderedFrames,
-              totalFrames,
-              progress,
-              avgFrameTimeMs,
-              estimatedRemainingMs,
-            });
-          } else if (progress < 1) {
-            updateJob({ status: 'encoding' });
-          }
-        },
-        cancelSignal: abortController.signal,
-      });
-
-      if (abortController.signal.aborted) {
-        updateJob({ status: 'cancelled' });
-      } else {
-        updateJob({
-          status: 'done',
-          progress: 1,
-          profile: renderResult.profile as RenderProfileData | undefined,
+      if (nextJob.renderType === 'still') {
+        // Still image rendering
+        updateJob({ status: 'rendering', renderedFrames: 0, totalFrames: 1, progress: 0.5 });
+        await renderStill({
+          serveUrl: bundlePath,
+          composition,
+          output: nextJob.outputPath,
+          frame: nextJob.frame ?? 0,
+          inputProps: nextJob.inputProps,
+          imageFormat: nextJob.imageFormat,
+          gl: nextJob.gl,
         });
+
+        if (abortController.signal.aborted) {
+          updateJob({ status: 'cancelled' });
+        } else {
+          updateJob({ status: 'done', progress: 1 });
+        }
+      } else {
+        // Video rendering
+        updateJob({ status: 'rendering', renderedFrames: 0, totalFrames: composition.durationInFrames, progress: 0 });
+        const renderResult = await renderMedia({
+          composition,
+          serveUrl: bundlePath,
+          codec: nextJob.codec,
+          outputLocation: nextJob.outputPath,
+          inputProps: nextJob.inputProps,
+          concurrency: nextJob.concurrency,
+          imageFormat: nextJob.imageFormat,
+          encodingPreset: nextJob.encodingPreset,
+          crf: nextJob.crf,
+          videoEncoder: nextJob.videoEncoder,
+          gl: nextJob.gl,
+          profiling: nextJob.profiling,
+          onProgress: ({ progress, renderedFrames, totalFrames, avgFrameTimeMs, estimatedRemainingMs }) => {
+            if (progress < 0.9) {
+              updateJob({
+                status: 'rendering',
+                renderedFrames,
+                totalFrames,
+                progress,
+                avgFrameTimeMs,
+                estimatedRemainingMs,
+              });
+            } else if (progress < 1) {
+              updateJob({ status: 'encoding' });
+            }
+          },
+          cancelSignal: abortController.signal,
+        });
+
+        if (abortController.signal.aborted) {
+          updateJob({ status: 'cancelled' });
+        } else {
+          updateJob({
+            status: 'done',
+            progress: 1,
+            profile: renderResult.profile as RenderProfileData | undefined,
+          });
+        }
       }
 
       await closeBrowser();
@@ -433,6 +455,7 @@ export function rendivStudioPlugin(options: StudioPluginOptions): Plugin {
               id: String(nextJobId++),
               compositionId: body.compositionId,
               compositionName: body.compositionName ?? body.compositionId,
+              renderType: body.renderType ?? 'video',
               codec: body.codec ?? 'mp4',
               outputPath: body.outputPath,
               inputProps: body.inputProps ?? {},
@@ -447,6 +470,7 @@ export function rendivStudioPlugin(options: StudioPluginOptions): Plugin {
               gl: body.gl,
               concurrency: body.concurrency != null ? Number(body.concurrency) : undefined,
               profiling: body.profiling ?? false,
+              frame: body.frame != null ? Number(body.frame) : undefined,
             };
             renderJobs.push(job);
             processQueue(entryPoint);
@@ -482,7 +506,12 @@ export function rendivStudioPlugin(options: StudioPluginOptions): Plugin {
           }
           const absolutePath = resolve(process.cwd(), job.outputPath);
           fsStat(absolutePath).then((fileStat) => {
-            const contentType = job.codec === 'webm' ? 'video/webm' : 'video/mp4';
+            let contentType: string;
+            if (job.renderType === 'still') {
+              contentType = job.imageFormat === 'jpeg' ? 'image/jpeg' : 'image/png';
+            } else {
+              contentType = job.codec === 'webm' ? 'video/webm' : 'video/mp4';
+            }
             res.writeHead(200, {
               'Content-Type': contentType,
               'Content-Disposition': `attachment; filename="${basename(absolutePath)}"`,

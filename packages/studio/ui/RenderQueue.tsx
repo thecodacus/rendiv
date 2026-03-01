@@ -26,6 +26,7 @@ export interface RenderJob {
   id: string;
   compositionId: string;
   compositionName: string;
+  renderType?: 'video' | 'still';
   codec: 'mp4' | 'webm';
   outputPath: string;
   inputProps: Record<string, unknown>;
@@ -34,6 +35,7 @@ export interface RenderJob {
   renderedFrames: number;
   totalFrames: number;
   error?: string;
+  frame?: number;
   avgFrameTimeMs?: number;
   estimatedRemainingMs?: number;
   profile?: RenderJobProfile;
@@ -59,12 +61,14 @@ function formatDuration(ms: number): string {
 }
 
 function statusLabel(job: RenderJob): string {
+  const isStill = job.renderType === 'still';
   switch (job.status) {
     case 'queued':
       return 'Queued';
     case 'bundling':
       return 'Bundling...';
     case 'rendering': {
+      if (isStill) return `Rendering still \u00b7 frame ${job.frame ?? 0}`;
       let label = `Rendering ${job.renderedFrames}/${job.totalFrames}`;
       if (job.avgFrameTimeMs != null) {
         label += ` \u00b7 ~${Math.round(job.avgFrameTimeMs)}ms/frame`;
@@ -77,6 +81,7 @@ function statusLabel(job: RenderJob): string {
     case 'encoding':
       return 'Encoding...';
     case 'done':
+      if (isStill) return `Still \u00b7 frame ${job.frame ?? 0}`;
       return 'Done';
     case 'error':
       return 'Failed';
@@ -99,6 +104,15 @@ function statusColor(status: RenderJobStatus): string {
 }
 
 function overallProgress(job: RenderJob): number {
+  if (job.renderType === 'still') {
+    switch (job.status) {
+      case 'queued': return 0;
+      case 'bundling': return job.progress * 0.3;
+      case 'rendering': return 0.3 + job.progress * 0.7;
+      case 'done': return 1;
+      default: return 0;
+    }
+  }
   switch (job.status) {
     case 'queued':
       return 0;
