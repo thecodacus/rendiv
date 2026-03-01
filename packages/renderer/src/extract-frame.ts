@@ -7,15 +7,16 @@ const ffmpegPath: string = ffmpegStatic as unknown as string;
 export interface ExtractFrameOptions {
   videoPath: string;
   timeInSeconds: number;
+  imageFormat?: 'png' | 'jpeg';
 }
 
 /**
  * Extract a single frame from a video file at the given timestamp using FFmpeg.
  * Uses hybrid seeking: fast keyframe seek + decode-accurate sub-seek for precision.
- * Returns the frame as a PNG buffer.
+ * Returns the frame as an image buffer (PNG or JPEG).
  */
 export function extractFrame(options: ExtractFrameOptions): Promise<Buffer> {
-  const { videoPath, timeInSeconds } = options;
+  const { videoPath, timeInSeconds, imageFormat = 'png' } = options;
 
   // Hybrid seek: fast seek to 1s before, then decode-accurate for the remainder.
   // This gives keyframe-speed performance with frame-accurate results.
@@ -28,7 +29,9 @@ export function extractFrame(options: ExtractFrameOptions): Promise<Buffer> {
     '-ss', String(remainder),     // Accurate seek after input
     '-frames:v', '1',             // Extract exactly 1 frame
     '-f', 'image2pipe',           // Pipe output
-    '-vcodec', 'png',             // Output as PNG
+    ...(imageFormat === 'jpeg'
+      ? ['-vcodec', 'mjpeg', '-q:v', '2']   // Output as JPEG (quality 2 = high)
+      : ['-vcodec', 'png']),                 // Output as PNG
     '-',                          // Write to stdout
   ];
 

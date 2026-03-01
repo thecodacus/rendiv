@@ -115,7 +115,9 @@ export function startServer(rootDir: string, preferredPort = 0): Promise<ServeRe
           return;
         }
 
-        const cacheKey = `${src}:${timeInSeconds.toFixed(6)}`;
+        const formatParam = parsed.searchParams.get('format');
+        const imageFormat: 'png' | 'jpeg' = formatParam === 'jpeg' ? 'jpeg' : 'png';
+        const cacheKey = `${src}:${timeInSeconds.toFixed(6)}:${imageFormat}`;
 
         try {
           // Check cache
@@ -125,7 +127,7 @@ export function startServer(rootDir: string, preferredPort = 0): Promise<ServeRe
             // Deduplicate concurrent requests for the same frame
             let pending = pendingExtractions.get(cacheKey);
             if (!pending) {
-              pending = extractFrame({ videoPath, timeInSeconds }).then((buf) => {
+              pending = extractFrame({ videoPath, timeInSeconds, imageFormat }).then((buf) => {
                 frameCache.set(cacheKey, buf);
                 pendingExtractions.delete(cacheKey);
                 return buf;
@@ -139,7 +141,7 @@ export function startServer(rootDir: string, preferredPort = 0): Promise<ServeRe
           }
 
           res.writeHead(200, {
-            'Content-Type': 'image/png',
+            'Content-Type': imageFormat === 'jpeg' ? 'image/jpeg' : 'image/png',
             'Content-Length': String(data.length),
             'Access-Control-Allow-Origin': '*',
             'Cache-Control': 'public, max-age=31536000, immutable',

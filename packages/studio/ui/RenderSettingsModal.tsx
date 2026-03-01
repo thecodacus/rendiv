@@ -11,6 +11,7 @@ export interface RenderSettings {
   encodingPreset?: string;
   videoEncoder?: string;
   gl: 'swiftshader' | 'egl' | 'angle';
+  profiling: boolean;
 }
 
 interface RenderSettingsModalProps {
@@ -66,6 +67,7 @@ export const RenderSettingsModal: React.FC<RenderSettingsModalProps> = React.mem
   const [encodingPreset, setEncodingPreset] = useState('');
   const [videoEncoder, setVideoEncoder] = useState('');
   const [gl, setGl] = useState<'swiftshader' | 'egl' | 'angle'>('swiftshader');
+  const [profiling, setProfiling] = useState(false);
   const modalRef = useRef<HTMLDivElement>(null);
 
   // Update output path extension when codec changes
@@ -101,8 +103,9 @@ export const RenderSettingsModal: React.FC<RenderSettingsModalProps> = React.mem
       encodingPreset: encodingPreset || undefined,
       videoEncoder: videoEncoder || undefined,
       gl,
+      profiling,
     });
-  }, [codec, outputPath, crf, concurrency, imageFormat, encodingPreset, videoEncoder, gl, onSubmit]);
+  }, [codec, outputPath, crf, concurrency, imageFormat, encodingPreset, videoEncoder, gl, profiling, onSubmit]);
 
   return (
     <div style={backdropStyle} onClick={handleBackdropClick}>
@@ -215,6 +218,20 @@ export const RenderSettingsModal: React.FC<RenderSettingsModalProps> = React.mem
               >
                 {glOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
               </select>
+            </div>
+            <div style={fieldRowStyle}>
+              <label style={labelStyle}>Profiling</label>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={profiling}
+                  onChange={e => setProfiling(e.target.checked)}
+                  style={{ margin: 0 }}
+                />
+                <span style={{ fontSize: 12, color: colors.textSecondary }}>
+                  Show per-frame timing breakdown
+                </span>
+              </label>
             </div>
           </div>
         </div>

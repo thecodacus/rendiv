@@ -62,8 +62,10 @@ let rootInstance = null;
 let resolveFrameReady = null;
 
 window.__RENDIV_SET_FRAME__ = (frame) => {
+  const t0 = performance.now();
   currentFrame = frame;
   rerender();
+  window.__RENDIV_RENDER_MS__ = performance.now() - t0;
   return new Promise((resolve) => {
     resolveFrameReady = resolve;
     // Check immediately if already ready
@@ -86,17 +88,12 @@ function checkReady() {
   if (resolveFrameReady && getPendingHoldCount() === 0) {
     const resolve = resolveFrameReady;
     resolveFrameReady = null;
-    // Use requestAnimationFrame to ensure React has flushed
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        resolve();
-      });
-    });
+    resolve();
   }
 }
 
-// Poll for pending holds
-setInterval(checkReady, 16);
+// Poll for pending holds (4ms for faster hold detection)
+setInterval(checkReady, 4);
 
 function App() {
   const Root = getRootComponent();

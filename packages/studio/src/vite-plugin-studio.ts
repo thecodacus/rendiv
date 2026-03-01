@@ -18,6 +18,19 @@ export interface StudioPluginOptions {
 
 type ServerRenderJobStatus = 'queued' | 'bundling' | 'rendering' | 'encoding' | 'done' | 'error' | 'cancelled';
 
+interface RenderProfileData {
+  totalFrames: number;
+  totalTimeMs: number;
+  avgFrameTimeMs: number;
+  phases: {
+    setFrame: { avgMs: number; maxMs: number; totalMs: number };
+    waitForHolds: { avgMs: number; maxMs: number; totalMs: number };
+    screenshot: { avgMs: number; maxMs: number; totalMs: number };
+  };
+  bottleneck: string;
+  framesPerSecond: number;
+}
+
 interface ServerRenderJob {
   id: string;
   compositionId: string;
@@ -36,6 +49,10 @@ interface ServerRenderJob {
   videoEncoder?: string;
   gl?: 'swiftshader' | 'egl' | 'angle';
   concurrency?: number;
+  profiling?: boolean;
+  avgFrameTimeMs?: number;
+  estimatedRemainingMs?: number;
+  profile?: RenderProfileData;
 }
 
 let renderJobs: ServerRenderJob[] = [];
@@ -159,7 +176,7 @@ function processQueue(entryPoint: string): void {
 
       // Step 3: Render
       updateJob({ status: 'rendering', renderedFrames: 0, totalFrames: composition.durationInFrames, progress: 0 });
-      await renderMedia({
+      const renderResult = await renderMedia({
         composition,
         serveUrl: bundlePath,
         codec: nextJob.codec,
@@ -171,9 +188,17 @@ function processQueue(entryPoint: string): void {
         crf: nextJob.crf,
         videoEncoder: nextJob.videoEncoder,
         gl: nextJob.gl,
-        onProgress: ({ progress, renderedFrames, totalFrames }: { progress: number; renderedFrames: number; totalFrames: number }) => {
+        profiling: nextJob.profiling,
+        onProgress: ({ progress, renderedFrames, totalFrames, avgFrameTimeMs, estimatedRemainingMs }) => {
           if (progress < 0.9) {
-            updateJob({ status: 'rendering', renderedFrames, totalFrames, progress });
+            updateJob({
+              status: 'rendering',
+              renderedFrames,
+              totalFrames,
+              progress,
+              avgFrameTimeMs,
+              estimatedRemainingMs,
+            });
           } else if (progress < 1) {
             updateJob({ status: 'encoding' });
           }
@@ -184,7 +209,11 @@ function processQueue(entryPoint: string): void {
       if (abortController.signal.aborted) {
         updateJob({ status: 'cancelled' });
       } else {
-        updateJob({ status: 'done', progress: 1 });
+        updateJob({
+          status: 'done',
+          progress: 1,
+          profile: renderResult.profile as RenderProfileData | undefined,
+        });
       }
 
       await closeBrowser();
@@ -417,6 +446,7 @@ export function rendivStudioPlugin(options: StudioPluginOptions): Plugin {
               videoEncoder: body.videoEncoder,
               gl: body.gl,
               concurrency: body.concurrency != null ? Number(body.concurrency) : undefined,
+              profiling: body.profiling ?? false,
             };
             renderJobs.push(job);
             processQueue(entryPoint);

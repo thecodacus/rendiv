@@ -525,6 +525,7 @@ const StudioApp: React.FC = () => {
         encodingPreset: settings.encodingPreset,
         videoEncoder: settings.videoEncoder,
         gl: settings.gl,
+        profiling: settings.profiling,
       }),
     });
     setRightPanel('queue');

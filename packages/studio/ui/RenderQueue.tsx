@@ -3,6 +3,25 @@ import { colors, fonts } from './styles';
 
 export type RenderJobStatus = 'queued' | 'bundling' | 'rendering' | 'encoding' | 'done' | 'error' | 'cancelled';
 
+export interface RenderProfilePhase {
+  avgMs: number;
+  maxMs: number;
+  totalMs: number;
+}
+
+export interface RenderJobProfile {
+  totalFrames: number;
+  totalTimeMs: number;
+  avgFrameTimeMs: number;
+  phases: {
+    setFrame: RenderProfilePhase;
+    waitForHolds: RenderProfilePhase;
+    screenshot: RenderProfilePhase;
+  };
+  bottleneck: string;
+  framesPerSecond: number;
+}
+
 export interface RenderJob {
   id: string;
   compositionId: string;
@@ -15,6 +34,9 @@ export interface RenderJob {
   renderedFrames: number;
   totalFrames: number;
   error?: string;
+  avgFrameTimeMs?: number;
+  estimatedRemainingMs?: number;
+  profile?: RenderJobProfile;
 }
 
 interface RenderQueueProps {
@@ -25,14 +47,33 @@ interface RenderQueueProps {
   onClear: () => void;
 }
 
+function formatDuration(ms: number): string {
+  const seconds = Math.floor(ms / 1000);
+  if (seconds < 60) return `${seconds}s`;
+  const minutes = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  if (minutes < 60) return `${minutes}m ${secs}s`;
+  const hours = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+  return `${hours}h ${mins}m`;
+}
+
 function statusLabel(job: RenderJob): string {
   switch (job.status) {
     case 'queued':
       return 'Queued';
     case 'bundling':
       return 'Bundling...';
-    case 'rendering':
-      return `Rendering ${job.renderedFrames}/${job.totalFrames}`;
+    case 'rendering': {
+      let label = `Rendering ${job.renderedFrames}/${job.totalFrames}`;
+      if (job.avgFrameTimeMs != null) {
+        label += ` \u00b7 ~${Math.round(job.avgFrameTimeMs)}ms/frame`;
+      }
+      if (job.estimatedRemainingMs != null && job.estimatedRemainingMs > 0) {
+        label += ` \u00b7 ETA ${formatDuration(job.estimatedRemainingMs)}`;
+      }
+      return label;
+    }
     case 'encoding':
       return 'Encoding...';
     case 'done':
@@ -72,6 +113,51 @@ function overallProgress(job: RenderJob): number {
     default:
       return 0;
   }
+}
+
+function phaseLabel(phase: string): string {
+  switch (phase) {
+    case 'setFrame': return 'React render';
+    case 'waitForHolds': return 'Wait for holds';
+    case 'screenshot': return 'Screenshot';
+    default: return phase;
+  }
+}
+
+function ProfileSummary({ profile }: { profile: RenderJobProfile }) {
+  const totalPhaseTime = profile.phases.setFrame.avgMs + profile.phases.waitForHolds.avgMs + profile.phases.screenshot.avgMs;
+
+  const phases = [
+    { key: 'setFrame', ...profile.phases.setFrame },
+    { key: 'waitForHolds', ...profile.phases.waitForHolds },
+    { key: 'screenshot', ...profile.phases.screenshot },
+  ];
+
+  return (
+    <div style={{
+      fontSize: 10,
+      color: colors.textSecondary,
+      marginBottom: 4,
+      padding: '4px 6px',
+      backgroundColor: colors.surfaceHover,
+      borderRadius: 4,
+      fontFamily: fonts.mono,
+      lineHeight: 1.6,
+    }}>
+      <div style={{ marginBottom: 2 }}>
+        {profile.totalFrames} frames in {formatDuration(profile.totalTimeMs)} ({profile.framesPerSecond.toFixed(1)} fps)
+      </div>
+      {phases.map((p) => {
+        const pct = totalPhaseTime > 0 ? Math.round((p.avgMs / totalPhaseTime) * 100) : 0;
+        const isBottleneck = p.key === profile.bottleneck;
+        return (
+          <div key={p.key} style={{ color: isBottleneck ? colors.warning : colors.textSecondary }}>
+            {phaseLabel(p.key)}: {Math.round(p.avgMs)}ms ({pct}%){isBottleneck ? ' \u2190 bottleneck' : ''}
+          </div>
+        );
+      })}
+    </div>
+  );
 }
 
 export const RenderQueue: React.FC<RenderQueueProps> = ({
@@ -183,6 +269,11 @@ export const RenderQueue: React.FC<RenderQueueProps> = ({
                   <div style={{ fontSize: 10, color: colors.error, marginBottom: 4, wordBreak: 'break-all' as const }}>
                     {job.error}
                   </div>
+                )}
+
+                {/* Profiling summary */}
+                {job.status === 'done' && job.profile && (
+                  <ProfileSummary profile={job.profile} />
                 )}
 
                 {/* Progress bar */}

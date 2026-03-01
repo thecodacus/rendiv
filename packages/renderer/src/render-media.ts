@@ -1,7 +1,7 @@
 import os from 'node:os';
 import path from 'node:path';
 import fs from 'node:fs';
-import { renderFrames, type RenderFramesOptions } from './render-frames.js';
+import { renderFrames, type RenderFramesOptions, type RenderProfile } from './render-frames.js';
 import { stitchFramesToVideo } from './stitch-frames-to-video.js';
 import type { CompositionInfo } from './types.js';
 import type { GlRenderer } from './browser.js';
@@ -13,7 +13,13 @@ export interface RenderMediaOptions {
   outputLocation: string;
   inputProps?: Record<string, unknown>;
   concurrency?: number;
-  onProgress?: (info: { progress: number; renderedFrames: number; totalFrames: number }) => void;
+  onProgress?: (info: {
+    progress: number;
+    renderedFrames: number;
+    totalFrames: number;
+    avgFrameTimeMs?: number;
+    estimatedRemainingMs?: number;
+  }) => void;
   frameRange?: [number, number];
   cancelSignal?: AbortSignal;
   /** Intermediate frame image format. Default: png */
@@ -26,9 +32,15 @@ export interface RenderMediaOptions {
   videoEncoder?: string;
   /** GL renderer for headless Chromium. Default: swiftshader */
   gl?: GlRenderer;
+  /** Enable per-frame profiling. Default: false */
+  profiling?: boolean;
 }
 
-export async function renderMedia(options: RenderMediaOptions): Promise<void> {
+export interface RenderMediaResult {
+  profile?: RenderProfile;
+}
+
+export async function renderMedia(options: RenderMediaOptions): Promise<RenderMediaResult> {
   const {
     composition,
     serveUrl,
@@ -44,6 +56,7 @@ export async function renderMedia(options: RenderMediaOptions): Promise<void> {
     crf,
     videoEncoder,
     gl,
+    profiling = false,
   } = options;
 
   const totalFrames = frameRange
@@ -58,8 +71,12 @@ export async function renderMedia(options: RenderMediaOptions): Promise<void> {
   fs.mkdirSync(outputDir, { recursive: true });
 
   try {
+    // Running average for profiling ETA
+    let totalFrameTimeMs = 0;
+    let frameCount = 0;
+
     // Step 1: Render frames and collect audio metadata
-    const { audioSources } = await renderFrames({
+    const { audioSources, profile } = await renderFrames({
       serveUrl,
       composition,
       outputDir: tmpDir,
@@ -68,17 +85,33 @@ export async function renderMedia(options: RenderMediaOptions): Promise<void> {
       frameRange,
       imageFormat,
       gl,
-      onFrameRendered: ({ frame, total }) => {
+      profiling,
+      onFrameRendered: ({ frame, total, timings }) => {
+        let avgFrameTimeMs: number | undefined;
+        let estimatedRemainingMs: number | undefined;
+
+        if (profiling && timings) {
+          totalFrameTimeMs += timings.totalMs;
+          frameCount++;
+          avgFrameTimeMs = totalFrameTimeMs / frameCount;
+          const remainingFrames = total - frame;
+          // Estimate using avg frame time divided by concurrency
+          const effectiveConcurrency = concurrency ?? 1;
+          estimatedRemainingMs = (remainingFrames / effectiveConcurrency) * avgFrameTimeMs;
+        }
+
         onProgress?.({
           progress: (frame / total) * 0.9, // 90% for frame rendering
           renderedFrames: frame,
           totalFrames: total,
+          avgFrameTimeMs,
+          estimatedRemainingMs,
         });
       },
       cancelSignal,
     });
 
-    if (cancelSignal?.aborted) return;
+    if (cancelSignal?.aborted) return {};
 
     // Step 2: Stitch frames to video (with audio if available)
     onProgress?.({
@@ -105,6 +138,8 @@ export async function renderMedia(options: RenderMediaOptions): Promise<void> {
       renderedFrames: totalFrames,
       totalFrames,
     });
+
+    return { profile };
   } finally {
     // Cleanup temp frames
     fs.rmSync(tmpDir, { recursive: true, force: true });

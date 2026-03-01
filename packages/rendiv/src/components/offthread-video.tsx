@@ -161,9 +161,11 @@ function OffthreadVideoRendering({
     );
     holdHandleRef.current = handle;
 
+    const imgFormat = (window as any).__RENDIV_IMAGE_FORMAT__ as string | undefined;
     const params = new URLSearchParams({
       src,
       time: String(currentTime),
+      ...(imgFormat ? { format: imgFormat } : {}),
     });
     const url = `${window.location.origin}/__offthread_video__?${params.toString()}`;
 
