@@ -19,6 +19,8 @@
     "@rendiv/motion-blur": "workspace:*",
     "@rendiv/gif": "workspace:*",
     "@rendiv/captions": "workspace:*",
+    "@rendiv/text": "workspace:*",
+    "@rendiv/effects": "workspace:*",
     "@rendiv/tsconfig": "workspace:*",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

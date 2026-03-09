@@ -28,9 +28,32 @@ rendiv render src/index.tsx MyScene out/video.mp4
 
 # Render to WebM
 rendiv render src/index.tsx MyScene out/video.webm
+
+# With options
+rendiv render src/index.tsx MyScene out/video.mp4 \
+  --concurrency 4 \
+  --image-format jpeg \
+  --preset fast \
+  --crf 18 \
+  --profiling
 ```
 
 The output format is determined by the file extension (`.mp4` or `.webm`).
+
+##### Render options
+
+| Flag | Default | Description |
+|---|---|---|
+| `--props <json>` | `'{}'` | Input props as JSON |
+| `--codec <codec>` | `mp4` | Output codec (`mp4`, `webm`) |
+| `--concurrency <n>` | `1` | Parallel browser tabs for frame capture |
+| `--frames <range>` | all | Frame range (e.g. `0-59`) |
+| `--image-format <fmt>` | `png` | Intermediate frame format (`png`, `jpeg`) |
+| `--preset <preset>` | — | FFmpeg encoding preset (`ultrafast`, `fast`, `medium`, `slow`, `veryslow`) |
+| `--crf <number>` | `18` | Quality factor 0-51, lower is better |
+| `--video-encoder <enc>` | — | Video encoder (`libx264`, `h264_videotoolbox`, `h264_nvenc`) |
+| `--gl <renderer>` | `swiftshader` | GL renderer (`swiftshader`, `egl`, `angle`) |
+| `--profiling` | off | Enable per-frame profiling with phase breakdown |
 
 #### `rendiv still`
 
@@ -61,6 +84,21 @@ rendiv compositions src/index.tsx
 # Outputs: id, dimensions, fps, duration for each composition
 ```
 
+#### `rendiv upgrade`
+
+Updates all `@rendiv/*` dependencies to the latest version.
+
+```bash
+# Check for updates without installing
+rendiv upgrade --check
+
+# Apply updates
+rendiv upgrade
+```
+
+Auto-detects your package manager (pnpm, yarn, bun, npm), preserves version
+prefix style (`^`, `~`), and runs install automatically.
+
 #### `rendiv studio`
 
 Launches the Studio dev server for interactive preview and rendering.
@@ -82,9 +120,14 @@ Studio is a Vite-powered dev server with a full preview UI.
 - **Composition navigator**: Browse compositions organized by folder
 - **Live preview**: Player-based preview with play/pause controls
 - **Timeline scrubber**: Drag to seek through frames
-- **Render queue**: Queue render jobs that run server-side
+- **Render modal**: Configure and queue render jobs with full settings
+  - Video or still image output (PNG/JPEG)
+  - Image format, encoding preset, CRF, video encoder, GL renderer, concurrency
+  - Still rendering captures a single frame (defaults to current playhead position)
+- **Render queue**: Render jobs run server-side
   - Jobs persist across page refreshes (stored in server memory)
   - Jobs continue even if the browser tab is closed
+  - Download button for completed renders
   - REST API at `/__rendiv_api__/render/queue`
 
 ### Architecture

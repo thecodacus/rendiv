@@ -140,3 +140,39 @@ The end-to-end rendering process:
 
 The renderer waits for `getPendingHoldCount() === 0` before capturing each frame,
 which is why the `holdRender` pattern is critical for async resources.
+
+## Render Profiling
+
+Enable profiling to get per-frame timing breakdowns:
+
+```bash
+rendiv render src/index.tsx MyScene out/video.mp4 --profiling
+```
+
+The profiling summary shows:
+
+- **Total frames** and overall render time (fps)
+- **Phase breakdown** (average ms per frame):
+  - `React render` — `setFrame` + React reconciliation
+  - `Wait for holds` — waiting for `holdRender` releases (media loading)
+  - `Screenshot` — Playwright page screenshot
+- **Bottleneck indicator** — highlights the slowest phase
+
+### Performance tips
+
+- Use `--image-format jpeg` for faster screenshots (vs PNG)
+- Increase `--concurrency` to render frames in parallel browser tabs
+- Use `--video-encoder h264_videotoolbox` (macOS) or `h264_nvenc` (NVIDIA) for
+  GPU-accelerated encoding
+- Use `--preset ultrafast` for quick previews, `--preset slow` for final output
+
+## Still Rendering
+
+Capture a single frame as an image:
+
+```bash
+rendiv still src/index.tsx MyScene out/thumb.png --frame 45
+```
+
+Also available in Studio via the render modal — toggle to "Still" mode and
+select the frame number (defaults to current playhead position).

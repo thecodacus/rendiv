@@ -15,11 +15,17 @@ import { GifDemo } from "./GifDemo";
 import { CaptionsDemo } from "./CaptionsDemo";
 import { VideoSequencesDemo } from "./VideoSequencesDemo";
 import { MasterDemo } from "./MasterDemo";
+import { TextDemo } from "./TextDemo";
+import { EffectsDemo } from "./EffectsDemo";
 
 const Root: React.FC = () => {
 	return (
 		<>
 			<Composition id="MasterDemo" component={MasterDemo} durationInFrames={1330} fps={30} width={1920} height={1080} />
+			<Folder name="Effects">
+				<Composition id="TextDemo" component={TextDemo} durationInFrames={150} fps={30} width={1920} height={1080} />
+				<Composition id="EffectsDemo" component={EffectsDemo} durationInFrames={150} fps={30} width={1920} height={1080} />
+			</Folder>
 			<Folder name="Demos">
 				<Composition id="VideoSequencesDemo" component={VideoSequencesDemo} durationInFrames={300} fps={30} width={1920} height={1080} />
 				<Composition id="GifDemo" component={GifDemo} durationInFrames={150} fps={30} width={1920} height={1080} />

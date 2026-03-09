@@ -38,6 +38,9 @@ importers:
       '@rendiv/core':
         specifier: workspace:*
         version: link:../../packages/rendiv
+      '@rendiv/effects':
+        specifier: workspace:*
+        version: link:../../packages/effects
       '@rendiv/fonts':
         specifier: workspace:*
         version: link:../../packages/fonts
@@ -65,6 +68,9 @@ importers:
       '@rendiv/shapes':
         specifier: workspace:*
         version: link:../../packages/shapes
+      '@rendiv/text':
+        specifier: workspace:*
+        version: link:../../packages/text
       '@rendiv/three':
         specifier: workspace:*
         version: link:../../packages/three
@@ -189,6 +195,36 @@ importers:
       '@types/node':
         specifier: ^22.0.0
         version: 22.19.11
+
+  packages/effects:
+    devDependencies:
+      '@rendiv/core':
+        specifier: workspace:*
+        version: link:../rendiv
+      '@rendiv/tsconfig':
+        specifier: workspace:*
+        version: link:../tsconfig
+      '@types/react':
+        specifier: ^19.0.0
+        version: 19.2.14
+      '@types/react-dom':
+        specifier: ^19.0.0
+        version: 19.2.3(@types/react@19.2.14)
+      react:
+        specifier: ^19.0.0
+        version: 19.2.4
+      react-dom:
+        specifier: ^19.0.0
+        version: 19.2.4(react@19.2.4)
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+      vite:
+        specifier: ^6.0.0
+        version: 6.4.1(@types/node@22.19.11)
+      vite-plugin-dts:
+        specifier: ^4.3.0
+        version: 4.5.4(typescript@5.9.3)(vite@6.4.1)
 
   packages/fonts:
     devDependencies:
@@ -468,6 +504,9 @@ importers:
       '@rendiv/core':
         specifier: workspace:*
         version: link:../rendiv
+      '@rendiv/effects':
+        specifier: workspace:*
+        version: link:../effects
       '@rendiv/fonts':
         specifier: workspace:*
         version: link:../fonts
@@ -492,6 +531,9 @@ importers:
       '@rendiv/shapes':
         specifier: workspace:*
         version: link:../shapes
+      '@rendiv/text':
+        specifier: workspace:*
+        version: link:../text
       '@rendiv/transitions':
         specifier: workspace:*
         version: link:../transitions
@@ -553,6 +595,36 @@ importers:
       typescript:
         specifier: ^5.7.0
         version: 5.9.3
+
+  packages/text:
+    devDependencies:
+      '@rendiv/core':
+        specifier: workspace:*
+        version: link:../rendiv
+      '@rendiv/tsconfig':
+        specifier: workspace:*
+        version: link:../tsconfig
+      '@types/react':
+        specifier: ^19.0.0
+        version: 19.2.14
+      '@types/react-dom':
+        specifier: ^19.0.0
+        version: 19.2.3(@types/react@19.2.14)
+      react:
+        specifier: ^19.0.0
+        version: 19.2.4
+      react-dom:
+        specifier: ^19.0.0
+        version: 19.2.4(react@19.2.4)
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+      vite:
+        specifier: ^6.0.0
+        version: 6.4.1(@types/node@22.19.11)
+      vite-plugin-dts:
+        specifier: ^4.3.0
+        version: 4.5.4(typescript@5.9.3)(vite@6.4.1)
 
   packages/three:
     devDependencies:

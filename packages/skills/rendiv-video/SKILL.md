@@ -103,6 +103,8 @@ Load the relevant rule file based on the task at hand:
 | Animate between scenes with `TransitionSeries` | [transitions.md](rules/transitions.md) |
 | Generate SVG shapes or manipulate paths | [shapes-and-paths.md](rules/shapes-and-paths.md) |
 | Add noise-driven motion or motion blur | [procedural-effects.md](rules/procedural-effects.md) |
+| Animate text per character, word, or line | [text-animation.md](rules/text-animation.md) |
+| Apply visual effects and CSS filters | [visual-effects.md](rules/visual-effects.md) |
 | Load Google Fonts or local font files | [typography.md](rules/typography.md) |
 | Embed Lottie animations | [lottie.md](rules/lottie.md) |
 | Add 3D scenes with Three.js / R3F | [three.md](rules/three.md) |
@@ -146,6 +148,8 @@ Load the relevant rule file based on the task at hand:
 | `@rendiv/motion-blur` | MotionTrail and ShutterBlur components |
 | `@rendiv/gif` | Animated GIF playback with speed control and fit modes |
 | `@rendiv/captions` | SRT/Whisper parsing, word-by-word highlighting, caption overlay |
+| `@rendiv/text` | Animated text: per-character/word/line split, stagger, presets |
+| `@rendiv/effects` | Visual effects: composable CSS filters, glow, glitch, vignette |
 | `@rendiv/lottie` | Frame-accurate Lottie animations via lottie-web |
 | `@rendiv/three` | 3D scenes via React Three Fiber with context bridging |
 
