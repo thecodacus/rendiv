@@ -523,6 +523,7 @@ const StudioApp: React.FC = () => {
         crf: settings.crf,
         concurrency: settings.concurrency,
         imageFormat: settings.imageFormat,
+        jpegQuality: settings.jpegQuality,
         encodingPreset: settings.encodingPreset,
         videoEncoder: settings.videoEncoder,
         gl: settings.gl,

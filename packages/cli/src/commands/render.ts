@@ -60,6 +60,7 @@ export const renderCommand = new Command('render')
   .option('--concurrency <n>', 'Parallel browser tabs', '1')
   .option('--frames <range>', 'Frame range (e.g. 0-59)')
   .option('--image-format <format>', 'Intermediate frame format (png, jpeg)', 'png')
+  .option('--jpeg-quality <n>', 'JPEG quality 1-100, higher reduces banding (default: 80)', '80')
   .option('--preset <preset>', 'FFmpeg encoding preset (ultrafast, fast, medium, slow, veryslow)')
   .option('--crf <number>', 'Quality factor 0-51, lower is better', '18')
   .option('--video-encoder <encoder>', 'Video encoder (libx264, h264_videotoolbox, h264_nvenc)')
@@ -71,6 +72,7 @@ export const renderCommand = new Command('render')
     concurrency: string;
     frames?: string;
     imageFormat: string;
+    jpegQuality: string;
     preset?: string;
     crf: string;
     videoEncoder?: string;
@@ -115,6 +117,7 @@ export const renderCommand = new Command('render')
         concurrency: parseInt(options.concurrency, 10),
         frameRange,
         imageFormat: options.imageFormat as 'png' | 'jpeg',
+        jpegQuality: parseInt(options.jpegQuality, 10),
         encodingPreset: options.preset,
         crf: parseInt(options.crf, 10),
         videoEncoder: options.videoEncoder,

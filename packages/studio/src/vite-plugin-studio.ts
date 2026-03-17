@@ -45,6 +45,7 @@ interface ServerRenderJob {
   totalFrames: number;
   error?: string;
   imageFormat?: 'png' | 'jpeg';
+  jpegQuality?: number;
   encodingPreset?: string;
   crf?: number;
   videoEncoder?: string;
@@ -186,6 +187,7 @@ function processQueue(entryPoint: string): void {
           frame: nextJob.frame ?? 0,
           inputProps: nextJob.inputProps,
           imageFormat: nextJob.imageFormat,
+          quality: nextJob.jpegQuality,
           gl: nextJob.gl,
         });
 
@@ -205,6 +207,7 @@ function processQueue(entryPoint: string): void {
           inputProps: nextJob.inputProps,
           concurrency: nextJob.concurrency,
           imageFormat: nextJob.imageFormat,
+          jpegQuality: nextJob.jpegQuality,
           encodingPreset: nextJob.encodingPreset,
           crf: nextJob.crf,
           videoEncoder: nextJob.videoEncoder,
@@ -464,6 +467,7 @@ export function rendivStudioPlugin(options: StudioPluginOptions): Plugin {
               renderedFrames: 0,
               totalFrames: body.totalFrames ?? 0,
               imageFormat: body.imageFormat,
+              jpegQuality: body.jpegQuality != null ? Number(body.jpegQuality) : undefined,
               encodingPreset: body.encodingPreset,
               crf: body.crf != null ? Number(body.crf) : undefined,
               videoEncoder: body.videoEncoder,

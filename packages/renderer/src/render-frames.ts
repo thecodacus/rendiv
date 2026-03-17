@@ -39,6 +39,8 @@ export interface RenderFramesOptions {
   cancelSignal?: AbortSignal;
   timeoutPerFrame?: number;
   imageFormat?: ImageFormat;
+  /** JPEG quality (1–100). Higher values reduce compression artifacts like gradient banding. Default: 80 */
+  jpegQuality?: number;
   gl?: OpenBrowserOptions['gl'];
   profiling?: boolean;
 }
@@ -49,6 +51,7 @@ async function renderSingleFrame(
   outputDir: string,
   timeoutPerFrame: number,
   imageFormat: ImageFormat,
+  jpegQuality: number,
   profiling: boolean,
 ): Promise<FrameTimings | null> {
   const t0 = profiling ? performance.now() : 0;
@@ -86,7 +89,7 @@ async function renderSingleFrame(
     path: path.join(outputDir, `frame-${paddedFrame}.${ext}`),
     type: imageFormat,
     animations: 'disabled',
-    ...(imageFormat === 'jpeg' ? { quality: 80 } : {}),
+    ...(imageFormat === 'jpeg' ? { quality: jpegQuality } : {}),
   });
 
   const t3 = profiling ? performance.now() : 0;
@@ -160,6 +163,7 @@ export async function renderFrames(options: RenderFramesOptions): Promise<Render
     cancelSignal,
     timeoutPerFrame = 30000,
     imageFormat = 'png',
+    jpegQuality = 80,
     gl,
     profiling = false,
   } = options;
@@ -213,7 +217,7 @@ export async function renderFrames(options: RenderFramesOptions): Promise<Render
         if (cancelSignal?.aborted) return;
 
         const frame = frameQueue.shift()!;
-        const timings = await renderSingleFrame(page, frame, outputDir, timeoutPerFrame, imageFormat, profiling);
+        const timings = await renderSingleFrame(page, frame, outputDir, timeoutPerFrame, imageFormat, jpegQuality, profiling);
 
         if (timings) {
           allTimings.push(timings);

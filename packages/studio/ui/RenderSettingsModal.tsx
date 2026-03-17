@@ -9,6 +9,7 @@ export interface RenderSettings {
   crf: number;
   concurrency: number;
   imageFormat: 'png' | 'jpeg';
+  jpegQuality: number;
   encodingPreset?: string;
   videoEncoder?: string;
   gl: 'swiftshader' | 'egl' | 'angle';
@@ -73,6 +74,7 @@ export const RenderSettingsModal: React.FC<RenderSettingsModalProps> = React.mem
   const [crf, setCrf] = useState(18);
   const [concurrency, setConcurrency] = useState(4);
   const [imageFormat, setImageFormat] = useState<'png' | 'jpeg'>('jpeg');
+  const [jpegQuality, setJpegQuality] = useState(80);
   const [encodingPreset, setEncodingPreset] = useState('');
   const [videoEncoder, setVideoEncoder] = useState('');
   const [gl, setGl] = useState<'swiftshader' | 'egl' | 'angle'>('angle');
@@ -134,13 +136,14 @@ export const RenderSettingsModal: React.FC<RenderSettingsModalProps> = React.mem
       crf,
       concurrency,
       imageFormat,
+      jpegQuality,
       encodingPreset: encodingPreset || undefined,
       videoEncoder: videoEncoder || undefined,
       gl,
       profiling,
       frame,
     });
-  }, [renderType, codec, outputPath, crf, concurrency, imageFormat, encodingPreset, videoEncoder, gl, profiling, frame, onSubmit]);
+  }, [renderType, codec, outputPath, crf, concurrency, imageFormat, jpegQuality, encodingPreset, videoEncoder, gl, profiling, frame, onSubmit]);
 
   return (
     <div style={backdropStyle} onClick={handleBackdropClick}>
@@ -235,6 +238,20 @@ export const RenderSettingsModal: React.FC<RenderSettingsModalProps> = React.mem
                 {imageFormatOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
               </select>
             </div>
+            {imageFormat === 'jpeg' && (
+              <div style={fieldRowStyle}>
+                <label style={labelStyle}>JPEG Quality</label>
+                <input
+                  type="number"
+                  min={1}
+                  max={100}
+                  value={jpegQuality}
+                  onChange={e => setJpegQuality(Math.max(1, Math.min(100, Number(e.target.value))))}
+                  style={{ ...inputStyles.text, width: 64, fontSize: 12, textAlign: 'center' }}
+                />
+                <span style={{ fontSize: 11, color: colors.textSecondary }}>1 (worst) – 100 (best)</span>
+              </div>
+            )}
           </div>
 
           {/* Quality & Encoding — video only */}

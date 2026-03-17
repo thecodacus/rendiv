@@ -24,6 +24,8 @@ export interface RenderMediaOptions {
   cancelSignal?: AbortSignal;
   /** Intermediate frame image format. Default: png */
   imageFormat?: 'png' | 'jpeg';
+  /** JPEG quality (1–100). Higher values reduce compression artifacts like gradient banding. Default: 80 */
+  jpegQuality?: number;
   /** FFmpeg encoding preset (ultrafast, fast, medium, slow, veryslow). */
   encodingPreset?: string;
   /** Quality factor (0–51, lower = better). Default: 18 */
@@ -52,6 +54,7 @@ export async function renderMedia(options: RenderMediaOptions): Promise<RenderMe
     frameRange,
     cancelSignal,
     imageFormat,
+    jpegQuality,
     encodingPreset,
     crf,
     videoEncoder,
@@ -84,6 +87,7 @@ export async function renderMedia(options: RenderMediaOptions): Promise<RenderMe
       concurrency,
       frameRange,
       imageFormat,
+      jpegQuality,
       gl,
       profiling,
       onFrameRendered: ({ frame, total, timings }) => {
