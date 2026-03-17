@@ -40,6 +40,8 @@ COPY packages/fonts/package.json packages/fonts/
 COPY packages/google-fonts/package.json packages/google-fonts/
 COPY packages/gif/package.json packages/gif/
 COPY packages/captions/package.json packages/captions/
+COPY packages/text/package.json packages/text/
+COPY packages/effects/package.json packages/effects/
 COPY packages/create-rendiv/package.json packages/create-rendiv/
 COPY packages/skills/package.json packages/skills/
 COPY examples/hello-world/package.json examples/hello-world/
