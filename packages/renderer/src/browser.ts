@@ -41,6 +41,7 @@ export async function openBrowser(options?: OpenBrowserOptions): Promise<Browser
       '--disable-features=IsolateOrigins',
       '--disable-site-isolation-trials',
       '--no-sandbox',
+      '--force-color-profile=srgb',
       ...glArgs(gl),
     ],
   });
