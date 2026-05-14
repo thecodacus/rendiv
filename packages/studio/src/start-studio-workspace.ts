@@ -49,6 +49,7 @@ export async function startStudioWorkspace(options: WorkspaceOptions): Promise<W
   const { workspaceDir, port = 3000, host } = options;
 
   let currentClose: (() => Promise<void>) | null = null;
+  let currentUrl: string | null = null;
   let switching = false;
   let firstLaunch = true;
 
@@ -78,6 +79,7 @@ export async function startStudioWorkspace(options: WorkspaceOptions): Promise<W
             onSwitchProject: (p: string | null) => switchTo(p),
           });
           currentClose = result.close;
+          currentUrl = result.url;
         } catch (err) {
           // If project Studio fails, fall back to workspace picker
           process.chdir(originalCwd);
@@ -89,6 +91,7 @@ export async function startStudioWorkspace(options: WorkspaceOptions): Promise<W
             openBrowser: false,
           });
           currentClose = result.close;
+          currentUrl = result.url;
         }
       } else {
         // Start workspace picker
@@ -103,6 +106,7 @@ export async function startStudioWorkspace(options: WorkspaceOptions): Promise<W
           openBrowser: firstLaunch && !host,
         });
         currentClose = result.close;
+        currentUrl = result.url;
       }
     } finally {
       switching = false;
@@ -113,7 +117,7 @@ export async function startStudioWorkspace(options: WorkspaceOptions): Promise<W
   await switchTo(null);
   firstLaunch = false;
 
-  const url = `http://localhost:${port}`;
+  const url = currentUrl ?? `http://localhost:${port}`;
 
   return {
     url,

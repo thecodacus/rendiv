@@ -233,8 +233,9 @@ export async function startWorkspacePicker(options: WorkspacePickerOptions): Pro
 
   await server.listen();
 
-  const resolvedPort = server.config.server.port ?? port;
-  const url = `http://localhost:${resolvedPort}`;
+  // server.config.server.port is the *requested* port; after Vite's
+  // port-fallback the truth lives in resolvedUrls / httpServer.address().
+  const url = server.resolvedUrls?.local[0]?.replace(/\/$/, '') ?? `http://localhost:${port}`;
 
   const cleanup = () => {
     if (fs.existsSync(studioDir)) {
