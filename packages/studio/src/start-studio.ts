@@ -103,8 +103,9 @@ export async function startStudio(options: StudioOptions): Promise<StudioResult>
       // Force-include deps used only inside the Studio UI (which is imported
       // via an absolute path into node_modules/@rendiv/studio/ui/ and is not
       // reached by Vite's entry-time dep scanner). Without this, UMD packages
-      // like @xterm/* would be served raw and `import { FitAddon }` would fail.
-      include: ['@xterm/xterm', '@xterm/addon-fit'],
+      // like @xterm/* would be served raw and `import { FitAddon }` would fail,
+      // and subpaths like react-dom/client wouldn't expose their named exports.
+      include: ['@xterm/xterm', '@xterm/addon-fit', 'react-dom/client'],
       exclude: ['@rendiv/core', '@rendiv/player', '@rendiv/transitions', '@rendiv/noise', '@rendiv/shapes', '@rendiv/paths', '@rendiv/motion-blur', '@rendiv/fonts', '@rendiv/google-fonts'],
     },
     logLevel: 'info',
