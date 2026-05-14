@@ -113,9 +113,8 @@ export async function startStudio(options: StudioOptions): Promise<StudioResult>
 
   await server.listen();
 
-  // server.config.server.port is the *requested* port; after Vite's
-  // port-fallback the truth lives in resolvedUrls / httpServer.address().
-  const url = server.resolvedUrls?.local[0]?.replace(/\/$/, '') ?? `http://localhost:${port}`;
+  const resolvedPort = server.config.server.port ?? port;
+  const url = `http://localhost:${resolvedPort}`;
 
   const cleanup = () => {
     if (fs.existsSync(studioDir)) {
