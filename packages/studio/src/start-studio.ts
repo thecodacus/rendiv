@@ -3,8 +3,11 @@ import react from '@vitejs/plugin-react';
 import path from 'node:path';
 import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import { createRequire } from 'node:module';
 import { generateStudioEntryCode, generateStudioHtml, generateStudioGlobals, FAVICON_SVG } from './studio-entry-code.js';
 import { rendivStudioPlugin } from './vite-plugin-studio.js';
+
+const studioRequire = createRequire(import.meta.url);
 
 export interface StudioOptions {
   entryPoint: string;
@@ -39,6 +42,13 @@ export async function startStudio(options: StudioOptions): Promise<StudioResult>
   const thisDir = path.dirname(fileURLToPath(import.meta.url));
   const studioUiDir = path.resolve(thisDir, '..', 'ui');
 
+  // Resolve @xterm/* from the studio package's own dep tree. The user's project
+  // doesn't list these directly, and under pnpm they aren't hoisted to the cwd
+  // node_modules — so we must point Vite at them explicitly via resolve.alias.
+  const xtermXtermEntry = studioRequire.resolve('@xterm/xterm');
+  const xtermAddonFitEntry = studioRequire.resolve('@xterm/addon-fit');
+  const xtermXtermCss = studioRequire.resolve('@xterm/xterm/css/xterm.css');
+
   // Generate and write temp entry files under .studio/
   const studioDir = path.join(cwd, STUDIO_DIR);
   fs.mkdirSync(studioDir, { recursive: true });
@@ -70,6 +80,13 @@ export async function startStudio(options: StudioOptions): Promise<StudioResult>
       // Force Vite to resolve these packages from the user's project root,
       // not from the studio UI files' location (which is outside the project).
       dedupe: ['react', 'react-dom', '@rendiv/core', '@rendiv/player', '@rendiv/transitions', '@rendiv/noise', '@rendiv/shapes', '@rendiv/paths', '@rendiv/motion-blur', '@rendiv/fonts', '@rendiv/google-fonts'],
+      alias: [
+        // Point Vite at the @xterm/* copies that ship with @rendiv/studio,
+        // since the user's project doesn't list them and pnpm doesn't hoist them.
+        { find: /^@xterm\/xterm\/css\/xterm\.css$/, replacement: xtermXtermCss },
+        { find: /^@xterm\/xterm$/, replacement: xtermXtermEntry },
+        { find: /^@xterm\/addon-fit$/, replacement: xtermAddonFitEntry },
+      ],
     },
     server: {
       port,
@@ -83,6 +100,11 @@ export async function startStudio(options: StudioOptions): Promise<StudioResult>
     },
     optimizeDeps: {
       entries: [studioEntryFile],
+      // Force-include deps used only inside the Studio UI (which is imported
+      // via an absolute path into node_modules/@rendiv/studio/ui/ and is not
+      // reached by Vite's entry-time dep scanner). Without this, UMD packages
+      // like @xterm/* would be served raw and `import { FitAddon }` would fail.
+      include: ['@xterm/xterm', '@xterm/addon-fit'],
       exclude: ['@rendiv/core', '@rendiv/player', '@rendiv/transitions', '@rendiv/noise', '@rendiv/shapes', '@rendiv/paths', '@rendiv/motion-blur', '@rendiv/fonts', '@rendiv/google-fonts'],
     },
     logLevel: 'info',
