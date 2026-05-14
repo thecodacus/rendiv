@@ -12,7 +12,7 @@
     "template"
   ],
   "scripts": {
-    "build": "tsc && cp -r src/template dist/template",
+    "build": "tsc && rm -rf dist/template && cp -r src/template dist/template",
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf dist"
   },
