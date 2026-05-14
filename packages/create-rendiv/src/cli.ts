@@ -9,6 +9,9 @@ import { execSync } from 'node:child_process';
 
 const thisDir = path.dirname(fileURLToPath(import.meta.url));
 const templateDir = path.resolve(thisDir, 'template');
+const pkgVersion = JSON.parse(
+  fs.readFileSync(path.resolve(thisDir, '..', 'package.json'), 'utf8'),
+).version as string;
 
 function detectPackageManager(): string {
   const agent = process.env.npm_config_user_agent ?? '';
@@ -99,7 +102,7 @@ const program = new Command();
 program
   .name('create-rendiv')
   .description('Create a new Rendiv video project')
-  .version('0.1.0')
+  .version(pkgVersion)
   .argument('[project-name]', 'Name for the new project')
   .action(async (name?: string) => {
     let projectName = name;
