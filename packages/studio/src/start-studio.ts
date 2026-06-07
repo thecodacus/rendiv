@@ -104,8 +104,17 @@ export async function startStudio(options: StudioOptions): Promise<StudioResult>
       // via an absolute path into node_modules/@rendiv/studio/ui/ and is not
       // reached by Vite's entry-time dep scanner). Without this, UMD packages
       // like @xterm/* would be served raw and `import { FitAddon }` would fail,
-      // and subpaths like react-dom/client wouldn't expose their named exports.
-      include: ['@xterm/xterm', '@xterm/addon-fit', 'react-dom/client'],
+      // and CJS subpaths (react-dom/client, react/jsx-runtime, etc.) wouldn't
+      // expose their named exports. The jsx-runtime entries also matter when
+      // excluded packages like @rendiv/core ship pre-compiled JSX that imports
+      // 'react/jsx-runtime' directly — which the scanner can't infer.
+      include: [
+        '@xterm/xterm',
+        '@xterm/addon-fit',
+        'react-dom/client',
+        'react/jsx-runtime',
+        'react/jsx-dev-runtime',
+      ],
       exclude: ['@rendiv/core', '@rendiv/player', '@rendiv/transitions', '@rendiv/noise', '@rendiv/shapes', '@rendiv/paths', '@rendiv/motion-blur', '@rendiv/fonts', '@rendiv/google-fonts'],
     },
     logLevel: 'info',

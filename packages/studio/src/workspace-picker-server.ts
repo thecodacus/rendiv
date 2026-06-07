@@ -204,6 +204,9 @@ export async function startWorkspacePicker(options: WorkspacePickerOptions): Pro
   const require = createRequire(import.meta.url);
   const reactPath = path.dirname(require.resolve('react/package.json'));
   const reactDomPath = path.dirname(require.resolve('react-dom/package.json'));
+  const reactJsxRuntime = require.resolve('react/jsx-runtime');
+  const reactJsxDevRuntime = require.resolve('react/jsx-dev-runtime');
+  const reactDomClient = require.resolve('react-dom/client');
 
   const server = await createServer({
     configFile: false,
@@ -220,13 +223,29 @@ export async function startWorkspacePicker(options: WorkspacePickerOptions): Pro
       watch: host ? { usePolling: true, interval: 500 } : undefined,
     },
     resolve: {
-      alias: {
-        'react': reactPath,
-        'react-dom': reactDomPath,
-      },
+      alias: [
+        // Subpath aliases must come before the bare-package alias so
+        // 'react/jsx-runtime' isn't rewritten to '<reactPath>/jsx-runtime'.
+        { find: /^react\/jsx-dev-runtime$/, replacement: reactJsxDevRuntime },
+        { find: /^react\/jsx-runtime$/, replacement: reactJsxRuntime },
+        { find: /^react-dom\/client$/, replacement: reactDomClient },
+        { find: /^react$/, replacement: reactPath },
+        { find: /^react-dom$/, replacement: reactDomPath },
+      ],
     },
     optimizeDeps: {
       entries: [studioEntryFile],
+      // Force-include CJS subpaths so the optimizer exposes their named
+      // exports. Required when the workspace root has no node_modules
+      // (Docker / freshly created workspaces) and when JSX transforms in
+      // the picker UI inject imports the scanner can't see.
+      include: [
+        'react',
+        'react-dom',
+        'react/jsx-runtime',
+        'react/jsx-dev-runtime',
+        'react-dom/client',
+      ],
     },
     logLevel: 'info',
   });
