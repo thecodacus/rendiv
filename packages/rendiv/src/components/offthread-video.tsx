@@ -148,13 +148,16 @@ function OffthreadVideoRendering({
   const holdHandleRef = useRef<number | null>(null);
   const prevObjectUrlRef = useRef<string | null>(null);
 
-  // Past the end — render nothing
-  if (endAt !== undefined && videoFrame >= endAt) {
-    return null;
-  }
+  // Past the end — render nothing. Computed as a flag (NOT an early return)
+  // so the hook order stays constant across frames: an early return here
+  // skips the useEffects below, and the first frame where videoFrame
+  // crosses endAt throws "Rendered fewer hooks than expected", unmounting
+  // the entire composition tree — every frame after renders black.
+  const pastEnd = endAt !== undefined && videoFrame >= endAt;
 
   // Fetch the frame from the extraction endpoint
   useEffect(() => {
+    if (pastEnd) return;
     const handle = holdRender(
       `Extracting <OffthreadVideo> frame at ${currentTime.toFixed(3)}s from "${src}"`,
       { timeoutInMilliseconds: holdRenderTimeout },
@@ -231,7 +234,7 @@ function OffthreadVideoRendering({
         holdHandleRef.current = null;
       }
     };
-  }, [currentTime, src, holdRenderTimeout, showEmptyOnEnd]);
+  }, [currentTime, src, holdRenderTimeout, showEmptyOnEnd, pastEnd]);
 
   // Clean up object URL on unmount
   useEffect(() => {
@@ -257,7 +260,7 @@ function OffthreadVideoRendering({
     }
   }, []);
 
-  if (!frameSrc) return null;
+  if (pastEnd || !frameSrc) return null;
 
   return (
     <img
