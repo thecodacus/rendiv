@@ -20,6 +20,50 @@ Pure code. No GUI required. Fully open source.
 
 ---
 
+## Quick Start
+
+Your first video in under a minute. All you need is [Node.js](https://nodejs.org) 18 or newer.
+
+```bash
+# 1. Scaffold a project (dependencies are installed for you)
+npx create-rendiv my-video
+cd my-video
+
+# 2. Open the Studio — live preview at http://localhost:3000
+npm run studio
+
+# 3. Render it to MP4 (writes out/my-video.mp4)
+npm run render
+```
+
+That's the whole loop: edit `src/MyVideo.tsx`, watch the Studio hot-reload, render when you're happy. The scaffold also gives you `npm run preview` (plain browser preview) and `npm run still` (export a single frame as an image).
+
+Building with an AI coding agent? Install the rendiv agent skill so your agent knows the API:
+
+```bash
+npx skills add thecodacus/rendiv
+```
+
+Prefer wiring things up yourself, or running in a container? See [Getting Started](#getting-started) for the [manual setup](#manual-setup) and [Docker](#docker) paths.
+
+---
+
+## Table of Contents
+
+- [Quick Start](#quick-start)
+- [What is Rendiv?](#what-is-rendiv)
+- [Features](#features)
+- [Why AI-First?](#why-ai-first)
+- [Packages](#packages)
+- [Getting Started](#getting-started) · [Manual setup](#manual-setup) · [Docker](#docker)
+- [CLI Reference](#cli-reference)
+- [Render API (Node.js / Bun)](#render-api-nodejs--bun)
+- [Tech Stack](#tech-stack)
+- [Roadmap](#roadmap)
+- [Contributing](#contributing)
+
+---
+
 ## What is Rendiv?
 
 Rendiv is a **code-first video editor** where AI is a first-class citizen. Every video is a pure function of time — a React component that renders a frame given a frame number. This makes video creation fully deterministic, versionable, and trivially automatable by LLMs and AI agents.
@@ -262,6 +306,8 @@ Rendiv compositions are **just functions** — deterministic, testable, and perf
 
 ## Getting Started
 
+> Already saw the [Quick Start](#quick-start)? This section covers the same flow in more detail, plus manual setup and Docker.
+
 The fastest way to start is with `create-rendiv`:
 
 ```bash
@@ -269,18 +315,31 @@ npx create-rendiv my-video-project
 cd my-video-project
 ```
 
-This scaffolds a complete project with a starter composition, Vite config, and all dependencies installed. Then:
+This scaffolds a complete project and installs all dependencies for you. You get:
+
+```
+my-video-project/
+├── src/
+│   ├── index.tsx      # entry point — registers your compositions
+│   └── MyVideo.tsx    # a starter composition to edit
+├── vite.config.ts
+└── package.json       # studio / preview / render / still scripts wired up
+```
+
+Then:
 
 ```bash
-# Open the Studio preview
-npx rendiv studio src/index.tsx
+# Open the Studio preview (http://localhost:3000)
+npm run studio          # same as: npx rendiv studio src/index.tsx
 
-# Render to MP4
+# Render to MP4 (writes out/my-video.mp4)
 npm run render
 
 # Preview in browser (Vite dev server)
 npm run preview
 ```
+
+Edit `src/MyVideo.tsx` while the Studio is open — it hot-reloads on every save, so you can iterate on animations frame by frame before committing to a render.
 
 ### Manual setup
 
@@ -333,7 +392,7 @@ export const MyVideo = () => {
 };
 ```
 
-Then launch the studio or render:
+Then launch the studio (http://localhost:3000) or render:
 
 ```bash
 npx rendiv studio src/index.tsx
