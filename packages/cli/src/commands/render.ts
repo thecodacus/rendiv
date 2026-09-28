@@ -64,7 +64,7 @@ export const renderCommand = new Command('render')
   .option('--preset <preset>', 'FFmpeg encoding preset (ultrafast, fast, medium, slow, veryslow)')
   .option('--crf <number>', 'Quality factor 0-51, lower is better', '18')
   .option('--video-encoder <encoder>', 'Video encoder (libx264, h264_videotoolbox, h264_nvenc)')
-  .option('--gl <renderer>', 'GL renderer (swiftshader, egl, angle)', 'swiftshader')
+  .option('--gl <renderer>', 'GL renderer: swiftshader (CPU), egl (GPU: ANGLE on EGL/GLES), angle (GPU: ANGLE on Vulkan)', 'swiftshader')
   .option('--profiling', 'Enable per-frame profiling')
   .action(async (entry: string, compositionId: string, output: string, options: {
     props: string;

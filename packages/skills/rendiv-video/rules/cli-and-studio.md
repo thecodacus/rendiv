@@ -52,7 +52,7 @@ The output format is determined by the file extension (`.mp4` or `.webm`).
 | `--preset <preset>` | — | FFmpeg encoding preset (`ultrafast`, `fast`, `medium`, `slow`, `veryslow`) |
 | `--crf <number>` | `18` | Quality factor 0-51, lower is better |
 | `--video-encoder <enc>` | — | Video encoder (`libx264`, `h264_videotoolbox`, `h264_nvenc`) |
-| `--gl <renderer>` | `swiftshader` | GL renderer (`swiftshader`, `egl`, `angle`) |
+| `--gl <renderer>` | `swiftshader` | GL renderer: `swiftshader` (CPU), `egl` (GPU, ANGLE on EGL/GLES), `angle` (GPU, ANGLE on Vulkan). GPU modes need a GPU + its Vulkan/EGL userspace (the Docker image ships it; run with `--gpus all`) |
 | `--profiling` | off | Enable per-frame profiling with phase breakdown |
 
 #### `rendiv still`
