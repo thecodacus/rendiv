@@ -112,6 +112,18 @@ export const Preview: React.FC<PreviewProps> = React.memo(({
     player.addEventListener('frameupdate', onFrame);
     player.addEventListener('play', onPlay);
     player.addEventListener('pause', onPause);
+
+    // The Player is keyed by composition.id, so switching compositions mounts a
+    // fresh instance. Its initial 'frameupdate'/'pause' events fire from its own
+    // mount effects, which run before this (parent) effect subscribes, so they
+    // never reach us. Seed local state from the new instance; otherwise
+    // isPlaying stays true from the previous composition and the play button
+    // calls pause() on a player that is already paused.
+    const frame = player.getCurrentFrame();
+    setIsPlaying(player.isPlaying());
+    setCurrentFrame(frame);
+    onFrameUpdate?.(frame);
+
     return () => {
       player.removeEventListener('frameupdate', onFrame);
       player.removeEventListener('play', onPlay);
