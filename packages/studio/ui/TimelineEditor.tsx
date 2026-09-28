@@ -59,7 +59,7 @@ export const TimelineEditor: React.FC<TimelineEditorProps> = ({
   const [speedEditPath, setSpeedEditPath] = useState<string | null>(null);
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; namePath: string; entry: { from: number; durationInFrames: number; playbackRate?: number } } | null>(null);
 
-  const { pixelsPerFrame, scrollLeft, setScrollLeft, setPixelsPerFrame, handleWheel } = useTimelineZoom({
+  const { pixelsPerFrame, setPixelsPerFrame, handleWheel } = useTimelineZoom({
     totalFrames,
     containerRef: trackAreaRef,
   });
@@ -107,12 +107,6 @@ export const TimelineEditor: React.FC<TimelineEditorProps> = ({
     el.addEventListener('wheel', handleWheel, { passive: false });
     return () => el.removeEventListener('wheel', handleWheel);
   }, [handleWheel]);
-
-  // Sync scroll position
-  useEffect(() => {
-    const el = trackAreaRef.current;
-    if (el) el.scrollLeft = scrollLeft;
-  }, [scrollLeft]);
 
   // Close context menu on click elsewhere
   useEffect(() => {
@@ -270,7 +264,6 @@ export const TimelineEditor: React.FC<TimelineEditorProps> = ({
           ref={trackAreaRef}
           style={trackAreaContainerStyle}
           onClick={handleTrackAreaClick}
-          onScroll={(e) => setScrollLeft((e.target as HTMLElement).scrollLeft)}
         >
           {/* Ruler */}
           <div style={{ ...rulerStyle, width: totalWidth }}>
