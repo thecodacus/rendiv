@@ -25,7 +25,7 @@ rendiv render src/index.tsx MyComp --frames 0-89
 | Bottleneck | Impact | Possible Fix |
 |---|---|---|
 | **PNG screenshots** | Every frame is captured as lossless PNG, which is slow to encode. JPEG would be ~3-5x faster per frame. | Add `--image-format jpeg` option for intermediate frames |
-| **Software GL rendering** | Browser uses `--use-angle=swiftshader` (CPU-based GL). Slow for Three.js/canvas-heavy compositions. | Use `--use-gl=egl` or native GPU on Linux; macOS GPU is less reliable headless |
+| **Software GL rendering** | Browser uses `--use-angle=swiftshader` (CPU-based GL). Slow for Three.js/canvas-heavy compositions. | Render with `--gl angle` (ANGLE on Vulkan) or `--gl egl` (ANGLE on EGL) on a Linux GPU. In Docker: run the image with `--gpus all` (NVIDIA Container Toolkit); the image ships the Vulkan/EGL loaders and NVIDIA vendor files. Measured on an RTX 3060: a GL-heavy 18-min video went from ~3 h (SwiftShader) to ~13 min. macOS GPU is less reliable headless |
 | **FFmpeg H.264 preset** | No `-preset` specified, defaults to `medium`. | Add `-preset ultrafast` for ~4x faster encoding (slightly larger file) or `-preset fast` for a good balance |
 | **FFmpeg hardware encoding** | CPU-only `libx264` encoder. | Use `h264_videotoolbox` (macOS) or `h264_nvenc` (NVIDIA) for GPU-accelerated encoding |
 | **holdRender polling** | Playwright's default `waitForFunction` polling interval (~100ms). | Reduce polling interval or switch to a notification-based approach |

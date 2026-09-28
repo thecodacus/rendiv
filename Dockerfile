@@ -8,6 +8,10 @@
 #
 # Usage:
 #   docker run -v /path/to/projects:/workspace -v agent-persist:/persist -p 3000:3000 ghcr.io/thecodacus/rendiv-studio
+#
+# GPU rendering (NVIDIA, needs the NVIDIA Container Toolkit on the host): add `--gpus all` (compose:
+# deploy.resources.reservations.devices: [{driver: nvidia, count: all, capabilities: [gpu]}]) and render with
+# `--gl angle` (Vulkan) or `--gl egl`. Without a GPU the image still renders on the CPU (SwiftShader).
 # =============================================================================
 
 # ---------------------------------------------------------------------------
@@ -70,7 +74,20 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     make g++ python3 \
     # General utilities
     git curl \
+    # GPU rendering: Vulkan loader + GLVND EGL/GL so headless Chromium can reach the host GPU driver that
+    # --gpus injects. Without these it silently falls back to SwiftShader (CPU) even with a GPU passed in.
+    libvulkan1 libegl1 libgl1 libglvnd0 \
     && rm -rf /var/lib/apt/lists/*
+
+# NVIDIA vendor files for the Vulkan loader and GLVND EGL. The NVIDIA Container Toolkit injects the driver libraries
+# (libGLX_nvidia / libEGL_nvidia) but not always these JSONs; harmless on machines without an NVIDIA GPU.
+RUN mkdir -p /usr/share/vulkan/icd.d /usr/share/glvnd/egl_vendor.d \
+    && printf '%s' '{"file_format_version":"1.0.0","ICD":{"library_path":"libGLX_nvidia.so.0","api_version":"1.3.0"}}' \
+       > /usr/share/vulkan/icd.d/nvidia_icd.json \
+    && printf '%s' '{"file_format_version":"1.0.0","ICD":{"library_path":"libEGL_nvidia.so.0"}}' \
+       > /usr/share/glvnd/egl_vendor.d/10_nvidia.json
+# Ask the NVIDIA runtime for the graphics libraries too (compute-only is the default and has no Vulkan/EGL)
+ENV NVIDIA_DRIVER_CAPABILITIES=all
 
 # Install pnpm
 RUN corepack enable && corepack prepare pnpm@9.15.4 --activate

@@ -9,12 +9,22 @@ export interface OpenBrowserOptions {
 let browserInstance: Browser | null = null;
 let currentGl: GlRenderer = 'swiftshader';
 
+/**
+ * Chromium flags per GL renderer.
+ *
+ * `egl` and `angle` must name an explicit ANGLE backend: plain `--use-gl=egl` / `--use-gl=angle` let headless
+ * Chromium fall back to SwiftShader (software) even when a GPU and its drivers are present, so "GPU" renders were
+ * silently running on the CPU. Verified on an NVIDIA RTX 3060 in Docker (WebGL renderer string):
+ *   egl   → ANGLE (NVIDIA ..., OpenGL ES 3.2)        via --use-angle=gl-egl
+ *   angle → ANGLE (NVIDIA, Vulkan 1.4 ...)            via --use-angle=vulkan
+ * Both need the GPU's Vulkan/EGL userspace (see the Dockerfile); without it Chromium still falls back to SwiftShader.
+ */
 function glArgs(gl: GlRenderer): string[] {
   switch (gl) {
     case 'egl':
-      return ['--use-gl=egl'];
+      return ['--use-gl=angle', '--use-angle=gl-egl'];
     case 'angle':
-      return ['--use-gl=angle'];
+      return ['--use-gl=angle', '--use-angle=vulkan'];
     case 'swiftshader':
     default:
       return ['--use-gl=angle', '--use-angle=swiftshader'];
