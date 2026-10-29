@@ -1,7 +1,8 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import React from 'react';
 import { render } from '@testing-library/react';
 import { Audio } from '../components/Audio';
+import { Sequence } from '../components/Sequence';
 import { TimelineContext } from '../context/TimelineContext';
 import { CompositionContext, type CompositionConfig } from '../context/CompositionContext';
 import { RendivEnvironmentContext } from '../context/RendivEnvironmentContext';
@@ -73,5 +74,43 @@ describe('Audio', () => {
     );
     const audio = container.querySelector('audio')!;
     expect(audio.getAttribute('preload')).toBe('auto');
+  });
+
+  describe('registered audio sources', () => {
+    const getSources = () =>
+      Array.from(((window as any).__RENDIV_AUDIO_SOURCES__ as Map<string, any>)?.values() ?? []);
+
+    beforeEach(() => {
+      delete (window as any).__RENDIV_AUDIO_SOURCES__;
+    });
+
+    it('bounds audio at the composition root by the composition duration', () => {
+      renderAudioInContext(<Audio src="/test.mp3" />, { environment: 'rendering' });
+      const [source] = getSources();
+      expect(source.startAtFrame).toBe(0);
+      expect(source.durationInFrames).toBe(150);
+    });
+
+    it('bounds audio in a Sequence without durationInFrames by the rest of the composition', () => {
+      renderAudioInContext(
+        <Sequence from={30}>
+          <Audio src="/test.mp3" />
+        </Sequence>,
+        { frame: 30, environment: 'rendering' },
+      );
+      const [source] = getSources();
+      expect(source.startAtFrame).toBe(30);
+      expect(source.durationInFrames).toBe(120);
+    });
+
+    it('keeps an explicit Sequence duration', () => {
+      renderAudioInContext(
+        <Sequence from={30} durationInFrames={60}>
+          <Audio src="/test.mp3" />
+        </Sequence>,
+        { frame: 30, environment: 'rendering' },
+      );
+      expect(getSources()[0].durationInFrames).toBe(60);
+    });
   });
 });
