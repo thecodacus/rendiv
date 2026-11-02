@@ -5,29 +5,42 @@ Server-side rendering API for Node.js and Bun. Captures frames via headless Chro
 ## Installation
 
 ```bash
-npm install @rendiv/renderer
+npm install @rendiv/renderer @rendiv/bundler
 ```
 
 ## Usage
 
 ```ts
-import { renderMedia, bundle } from '@rendiv/renderer';
+import { bundle } from '@rendiv/bundler';
+import { renderMedia, selectComposition, closeBrowser } from '@rendiv/renderer';
 
 // 1. Bundle your compositions
 const bundled = await bundle({ entryPoint: 'src/index.tsx' });
 
-// 2. Render to video
-await renderMedia({
-  serveUrl: bundled,
-  compositionId: 'MyVideo',
-  codec: 'mp4',
-  outputLocation: 'out/video.mp4',
-  concurrency: 4,
-  onProgress: ({ progress }) => {
-    console.log(`${Math.round(progress * 100)}%`);
-  },
-});
+try {
+  // 2. Look up the composition
+  const composition = await selectComposition(bundled, 'MyVideo');
+
+  // 3. Render to video
+  await renderMedia({
+    serveUrl: bundled,
+    composition,
+    codec: 'mp4',
+    outputLocation: 'out/video.mp4',
+    concurrency: 4,
+    onProgress: ({ progress }) => {
+      console.log(`${Math.round(progress * 100)}%`);
+    },
+  });
+} finally {
+  // 4. Close the shared headless browser so the process can exit
+  await closeBrowser();
+}
 ```
+
+## Closing the browser
+
+`renderMedia`, `renderFrames`, `renderStill` and `getCompositions` share one headless Chromium instance, which stays open between calls so later renders start faster. The renderer does not close it for you: call `closeBrowser()` when you are done rendering, or the Node.js process will not exit.
 
 ## renderMedia
 
@@ -36,7 +49,7 @@ Render a composition to a video file.
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `serveUrl` | `string` | required | URL or path to the bundled output |
-| `compositionId` | `string` | required | ID of the composition to render |
+| `composition` | `CompositionInfo` | required | The composition to render, from `selectComposition()` |
 | `codec` | `string` | `'mp4'` | Output codec (`'mp4'`, `'webm'`) |
 | `outputLocation` | `string` | required | Output file path |
 | `concurrency` | `number` | `4` | Number of parallel browser tabs |
