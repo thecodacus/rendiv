@@ -233,14 +233,21 @@ export async function renderFrames(options: RenderFramesOptions): Promise<Render
     const renderEndTime = profiling ? performance.now() : 0;
 
     // Collect audio source metadata registered by Audio/Video components.
-    // The persistent Map accumulates entries across all frames, so reading
-    // from any page after rendering captures everything.
-    const audioSources = await pages[0].evaluate(() => {
-      const w = window as any;
-      const map = w.__RENDIV_AUDIO_SOURCES__ as Map<string, unknown> | undefined;
-      if (!map || map.size === 0) return [];
-      return Array.from(map.values());
-    }) as AudioSourceInfo[];
+    // Each page's persistent Map only holds the components that mounted on
+    // the frames that page rendered, so merge all pages by the Map key.
+    const merged = new Map<string, AudioSourceInfo>();
+    for (const page of pages) {
+      const entries = await page.evaluate(() => {
+        const w = window as any;
+        const map = w.__RENDIV_AUDIO_SOURCES__ as Map<string, unknown> | undefined;
+        if (!map || map.size === 0) return [];
+        return Array.from(map.entries());
+      }) as Array<[string, AudioSourceInfo]>;
+      for (const [key, source] of entries) {
+        merged.set(key, source);
+      }
+    }
+    const audioSources = Array.from(merged.values());
 
     // Cleanup pages
     for (const page of pages) {
