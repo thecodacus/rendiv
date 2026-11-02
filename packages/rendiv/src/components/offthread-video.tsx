@@ -78,12 +78,15 @@ export function OffthreadVideo({
     const sources = w.__RENDIV_AUDIO_SOURCES__ as Map<string, unknown>;
     const startFrames = computeLoopStartFrames(sequence.accumulatedOffset, sequence.loopStack, compositionDuration);
     for (const startFrame of startFrames) {
-      const key = `video|${src}|${startFrame}|${effectiveDuration}|${startFrom}|${volume}|${effectiveRate}`;
+      // An open-ended Sequence (or none) has an infinite duration; bound the
+      // clip by what is left of the composition so the stitcher gets a number.
+      const durationInFrames = Math.min(effectiveDuration, compositionDuration - startFrame);
+      const key = `video|${src}|${startFrame}|${durationInFrames}|${startFrom}|${volume}|${effectiveRate}`;
       sources.set(key, {
         type: 'video' as const,
         src,
         startAtFrame: startFrame,
-        durationInFrames: effectiveDuration,
+        durationInFrames,
         startFrom,
         volume,
         playbackRate: effectiveRate,
