@@ -56,6 +56,11 @@ export async function stitchFramesToVideo(options: StitchOptions): Promise<void>
   const ext = imageFormat === 'jpeg' ? 'jpeg' : 'png';
   const inputPattern = path.join(framesDir, `frame-%06d.${ext}`);
 
+  // The video length is set by the rendered frames; audio is padded or cut to it.
+  const frameFilePattern = new RegExp(`^frame-\\d{6}\\.${ext}$`);
+  const frameCount = fs.readdirSync(framesDir).filter((f) => frameFilePattern.test(f)).length;
+  const videoDurationSec = frameCount / fps;
+
   // Resolve audio sources to absolute file paths, filtering out missing files
   const resolvedAudio: Array<AudioSourceInfo & { filePath: string }> = [];
   if (assetsDir && audioSources.length > 0) {
@@ -107,8 +112,11 @@ export async function stitchFramesToVideo(options: StitchOptions): Promise<void>
       // Build per-source filter chain: trim → atempo → adelay → volume
       const filters: string[] = [];
 
-      // Trim: skip into source file and limit duration
-      filters.push(`atrim=start=${startFromSec.toFixed(6)}:duration=${durationSec.toFixed(6)}`);
+      // Trim: skip into source file and limit duration. An unbounded clip
+      // is left open; -t on the output cuts it at the end of the video.
+      filters.push(Number.isFinite(durationSec)
+        ? `atrim=start=${startFromSec.toFixed(6)}:duration=${durationSec.toFixed(6)}`
+        : `atrim=start=${startFromSec.toFixed(6)}`);
       filters.push('asetpts=PTS-STARTPTS');
 
       // Playback rate adjustment via atempo (supports 0.5–100, chain for wider range)
@@ -131,17 +139,13 @@ export async function stitchFramesToVideo(options: StitchOptions): Promise<void>
       mixInputs.push(`[${label}]`);
     }
 
-    // Mix all audio tracks together
+    // Mix all audio tracks together, then pad with silence so audio that
+    // ends early does not shorten the video
     if (mixInputs.length === 1) {
-      filterGraph = `${filterParts[0].replace(`[${mixInputs[0].slice(1, -1)}]`, '[aout]')}`.replace(
-        filterParts[0],
-        filterParts[0]
-      );
-      // Simpler: just rename the output label
-      filterGraph = filterParts[0].slice(0, filterParts[0].lastIndexOf('[')) + '[aout]';
+      filterGraph = filterParts[0] + `;${mixInputs[0]}apad[aout]`;
     } else {
       filterGraph = filterParts.join(';')
-        + `;${mixInputs.join('')}amix=inputs=${mixInputs.length}:duration=longest:normalize=0[aout]`;
+        + `;${mixInputs.join('')}amix=inputs=${mixInputs.length}:duration=longest:normalize=0,apad[aout]`;
     }
 
     args.push('-filter_complex', filterGraph);
@@ -156,18 +160,21 @@ export async function stitchFramesToVideo(options: StitchOptions): Promise<void>
     }
     args.push('-pix_fmt', pixelFormat, '-movflags', '+faststart');
     if (resolvedAudio.length > 0) {
-      args.push('-c:a', 'aac', '-b:a', '192k');
+      args.push('-c:a', 'aac', '-b:a', '192k', '-ar', '48000');
     }
   } else {
     const encoder = videoEncoder ?? 'libvpx-vp9';
     args.push('-c:v', encoder, '-crf', String(crf), '-b:v', '0');
     if (resolvedAudio.length > 0) {
-      args.push('-c:a', 'libopus', '-b:a', '128k');
+      args.push('-c:a', 'libopus', '-b:a', '128k', '-ar', '48000');
     }
   }
 
-  // Ensure output duration matches the video (don't let audio extend it)
-  args.push('-shortest');
+  // Output duration matches the video: padded audio is cut here, and audio
+  // that ends early no longer truncates the video (as -shortest did)
+  if (resolvedAudio.length > 0) {
+    args.push('-t', videoDurationSec.toFixed(6));
+  }
 
   args.push(outputPath);
 
